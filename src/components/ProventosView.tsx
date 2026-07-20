@@ -136,7 +136,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
   ).padStart(2, "0")}`;
 
   const rendaMesAtual =
-    proventosData?.historicoMensal.find((m) => m.chaveMes === mesAtualChave)
+    proventosData?.historicoMensal?.find((m) => m.chaveMes === mesAtualChave)
       ?.total || 0;
 
   return (
@@ -239,7 +239,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={proventosData.historicoMensal}
+                data={proventosData.historicoMensal || []}
                 margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />

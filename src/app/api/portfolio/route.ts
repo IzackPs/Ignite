@@ -20,7 +20,16 @@ export async function GET() {
       metasMap[m.classe] = m.percentualIdeal;
     });
 
-    const portfolio = calcularPortfolio(ativos as unknown as AtivoDTO[], metasMap);
+    const ativosDTOS = ativos.map(a => ({
+      ...a,
+      classe: a.classe as "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA",
+      transacoes: a.transacoes.map(t => ({
+        ...t,
+        tipo: t.tipo as "COMPRA" | "VENDA"
+      }))
+    }));
+
+    const portfolio = calcularPortfolio(ativosDTOS, metasMap);
 
     // Buscar histórico mensal de patrimônio
     const historico = await prisma.historicoPatrimonio.findMany({
