@@ -70,8 +70,6 @@ export function ProventosView({ ativos }: ProventosViewProps) {
       }
     } catch (err) {
       console.error("Erro ao carregar proventos:", err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
