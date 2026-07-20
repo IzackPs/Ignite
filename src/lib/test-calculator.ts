@@ -6,7 +6,7 @@ import {
 } from "./calculator";
 
 function testCalculator() {
-  console.log("--- Executando Testes do Motor de Cálculo de Rebalanceamento ---");
+  console.info("--- Executando Testes do Motor de Cálculo de Rebalanceamento ---");
 
   // 1. Teste de Preço Médio e Quantidade (Compras e Venda Parcial)
   const transacoesAtivo1: TransacaoDTO[] = [
@@ -16,9 +16,9 @@ function testCalculator() {
   ];
 
   const pos1 = calcularPosicaoAtivo(transacoesAtivo1);
-  console.assert(pos1.quantidadeAtual === 150, `Esperado 150 qtd, obtido ${pos1.quantidadeAtual}`);
-  console.assert(pos1.precoMedio === 35.0, `Esperado PM 35.0, obtido ${pos1.precoMedio}`);
-  console.assert(pos1.totalInvestido === 5250.0, `Esperado Total Investido 5250, obtido ${pos1.totalInvestido}`);
+  if (pos1.quantidadeAtual !== 150) console.error(`Esperado 150 qtd, obtido ${pos1.quantidadeAtual}`);
+  if (pos1.precoMedio !== 35.0) console.error(`Esperado PM 35.0, obtido ${pos1.precoMedio}`);
+  if (pos1.totalInvestido !== 5250.0) console.error(`Esperado Total Investido 5250, obtido ${pos1.totalInvestido}`);
 
   // 2. Teste do Portfólio Completo com Rebalanceamento
   const ativos: AtivoDTO[] = [
@@ -80,9 +80,9 @@ function testCalculator() {
   // Mercado Total: PETR4(6000) + VALE3(6000) + HGLG11(1600) + IVVB11(1200) + TESOURO(5000) = 19,800 R$
   const resultado = calcularPortfolio(ativos);
 
-  console.log("Patrimônio Total Calculado:", resultado.patrimonioTotal);
-  console.log("Resumo por Classes:", resultado.resumoClasses);
-  console.log("Ativos Calculados:", resultado.ativos.map(a => ({
+  console.info("Patrimônio Total Calculado:", resultado.patrimonioTotal);
+  console.info("Resumo por Classes:", resultado.resumoClasses);
+  console.info("Ativos Calculados:", resultado.ativos.map(a => ({
     simbolo: a.simbolo,
     percentualAtual: a.percentualAtual.toFixed(2) + "%",
     percentualIdeal: a.percentualIdeal + "%",
@@ -91,7 +91,7 @@ function testCalculator() {
     qtdAComprar: a.qtdAComprar
   })));
 
-  console.log("✅ Todos os testes do motor de cálculo passaram com sucesso!");
+  console.info("✅ Todos os testes do motor de cálculo passaram com sucesso!");
 }
 
 testCalculator();

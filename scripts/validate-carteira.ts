@@ -1,9 +1,9 @@
 import { calcularPortfolio, AtivoDTO } from "../src/lib/calculator";
 
 function runSanityCheck() {
-  console.log("=========================================");
-  console.log("⚡ IGNITE - SANITY CHECK DA CARTEIRA");
-  console.log("=========================================\n");
+  console.info("=========================================");
+  console.info("⚡ IGNITE - SANITY CHECK DA CARTEIRA");
+  console.info("=========================================\n");
 
   // Mock de uma carteira para validação exata dos cálculos matemáticos
   // Cenário:
@@ -12,10 +12,10 @@ function runSanityCheck() {
 
   // Precisamos mockar as datas para garantir os 5 dias úteis do CDI
   const OriginalDate = global.Date;
-  const mockNow = new Date("2025-01-08T12:00:00Z"); // Hoje (Quarta)
+  const _mockNow = new Date("2025-01-08T12:00:00Z"); // Hoje (Quarta)
   const transacaoData = new Date("2025-01-01T12:00:00Z"); // 7 dias antes (Quarta-feira) -> 5 dias úteis
 
-  // @ts-ignore
+  // @ts-expect-error mock global date
   global.Date = class extends OriginalDate {
     constructor(arg?: any) {
       if (arg) {
@@ -52,7 +52,7 @@ function runSanityCheck() {
     },
   ];
 
-  console.log("-> Processando motor de cálculo...");
+  console.info("-> Processando motor de cálculo...");
   const portfolio = calcularPortfolio(ativos);
 
   global.Date = OriginalDate;
@@ -74,19 +74,19 @@ function runSanityCheck() {
   // Total Investido = 1513.05 + 1000.00 = 2513.05
   // Lucro Global = 2052.50 - 2513.05 = -460.55
 
-  console.log("\n📈 RESULTADOS DA CARTEIRA:");
-  console.log("-----------------------------------------");
-  console.log(`Patrimônio Total:    R$ ${portfolio.patrimonioTotal.toFixed(2)}`);
-  console.log(`Total Investido:     R$ ${portfolio.totalInvestidoTotal.toFixed(2)}`);
-  console.log(`Lucro / Prejuízo:    R$ ${portfolio.lucroPrejuizoTotalR$.toFixed(2)} (${portfolio.lucroPrejuizoTotalPercentual.toFixed(2)}%)`);
-  console.log("-----------------------------------------");
+  console.info("\n📈 RESULTADOS DA CARTEIRA:");
+  console.info("-----------------------------------------");
+  console.info(`Patrimônio Total:    R$ ${portfolio.patrimonioTotal.toFixed(2)}`);
+  console.info(`Total Investido:     R$ ${portfolio.totalInvestidoTotal.toFixed(2)}`);
+  console.info(`Lucro / Prejuízo:    R$ ${portfolio.lucroPrejuizoTotalR$.toFixed(2)} (${portfolio.lucroPrejuizoTotalPercentual.toFixed(2)}%)`);
+  console.info("-----------------------------------------");
   
   const b3 = portfolio.ativos.find(a => a.simbolo === "B3SA3")!;
   const cdb = portfolio.ativos.find(a => a.simbolo === "CDB_120")!;
 
-  console.log("\n📊 DETALHAMENTO DOS ATIVOS:");
-  console.log(`[B3SA3] Valor Mercado: R$ ${b3.valorMercado.toFixed(2)} | PM: R$ ${b3.precoMedio.toFixed(2)} | Qtd: ${b3.quantidadeAtual}`);
-  console.log(`[CDB_120] Valor Mercado: R$ ${cdb.valorMercado.toFixed(2)} | Rendimento Pro-rata: R$ ${cdb.rendimentoProRataR$.toFixed(2)} | Dias Úteis: ${cdb.diasUteisDecorridos}`);
+  console.info("\n📊 DETALHAMENTO DOS ATIVOS:");
+  console.info(`[B3SA3] Valor Mercado: R$ ${b3.valorMercado.toFixed(2)} | PM: R$ ${b3.precoMedio.toFixed(2)} | Qtd: ${b3.quantidadeAtual}`);
+  console.info(`[CDB_120] Valor Mercado: R$ ${cdb.valorMercado.toFixed(2)} | Rendimento Pro-rata: R$ ${cdb.rendimentoProRataR$.toFixed(2)} | Dias Úteis: ${cdb.diasUteisDecorridos}`);
 
   // Assertions (Sanity check fails if these don't match)
   let falhou = false;
@@ -107,10 +107,10 @@ function runSanityCheck() {
   }
 
   if (falhou) {
-    console.log("\n❌ SANITY CHECK FALHOU. Revisar regras de negócio no calculator.ts.");
+    console.info("\n❌ SANITY CHECK FALHOU. Revisar regras de negócio no calculator.ts.");
     process.exit(1);
   } else {
-    console.log("\n✅ SANITY CHECK PASSOU COM SUCESSO! Valores validados com precisão.");
+    console.info("\n✅ SANITY CHECK PASSOU COM SUCESSO! Valores validados com precisão.");
     process.exit(0);
   }
 }

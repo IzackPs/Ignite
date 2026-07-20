@@ -1,7 +1,7 @@
 import { prisma } from "../src/lib/prisma";
 
 async function main() {
-  console.log("Semeando banco de dados com carteira, proventos e histórico de dividendos...");
+  console.info("Semeando banco de dados com carteira, proventos e histórico de dividendos...");
 
   await prisma.provento.deleteMany();
   await prisma.transacao.deleteMany();
@@ -180,7 +180,7 @@ async function main() {
     ],
   });
 
-  console.log("✅ Banco de dados semeado com proventos!");
+  console.info("✅ Banco de dados semeado com proventos!");
 }
 
 main()

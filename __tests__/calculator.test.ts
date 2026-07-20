@@ -112,7 +112,7 @@ describe("Motor de Cálculo (calculator.ts)", () => {
       const transacaoData = new Date("2025-01-01T12:00:00Z");
       const OriginalDate = global.Date;
       
-      // @ts-ignore
+      // @ts-expect-error mock global date
       global.Date = class extends OriginalDate {
         constructor(arg?: any) {
           if (arg) {
