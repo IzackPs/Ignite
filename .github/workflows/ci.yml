@@ -61,7 +61,7 @@ jobs:
           fetch-depth: 0
 
       - name: Analisar a qualidade do código com SonarSource
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           # Token padrão gerado pelo GitHub para interações básicas
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
