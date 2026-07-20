@@ -18,14 +18,14 @@ import {
 } from "lucide-react";
 
 interface AssetTableProps {
-  ativos: AtivoCalculado[];
-  resumoClasse?: ResumoClasse;
-  classeKey: string;
-  nomeClasse: string;
-  onAddTransacao?: (ativo: AtivoCalculado) => void;
-  onEditAtivo?: (ativo: AtivoCalculado) => void;
-  onDeleteAtivo?: (id: string, simbolo: string) => void;
-  onNovoAtivo?: (classe: string) => void;
+  readonly ativos: AtivoCalculado[];
+  readonly resumoClasse?: ResumoClasse;
+  readonly classeKey: string;
+  readonly nomeClasse: string;
+  readonly onAddTransacao?: (ativo: AtivoCalculado) => void;
+  readonly onEditAtivo?: (ativo: AtivoCalculado) => void;
+  readonly onDeleteAtivo?: (id: string, simbolo: string) => void;
+  readonly onNovoAtivo?: (classe: string) => void;
 }
 
 export function AssetTable({
@@ -297,6 +297,7 @@ export function AssetTable({
 
             {onNovoAtivo && (
               <button
+                type="button"
                 onClick={() => onNovoAtivo(classeKey)}
                 className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-md shadow-blue-600/20"
               >
@@ -543,6 +544,7 @@ export function AssetTable({
                         <div className="flex items-center justify-center gap-1">
                           {onAddTransacao && (
                             <button
+                              type="button"
                               onClick={() => onAddTransacao(ativo)}
                               title="Registrar Compra/Venda"
                               className="p-1.5 rounded text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
@@ -552,6 +554,7 @@ export function AssetTable({
                           )}
                           {onEditAtivo && (
                             <button
+                              type="button"
                               onClick={() => onEditAtivo(ativo)}
                               title="Editar Meta/Preço/CDI"
                               className="p-1.5 rounded text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
@@ -561,6 +564,7 @@ export function AssetTable({
                           )}
                           {onDeleteAtivo && (
                             <button
+                              type="button"
                               onClick={() =>
                                 onDeleteAtivo(ativo.id, ativo.simbolo)
                               }

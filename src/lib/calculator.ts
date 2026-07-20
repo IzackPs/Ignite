@@ -9,7 +9,7 @@ export interface TransacaoDTO {
   id: string;
   ativoId: string;
   data: Date | string;
-  tipo: TipoTransacao | string;
+  tipo: TipoTransacao;
   quantidade: number;
   precoUnitario: number;
 }
@@ -18,7 +18,7 @@ export interface AtivoDTO {
   id: string;
   simbolo: string;
   nome: string;
-  classe: TipoClasse | string;
+  classe: TipoClasse;
   setor?: string | null;
   percentualIdeal: number; // Ex: 10 para 10%
   precoAtual: number;
@@ -122,7 +122,7 @@ const TAXA_CDI_DIARIA = Math.pow(1 + TAXA_CDI_ANUAL_DEFAULT, 1 / 252) - 1;
  */
 export function calcularDiasUteis(dataInicio: Date, dataFim: Date): number {
   let count = 0;
-  const curDate = new Date(dataInicio.getTime());
+  const curDate = new Date(dataInicio);
   
   // Avançar dia a dia
   while (curDate < dataFim) {
@@ -158,9 +158,7 @@ export function calcularPosicaoAtivo(transacoes: TransacaoDTO[] = []): {
     const preco = new Decimal(t.precoUnitario || 0);
 
     if (t.tipo.toUpperCase() === "COMPRA") {
-      if (!primeiraDataCompra) {
-        primeiraDataCompra = new Date(t.data);
-      }
+      primeiraDataCompra ??= new Date(t.data);
       custoTotalAcumulado = custoTotalAcumulado.plus(qtd.times(preco));
       quantidadeAtual = quantidadeAtual.plus(qtd);
       precoMedio = quantidadeAtual.greaterThan(0)

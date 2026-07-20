@@ -32,7 +32,7 @@ export default {
             where: { email }
           })
 
-          if (!user || !user.password) {
+          if (!user?.password) {
             return null
           }
 

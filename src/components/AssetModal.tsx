@@ -5,11 +5,11 @@ import { AtivoCalculado } from "@/lib/calculator";
 import { X } from "lucide-react";
 
 interface AssetModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  initialClasse?: string;
-  editingAtivo?: AtivoCalculado | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
+  readonly initialClasse?: string;
+  readonly editingAtivo?: AtivoCalculado | null;
 }
 
 export function AssetModal({
@@ -97,6 +97,7 @@ export function AssetModal({
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
         >
@@ -115,10 +116,11 @@ export function AssetModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="simbolo" className="block text-xs font-semibold text-slate-300 mb-1">
               Ticker / Símbolo *
             </label>
             <input
+              id="simbolo"
               type="text"
               required
               placeholder="Ex: CDB-NUBANK-100CDI, PETR4, HGLG11"
@@ -129,10 +131,11 @@ export function AssetModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="nome" className="block text-xs font-semibold text-slate-300 mb-1">
               Nome do Ativo *
             </label>
             <input
+              id="nome"
               type="text"
               required
               placeholder="Ex: CDB Nubank 120% CDI"
@@ -144,10 +147,11 @@ export function AssetModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="classe" className="block text-xs font-semibold text-slate-300 mb-1">
                 Classe *
               </label>
               <select
+                id="classe"
                 value={classe}
                 onChange={(e) => setClasse(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
@@ -160,10 +164,11 @@ export function AssetModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="setor" className="block text-xs font-semibold text-slate-300 mb-1">
                 Setor / Emissor
               </label>
               <input
+                id="setor"
                 type="text"
                 placeholder="Ex: Bancário, Governo"
                 value={setor}
@@ -175,10 +180,11 @@ export function AssetModal({
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="percentualIdeal" className="block text-xs font-semibold text-slate-300 mb-1">
                 % Ideal
               </label>
               <input
+                id="percentualIdeal"
                 type="number"
                 step="0.1"
                 min="0"
@@ -190,10 +196,11 @@ export function AssetModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="precoAtual" className="block text-xs font-semibold text-slate-300 mb-1">
                 Preço Base (R$)
               </label>
               <input
+                id="precoAtual"
                 type="number"
                 step="0.01"
                 min="0"
@@ -205,10 +212,11 @@ export function AssetModal({
 
             {isRendaFixa ? (
               <div>
-                <label className="block text-xs font-semibold text-emerald-400 mb-1">
+                <label htmlFor="taxaRentabilidade" className="block text-xs font-semibold text-emerald-400 mb-1">
                   % do CDI
                 </label>
                 <input
+                  id="taxaRentabilidade"
                   type="number"
                   step="1"
                   min="0"
@@ -220,10 +228,11 @@ export function AssetModal({
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label htmlFor="ultimoProvento" className="block text-xs font-semibold text-slate-300 mb-1">
                   Provento (R$)
                 </label>
                 <input
+                  id="ultimoProvento"
                   type="number"
                   step="0.01"
                   min="0"

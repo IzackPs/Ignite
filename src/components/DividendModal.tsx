@@ -5,10 +5,10 @@ import { AtivoCalculado } from "@/lib/calculator";
 import { X } from "lucide-react";
 
 interface DividendModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  ativos: AtivoCalculado[];
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
+  readonly ativos: AtivoCalculado[];
 }
 
 export function DividendModal({
@@ -68,6 +68,7 @@ export function DividendModal({
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
         >
@@ -91,10 +92,11 @@ export function DividendModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="ativoId" className="block text-xs font-semibold text-slate-300 mb-1">
               Ativo *
             </label>
             <select
+              id="ativoId"
               required
               value={ativoId}
               onChange={(e) => setAtivoId(e.target.value)}
@@ -110,10 +112,11 @@ export function DividendModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="tipo" className="block text-xs font-semibold text-slate-300 mb-1">
                 Tipo de Provento *
               </label>
               <select
+                id="tipo"
                 value={tipo}
                 onChange={(e) => setTipo(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
@@ -125,10 +128,11 @@ export function DividendModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="data" className="block text-xs font-semibold text-slate-300 mb-1">
                 Data do Pagamento *
               </label>
               <input
+                id="data"
                 type="date"
                 required
                 value={data}
@@ -139,10 +143,11 @@ export function DividendModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="valorTotal" className="block text-xs font-semibold text-slate-300 mb-1">
               Valor Total Recebido (R$) *
             </label>
             <input
+              id="valorTotal"
               type="number"
               step="0.01"
               min="0.01"

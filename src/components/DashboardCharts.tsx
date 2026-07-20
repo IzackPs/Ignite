@@ -35,10 +35,10 @@ export interface HistoricoItem {
 }
 
 interface DashboardChartsProps {
-  portfolio: PortfolioCalculado;
-  historico: HistoricoItem[];
-  onOpenMetasModal: () => void;
-  onRefresh: () => void;
+  readonly portfolio: PortfolioCalculado;
+  readonly historico: HistoricoItem[];
+  readonly onOpenMetasModal: () => void;
+  readonly onRefresh: () => void;
 }
 
 const COLORS = ["#3b82f6", "#a855f7", "#f59e0b", "#10b981"];
@@ -135,6 +135,7 @@ export function DashboardCharts({
 
         <div className="flex flex-wrap items-center gap-3">
           <button
+            type="button"
             onClick={onOpenMetasModal}
             className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 shadow-md"
           >
@@ -143,6 +144,7 @@ export function DashboardCharts({
           </button>
 
           <button
+            type="button"
             onClick={handleSalvarFotoMensal}
             disabled={savingSnapshot}
             className={`text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg ${
@@ -196,7 +198,7 @@ export function DashboardCharts({
                 >
                   {donutData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${entry.name}`}
                       fill={COLORS[index % COLORS.length]}
                       stroke="#0f172a"
                       strokeWidth={2}
@@ -353,11 +355,11 @@ export function DashboardCharts({
               <span>
                 Última foto:{" "}
                 <strong className="text-slate-200">
-                  {lineData[lineData.length - 1].mesAno}
+                  {lineData.at(-1)?.mesAno}
                 </strong>
               </span>
               <span className="font-mono text-emerald-400 font-bold">
-                {formatCurrency(lineData[lineData.length - 1].patrimonioTotal)}
+                {formatCurrency(lineData.at(-1)?.patrimonioTotal || 0)}
               </span>
             </div>
           )}
@@ -416,6 +418,7 @@ export function DashboardCharts({
                     </td>
                     <td className="py-2.5 px-4 text-center font-sans">
                       <button
+                        type="button"
                         onClick={() => handleExcluirHistorico(item.id)}
                         className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
                         title="Excluir este registro"

@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 
 interface PortfolioOverviewProps {
-  portfolio: PortfolioCalculado;
-  onSelectTab: (tabKey: string) => void;
+  readonly portfolio: PortfolioCalculado;
+  readonly onSelectTab: (tabKey: string) => void;
 }
 
 export function PortfolioOverview({
@@ -144,6 +144,14 @@ export function PortfolioOverview({
             return (
               <div
                 key={resumo.classe}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectTab(resumo.classe);
+                  }
+                }}
                 onClick={() => onSelectTab(resumo.classe)}
                 className="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-5 shadow-lg cursor-pointer transition-all duration-200 hover:scale-[1.01] group flex flex-col justify-between"
               >
@@ -196,13 +204,11 @@ export function PortfolioOverview({
                     </div>
                     <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${
-                          diffPercent < -2
-                            ? "bg-amber-400"
-                            : diffPercent > 2
-                            ? "bg-blue-400"
-                            : "bg-emerald-400"
-                        }`}
+                        className={`h-full transition-all duration-500 ${(() => {
+                          if (diffPercent < -2) return "bg-amber-400";
+                          if (diffPercent > 2) return "bg-blue-400";
+                          return "bg-emerald-400";
+                        })()}`}
                         style={{
                           width: `${Math.min(
                             100,

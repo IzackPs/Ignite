@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 
 interface SimuladorAporteBarProps {
-  portfolio: PortfolioCalculado;
-  onRefresh: () => void;
+  readonly portfolio: PortfolioCalculado;
+  readonly onRefresh: () => void;
 }
 
 export function SimuladorAporteBar({
@@ -94,7 +94,9 @@ export function SimuladorAporteBar({
             <span className="absolute left-3 top-2.5 text-xs font-bold text-indigo-400">
               R$
             </span>
+            <label htmlFor="valorAporte" className="sr-only">Valor do Aporte</label>
             <input
+              id="valorAporte"
               type="number"
               step="100"
               min="0"
@@ -229,6 +231,7 @@ export function SimuladorAporteBar({
           {resultadoSimulacao.itensCarrinho.length > 0 && (
             <div className="flex items-center justify-end pt-2">
               <button
+                type="button"
                 onClick={handleExecutarCompras}
                 disabled={executingOrders}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2"

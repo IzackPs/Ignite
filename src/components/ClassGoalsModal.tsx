@@ -5,10 +5,10 @@ import { ResumoClasse } from "@/lib/calculator";
 import { X, Save, AlertCircle } from "lucide-react";
 
 interface ClassGoalsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  resumoClasses: ResumoClasse[];
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
+  readonly resumoClasses: ResumoClasse[];
 }
 
 export function ClassGoalsModal({
@@ -82,6 +82,7 @@ export function ClassGoalsModal({
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
         >
@@ -109,13 +110,14 @@ export function ClassGoalsModal({
             {/* Ações */}
             <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
               <div>
-                <label className="text-xs font-bold text-blue-400 block">
+                <label htmlFor="metaAcoes" className="text-xs font-bold text-blue-400 block">
                   📈 Ações
                 </label>
                 <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
+                  id="metaAcoes"
                   type="number"
                   step="1"
                   min="0"
@@ -131,13 +133,14 @@ export function ClassGoalsModal({
             {/* FIIs */}
             <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
               <div>
-                <label className="text-xs font-bold text-purple-400 block">
+                <label htmlFor="metaFiis" className="text-xs font-bold text-purple-400 block">
                   🏢 FIIs (Fundos Imobiliários)
                 </label>
                 <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
+                  id="metaFiis"
                   type="number"
                   step="1"
                   min="0"
@@ -153,13 +156,14 @@ export function ClassGoalsModal({
             {/* ETFs */}
             <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
               <div>
-                <label className="text-xs font-bold text-amber-400 block">
+                <label htmlFor="metaEtfs" className="text-xs font-bold text-amber-400 block">
                   🌐 ETFs
                 </label>
                 <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
+                  id="metaEtfs"
                   type="number"
                   step="1"
                   min="0"
@@ -175,13 +179,14 @@ export function ClassGoalsModal({
             {/* Renda Fixa */}
             <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
               <div>
-                <label className="text-xs font-bold text-emerald-400 block">
+                <label htmlFor="metaRendaFixa" className="text-xs font-bold text-emerald-400 block">
                   💰 Renda Fixa
                 </label>
                 <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
+                  id="metaRendaFixa"
                   type="number"
                   step="1"
                   min="0"

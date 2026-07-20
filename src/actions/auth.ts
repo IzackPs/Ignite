@@ -20,12 +20,10 @@ export async function authenticate(
     await signIn("credentials", formData)
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Credenciais inválidas."
-        default:
-          return "Algo deu errado."
+      if (error.type === "CredentialsSignin") {
+        return "Credenciais inválidas."
       }
+      return "Algo deu errado."
     }
     throw error
   }
@@ -64,12 +62,10 @@ export async function register(prevState: string | undefined, formData: FormData
     await signIn("credentials", formData)
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Erro ao fazer login automático após registro."
-        default:
-          return "Algo deu errado durante o registro."
+      if (error.type === "CredentialsSignin") {
+        return "Erro ao fazer login automático após registro."
       }
+      return "Algo deu errado durante o registro."
     }
     throw error
   }

@@ -167,6 +167,64 @@ export default function Home() {
     RENDA_FIXA: "Renda Fixa",
   };
 
+  const getUpdateBtnText = () => {
+    if (updatingPrices) return "Buscando B3...";
+    if (cooldown > 0) return `Aguarde ${cooldown}s...`;
+    return "Atualizar Cotações";
+  };
+
+  const renderContent = () => {
+    if (loading && !portfolio) {
+      return (
+        <div className="py-24 text-center space-y-3">
+          <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
+            Carregando carteira de investimentos...
+          </p>
+        </div>
+      );
+    }
+    if (!portfolio) {
+      return (
+        <div className="py-16 text-center text-slate-500">
+          Nenhum dado encontrado.
+        </div>
+      );
+    }
+    if (activeTab === "GERAL") {
+      return (
+        <div className="space-y-8">
+          <SimuladorAporteBar portfolio={portfolio} onRefresh={fetchPortfolio} />
+          <DashboardCharts
+            portfolio={portfolio}
+            historico={portfolio.historico || []}
+            onOpenMetasModal={() => setGoalsModalOpen(true)}
+            onRefresh={fetchPortfolio}
+          />
+          <PortfolioOverview portfolio={portfolio} onSelectTab={setActiveTab} />
+        </div>
+      );
+    }
+    if (activeTab === "PROVENTOS") {
+      return <ProventosView ativos={portfolio.ativos} />;
+    }
+    return (
+      <div className="space-y-6">
+        <SimuladorAporteBar portfolio={portfolio} onRefresh={fetchPortfolio} />
+        <AssetTable
+          ativos={portfolio.ativos.filter((a) => a.classe.toUpperCase() === activeTab)}
+          resumoClasse={portfolio.resumoClasses.find((r) => r.classe === activeTab)}
+          classeKey={activeTab}
+          nomeClasse={nomesClasses[activeTab] || activeTab}
+          onAddTransacao={handleAddTransacao}
+          onEditAtivo={handleEditAtivo}
+          onDeleteAtivo={handleDeleteAtivo}
+          onNovoAtivo={handleNovoAtivo}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-blue-500 selection:text-white pb-16 transition-colors duration-200">
       {/* Top Header Navigation */}
@@ -178,7 +236,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                Ignite Finanças
+                {"Ignite Finanças "}
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   Asset Allocation
                 </span>
@@ -200,6 +258,7 @@ export default function Home() {
 
             {/* Botão de Atualizar Cotações em Tempo Real */}
             <button
+              type="button"
               onClick={() => handleAtualizarCotacoes(true)}
               disabled={updatingPrices || cooldown > 0}
               className={`bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm ${(updatingPrices || cooldown > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -210,10 +269,11 @@ export default function Home() {
                   updatingPrices ? "animate-bounce" : ""
                 }`}
               />
-              {updatingPrices ? "Buscando B3..." : cooldown > 0 ? `Aguarde ${cooldown}s...` : "Atualizar Cotações"}
+              {getUpdateBtnText()}
             </button>
 
             <button
+              type="button"
               onClick={() => setGoalsModalOpen(true)}
               className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 text-xs font-semibold"
               title="Ajustar Metas por Classe"
@@ -223,6 +283,7 @@ export default function Home() {
             </button>
 
             <button
+              type="button"
               onClick={() => fetchPortfolio()}
               disabled={loading}
               className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700"
@@ -234,6 +295,7 @@ export default function Home() {
             </button>
 
             <button
+              type="button"
               onClick={() => handleNovoAtivo()}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center gap-1.5"
             >
@@ -242,6 +304,7 @@ export default function Home() {
             </button>
 
             <button
+              type="button"
               onClick={() => logout()}
               className="p-2.5 ml-2 rounded-xl text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors border border-rose-200 dark:border-rose-900/50"
               title="Sair"
@@ -262,63 +325,7 @@ export default function Home() {
         />
 
         {/* Conteúdo Principal */}
-        {loading && !portfolio ? (
-          <div className="py-24 text-center space-y-3">
-            <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Carregando carteira de investimentos...
-            </p>
-          </div>
-        ) : portfolio ? (
-          <div>
-            {activeTab === "GERAL" ? (
-              <div className="space-y-8">
-                <SimuladorAporteBar
-                  portfolio={portfolio}
-                  onRefresh={fetchPortfolio}
-                />
-                <DashboardCharts
-                  portfolio={portfolio}
-                  historico={portfolio.historico || []}
-                  onOpenMetasModal={() => setGoalsModalOpen(true)}
-                  onRefresh={fetchPortfolio}
-                />
-                <PortfolioOverview
-                  portfolio={portfolio}
-                  onSelectTab={setActiveTab}
-                />
-              </div>
-            ) : activeTab === "PROVENTOS" ? (
-              <ProventosView ativos={portfolio.ativos} />
-            ) : (
-              <div className="space-y-6">
-                <SimuladorAporteBar
-                  portfolio={portfolio}
-                  onRefresh={fetchPortfolio}
-                />
-
-                <AssetTable
-                  ativos={portfolio.ativos.filter(
-                    (a) => a.classe.toUpperCase() === activeTab
-                  )}
-                  resumoClasse={portfolio.resumoClasses.find(
-                    (r) => r.classe === activeTab
-                  )}
-                  classeKey={activeTab}
-                  nomeClasse={nomesClasses[activeTab] || activeTab}
-                  onAddTransacao={handleAddTransacao}
-                  onEditAtivo={handleEditAtivo}
-                  onDeleteAtivo={handleDeleteAtivo}
-                  onNovoAtivo={handleNovoAtivo}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="py-16 text-center text-slate-500">
-            Nenhum dado encontrado.
-          </div>
-        )}
+        {renderContent()}
       </main>
 
       {/* Modais */}

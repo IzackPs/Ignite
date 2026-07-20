@@ -47,7 +47,7 @@ export interface HistoricoMensalProvento {
 }
 
 interface ProventosViewProps {
-  ativos: AtivoCalculado[];
+  readonly ativos: AtivoCalculado[];
 }
 
 export function ProventosView({ ativos }: ProventosViewProps) {
@@ -118,6 +118,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
           </div>
 
           <button
+            type="button"
             onClick={() => setModalOpen(true)}
             className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-600/25 flex items-center gap-1.5 shrink-0"
           >
@@ -360,6 +361,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                       {/* Botão Excluir */}
                       <td className="py-3 px-4 text-center">
                         <button
+                          type="button"
                           onClick={() => handleDeleteProvento(p.id)}
                           className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
                           title="Excluir lançamento"

@@ -6,10 +6,10 @@ import { X } from "lucide-react";
 import { transacaoSchema } from "@/lib/validations";
 
 interface TransactionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  ativo?: AtivoCalculado | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: () => void;
+  readonly ativo?: AtivoCalculado | null;
 }
 
 export function TransactionModal({
@@ -91,6 +91,7 @@ export function TransactionModal({
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
         >
@@ -140,10 +141,11 @@ export function TransactionModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="dataTransacao" className="block text-xs font-semibold text-slate-300 mb-1">
               Data da Operação
             </label>
             <input
+              id="dataTransacao"
               type="date"
               required
               max={maxDataHoje}
@@ -155,10 +157,11 @@ export function TransactionModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="quantidade" className="block text-xs font-semibold text-slate-300 mb-1">
                 Quantidade *
               </label>
               <input
+                id="quantidade"
                 type="number"
                 step="any"
                 min="0.000001"
@@ -170,10 +173,11 @@ export function TransactionModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="precoUnitario" className="block text-xs font-semibold text-slate-300 mb-1">
                 Preço Unitário (R$) *
               </label>
               <input
+                id="precoUnitario"
                 type="number"
                 step="0.01"
                 min="0.01"

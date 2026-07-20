@@ -4,10 +4,10 @@ import React, { useEffect } from "react";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 
 export interface ToastProps {
-  message: string;
-  type?: "info" | "warning" | "success" | "error";
-  onClose: () => void;
-  duration?: number;
+  readonly message: string;
+  readonly type?: "info" | "warning" | "success" | "error";
+  readonly onClose: () => void;
+  readonly duration?: number;
 }
 
 export function Toast({ message, type = "warning", onClose, duration = 5000 }: ToastProps) {
@@ -40,6 +40,7 @@ export function Toast({ message, type = "warning", onClose, duration = 5000 }: T
         {icons[type]}
         <span className="flex-1">{message}</span>
         <button
+          type="button"
           onClick={onClose}
           className="p-1 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
           title="Fechar"
