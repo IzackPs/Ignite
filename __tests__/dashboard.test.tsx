@@ -123,7 +123,7 @@ describe('Dashboard Page', () => {
       });
     });
 
-    const { getByText, getAllByText, getByRole, getAllByRole } = render(<Home />);
+    render(<Home />);
     
     await waitFor(() => {
       expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { calcularPortfolio, AtivoDTO } from "@/lib/calculator";
+import { calcularPortfolio } from "@/lib/calculator";
+
 
 export async function GET() {
   try {

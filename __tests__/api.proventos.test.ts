@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, DELETE } from '../src/app/api/proventos/route';
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
