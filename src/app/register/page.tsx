@@ -1,0 +1,70 @@
+"use client"
+
+import { useActionState } from "react"
+import { register } from "@/actions/auth"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import NextLink from "next/link"
+
+export default function RegisterPage() {
+  const [errorMessage, dispatch] = useActionState(register, undefined)
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold tracking-tight">Criar Conta</CardTitle>
+          <CardDescription>
+            Insira seus dados para criar sua conta de gerenciamento de carteira
+          </CardDescription>
+        </CardHeader>
+        <form action={dispatch}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome completo</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Seu Nome"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" name="password" type="password" required />
+            </div>
+            {errorMessage && (
+              <div className="text-sm text-red-500 font-medium">
+                {errorMessage}
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button className="w-full" type="submit">
+              Registrar
+            </Button>
+            <div className="text-sm text-center text-slate-500 dark:text-slate-400">
+              Já tem uma conta?{" "}
+              <NextLink href="/login" className="text-blue-600 hover:underline dark:text-blue-500">
+                Fazer login
+              </NextLink>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  )
+}

@@ -9,6 +9,7 @@ lerna-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Runtime data
 pids
@@ -22,31 +23,61 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # nyc test coverage
 .nyc_output
+# testing
+/coverage
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
+# next.js
+/.next/
+/out/
 
 # Bower dependency directory (https://bower.io/)
 bower_components
+# production
+/build
 
 # node-waf configuration
 .lock-wscript
+# misc
+.DS_Store
+*.pem
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # Dependency directories
 node_modules/
 jspm_packages/
+# env files (can opt-in for committing if needed)
+.env*
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
+# vercel
+.vercel
 
 # TypeScript cache
+# typescript
 *.tsbuildinfo
+next-env.d.ts
 
 # Optional npm cache directory
 .npm
@@ -68,6 +99,7 @@ web_modules/
 
 # Output of 'npm pack'
 *.tgz
+/src/generated/prisma
 
 # Yarn Integrity file
 .yarn-integrity
@@ -134,3 +166,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+# docker volumes
+postgres_data/
+
+agents.md
+.agent
+.claude
+.claudeignore
+.claudeignore.md
+
+claude.md
+   

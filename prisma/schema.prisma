@@ -1,0 +1,128 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// Modelos de Autenticação (NextAuth / Auth.js)
+// ------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Adicionado para suportar login com credenciais
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Relacionamentos com a carteira (opcional para manter compatibilidade com dados antigos)
+  ativos        Ativo[]
+  historicos    HistoricoPatrimonio[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ------------------------------------------------------
+// Modelos da Aplicação de Carteira
+// ------------------------------------------------------
+
+model Ativo {
+  id                String      @id @default(uuid())
+  simbolo           String      @unique
+  nome              String
+  classe            String      // "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA"
+  setor             String?
+  percentualIdeal   Float       @default(0) // Porcentagem ideal manual no ativo (%)
+  precoAtual        Float       @default(0) // Preço atual de mercado (R$)
+  ultimoProvento    Float       @default(0) // Último provento/dividendo pago por cota (R$)
+  taxaRentabilidade Float       @default(100) // Rentabilidade % do CDI (ex: 120 para 120% do CDI)
+  transacoes        Transacao[]
+  proventos         Provento[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  userId            String?     // Vínculo opcional com o usuário dono da carteira
+  user              User?       @relation(fields: [userId], references: [id])
+}
+
+model Transacao {
+  id            String   @id @default(uuid())
+  ativoId       String
+  ativo         Ativo    @relation(fields: [ativoId], references: [id], onDelete: Cascade)
+  data          DateTime @default(now())
+  tipo          String   // "COMPRA" | "VENDA"
+  quantidade    Float
+  precoUnitario Float
+  createdAt     DateTime @default(now())
+}
+
+model Provento {
+  id         String   @id @default(uuid())
+  ativoId    String
+  ativo      Ativo    @relation(fields: [ativoId], references: [id], onDelete: Cascade)
+  data       DateTime @default(now())
+  tipo       String   // "DIVIDENDO" | "JCP" | "RENDIMENTO"
+  valorTotal Float    // Valor total em R$ creditado na conta
+  createdAt  DateTime @default(now())
+}
+
+model MetaClasse {
+  classe          String   @id // "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA"
+  percentualIdeal Float
+  updatedAt       DateTime @updatedAt
+}
+
+model HistoricoPatrimonio {
+  id              String   @id @default(uuid())
+  data            DateTime @default(now())
+  patrimonioTotal Float
+  totalInvestido  Float
+  lucroPrejuizo   Float
+  createdAt       DateTime @default(now())
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+}
