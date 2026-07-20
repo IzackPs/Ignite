@@ -43,6 +43,48 @@ interface DashboardChartsProps {
 
 const COLORS = ["#3b82f6", "#a855f7", "#f59e0b", "#10b981"];
 
+const CustomDonutTooltip = ({ active, payload }: any) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
+        <div className="font-bold text-white">{data.name}</div>
+        <div className="text-slate-300">
+          Valor: <strong>{formatCurrency(data.atual)}</strong>
+        </div>
+        <div className="text-blue-400">
+          Atual: <strong>{formatPercent(data.percentualAtual)}</strong>
+        </div>
+        <div className="text-slate-400">
+          Meta Ideal: <strong>{data.metaPercentual}%</strong>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomAreaTooltip = ({ active, payload }: any) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
+        <div className="font-bold text-white">{data.mesAno}</div>
+        <div className="text-emerald-400 font-bold">
+          Patrimônio: {formatCurrency(data.patrimonioTotal)}
+        </div>
+        <div className="text-blue-400">
+          Investido: {formatCurrency(data.totalInvestido)}
+        </div>
+        <div className="text-slate-400 text-[10px]">
+          Lucro acumulado: {formatCurrency(data.lucroPrejuizo)}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function DashboardCharts({
   portfolio,
   historico,
@@ -205,28 +247,7 @@ export function DashboardCharts({
                     />
                   ))}
                 </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-                          <div className="font-bold text-white">{data.name}</div>
-                          <div className="text-slate-300">
-                            Valor: <strong>{formatCurrency(data.atual)}</strong>
-                          </div>
-                          <div className="text-blue-400">
-                            Atual: <strong>{formatPercent(data.percentualAtual)}</strong>
-                          </div>
-                          <div className="text-slate-400">
-                            Meta Ideal: <strong>{data.metaPercentual}%</strong>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+                <Tooltip content={<CustomDonutTooltip />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -303,28 +324,7 @@ export function DashboardCharts({
                     fontSize={11}
                     tickFormatter={(val) => `R$ ${(val / 1000).toFixed(0)}k`}
                   />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-                            <div className="font-bold text-white">{data.mesAno}</div>
-                            <div className="text-emerald-400 font-bold">
-                              Patrimônio: {formatCurrency(data.patrimonioTotal)}
-                            </div>
-                            <div className="text-blue-400">
-                              Investido: {formatCurrency(data.totalInvestido)}
-                            </div>
-                            <div className="text-slate-400 text-[10px]">
-                              Lucro acumulado: {formatCurrency(data.lucroPrejuizo)}
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
+                  <Tooltip content={<CustomAreaTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="patrimonioTotal"

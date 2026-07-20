@@ -46,6 +46,46 @@ export interface HistoricoMensalProvento {
   rendimento: number;
 }
 
+const CustomProventoTooltip = ({ active, payload }: any) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
+        <div className="font-bold text-white">{data.mesAno}</div>
+        <div className="text-emerald-400 font-bold text-sm">
+          Total: {formatCurrency(data.total)}
+        </div>
+        {data.rendimento > 0 && (
+          <div className="text-purple-400">
+            Rendimentos (FIIs): {formatCurrency(data.rendimento)}
+          </div>
+        )}
+        {data.dividendo > 0 && (
+          <div className="text-emerald-300">
+            Dividendos: {formatCurrency(data.dividendo)}
+          </div>
+        )}
+        {data.jcp > 0 && (
+          <div className="text-blue-400">
+            JCP: {formatCurrency(data.jcp)}
+          </div>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
+
+const getTipoProventoClass = (tipo: string) => {
+  if (tipo.toUpperCase() === "RENDIMENTO") {
+    return "bg-purple-500/10 text-purple-300 border-purple-500/20";
+  }
+  if (tipo.toUpperCase() === "DIVIDENDO") {
+    return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
+  }
+  return "bg-blue-500/10 text-blue-300 border-blue-500/20";
+};
+
 interface ProventosViewProps {
   readonly ativos: AtivoCalculado[];
 }
@@ -209,37 +249,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                   fontSize={11}
                   tickFormatter={(val) => `R$ ${val}`}
                 />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-                          <div className="font-bold text-white">{data.mesAno}</div>
-                          <div className="text-emerald-400 font-bold text-sm">
-                            Total: {formatCurrency(data.total)}
-                          </div>
-                          {data.rendimento > 0 && (
-                            <div className="text-purple-400">
-                              Rendimentos (FIIs): {formatCurrency(data.rendimento)}
-                            </div>
-                          )}
-                          {data.dividendo > 0 && (
-                            <div className="text-emerald-300">
-                              Dividendos: {formatCurrency(data.dividendo)}
-                            </div>
-                          )}
-                          {data.jcp > 0 && (
-                            <div className="text-blue-400">
-                              JCP: {formatCurrency(data.jcp)}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+                <Tooltip content={<CustomProventoTooltip />} />
                 <Legend />
                 <Bar
                   dataKey="rendimento"
@@ -304,9 +314,6 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                 </tr>
               ) : (
                 proventosData.proventos.map((p) => {
-                  const isRendimento = p.tipo.toUpperCase() === "RENDIMENTO";
-                  const isDividendo = p.tipo.toUpperCase() === "DIVIDENDO";
-
                   return (
                     <tr
                       key={p.id}
@@ -341,13 +348,9 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                       {/* Tipo */}
                       <td className="py-3 px-3">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                            isRendimento
-                              ? "bg-purple-500/10 text-purple-300 border-purple-500/20"
-                              : isDividendo
-                              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                              : "bg-blue-500/10 text-blue-300 border-blue-500/20"
-                          }`}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${getTipoProventoClass(
+                            p.tipo
+                          )}`}
                         >
                           {p.tipo}
                         </span>

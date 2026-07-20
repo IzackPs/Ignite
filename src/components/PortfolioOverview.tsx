@@ -142,18 +142,11 @@ export function PortfolioOverview({
             const diffPercent = resumo.percentualAtual - resumo.metaPercentual;
 
             return (
-              <div
+              <button
+                type="button"
                 key={resumo.classe}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onSelectTab(resumo.classe);
-                  }
-                }}
                 onClick={() => onSelectTab(resumo.classe)}
-                className="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-5 shadow-lg cursor-pointer transition-all duration-200 hover:scale-[1.01] group flex flex-col justify-between"
+                className="bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-5 shadow-lg cursor-pointer transition-all duration-200 hover:scale-[1.01] group flex flex-col justify-between text-left"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -233,7 +226,7 @@ export function PortfolioOverview({
                 <div className="mt-4 pt-3 text-xs text-blue-400 font-semibold flex items-center justify-end gap-1 group-hover:translate-x-1 transition-transform">
                   Ver Ativos de {resumo.nomeClasse} <ArrowRight className="w-3.5 h-3.5" />
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
