@@ -16,10 +16,10 @@ jobs:
       - name: Obter o código do repositório
         uses: actions/checkout@v4
 
-      - name: Configurar o Node.js (Versão 20)
+      - name: Configurar o Node.js (Versão 24)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm' # Ativa o cache do npm automaticamente
 
       - name: Instalar as dependências
@@ -36,10 +36,10 @@ jobs:
       - name: Obter o código do repositório
         uses: actions/checkout@v4
 
-      - name: Configurar o Node.js (Versão 20)
+      - name: Configurar o Node.js (Versão 24)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Instalar as dependências
@@ -61,7 +61,7 @@ jobs:
           fetch-depth: 0
 
       - name: Analisar a qualidade do código com SonarSource
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           # Token padrão gerado pelo GitHub para interações básicas
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,10 +76,10 @@ jobs:
       - name: Obter o código do repositório
         uses: actions/checkout@v4
 
-      - name: Configurar o Node.js (Versão 20)
+      - name: Configurar o Node.js (Versão 24)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Instalar as dependências
