@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { calcularPortfolio } from "@/lib/calculator";
+import { calcularPortfolio, AtivoDTO } from "@/lib/calculator";
 
 export async function GET() {
   try {
@@ -20,7 +20,7 @@ export async function GET() {
       metasMap[m.classe] = m.percentualIdeal;
     });
 
-    const portfolio = calcularPortfolio(ativos, metasMap);
+    const portfolio = calcularPortfolio(ativos as unknown as AtivoDTO[], metasMap);
 
     // Buscar histórico mensal de patrimônio
     const historico = await prisma.historicoPatrimonio.findMany({
