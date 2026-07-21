@@ -83,6 +83,18 @@ export function TransactionModal({
     }
   }, [activeAtivo, ativo, isOpen]);
 
+  // Derived state for new average price calculation
+  const totalOperacao = Number(quantidade || 0) * Number(precoUnitario || 0);
+
+  const novoPrecoMedio = useMemo(() => {
+    if (tipo !== "COMPRA") {
+      return activeAtivo?.precoMedio || 0;
+    }
+    const novaQtd = (activeAtivo?.quantidadeAtual || 0) + Number(quantidade || 0);
+    if (novaQtd <= 0) return 0;
+    return ((activeAtivo?.totalInvestido || 0) + totalOperacao) / novaQtd;
+  }, [tipo, activeAtivo, quantidade, totalOperacao]);
+
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -130,17 +142,6 @@ export function TransactionModal({
       setLoading(false);
     }
   }
-
-  const totalOperacao = Number(quantidade || 0) * Number(precoUnitario || 0);
-
-  const novoPrecoMedio = useMemo(() => {
-    if (tipo !== "COMPRA") {
-      return activeAtivo?.precoMedio || 0;
-    }
-    const novaQtd = (activeAtivo?.quantidadeAtual || 0) + Number(quantidade || 0);
-    if (novaQtd <= 0) return 0;
-    return ((activeAtivo?.totalInvestido || 0) + totalOperacao) / novaQtd;
-  }, [tipo, activeAtivo, quantidade, totalOperacao]);
 
   return (
     <Modal
