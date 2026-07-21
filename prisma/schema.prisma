@@ -8,9 +8,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ------------------------------------------------------
+// ─────────────────────────────────────────────────────────
+// Enums de Domínio
+// ─────────────────────────────────────────────────────────
+
+/// Classe de ativo financeiro
+enum TipoClasse {
+  ACOES
+  FIIS
+  ETFS
+  RENDA_FIXA
+}
+
+/// Tipo de movimentação em carteira
+enum TipoTransacao {
+  COMPRA
+  VENDA
+}
+
+/// Tipo de provento recebido
+enum TipoProvento {
+  DIVIDENDO
+  JCP
+  RENDIMENTO
+}
+
+// ─────────────────────────────────────────────────────────
 // Modelos de Autenticação (NextAuth / Auth.js)
-// ------------------------------------------------------
+// ─────────────────────────────────────────────────────────
 
 model User {
   id            String    @id @default(cuid())
@@ -18,16 +43,17 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // Adicionado para suportar login com credenciais
+  password      String?   // Suporta login com credenciais
   accounts      Account[]
   sessions      Session[]
-  
-  // Relacionamentos com a carteira (opcional para manter compatibilidade com dados antigos)
+
+  // Relacionamentos com a carteira
   ativos        Ativo[]
   historicos    HistoricoPatrimonio[]
+  metasClasses  MetaClasse[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
@@ -65,54 +91,60 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ------------------------------------------------------
+// ─────────────────────────────────────────────────────────
 // Modelos da Aplicação de Carteira
-// ------------------------------------------------------
+// ─────────────────────────────────────────────────────────
 
 model Ativo {
-  id                String      @id @default(uuid())
-  simbolo           String      @unique
+  id                String       @id @default(uuid())
+  simbolo           String       @unique
   nome              String
-  classe            String      // "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA"
+  classe            TipoClasse
   setor             String?
-  percentualIdeal   Float       @default(0) // Porcentagem ideal manual no ativo (%)
-  precoAtual        Float       @default(0) // Preço atual de mercado (R$)
-  ultimoProvento    Float       @default(0) // Último provento/dividendo pago por cota (R$)
-  taxaRentabilidade Float       @default(100) // Rentabilidade % do CDI (ex: 120 para 120% do CDI)
+  percentualIdeal   Float        @default(0)
+  precoAtual        Float        @default(0)
+  ultimoProvento    Float        @default(0)
+  taxaRentabilidade Float        @default(100)
   transacoes        Transacao[]
   proventos         Provento[]
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  userId            String?     // Vínculo opcional com o usuário dono da carteira
-  user              User?       @relation(fields: [userId], references: [id])
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Transacao {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   ativoId       String
-  ativo         Ativo    @relation(fields: [ativoId], references: [id], onDelete: Cascade)
-  data          DateTime @default(now())
-  tipo          String   // "COMPRA" | "VENDA"
+  ativo         Ativo         @relation(fields: [ativoId], references: [id], onDelete: Cascade)
+  data          DateTime      @default(now())
+  tipo          TipoTransacao
   quantidade    Float
   precoUnitario Float
-  createdAt     DateTime @default(now())
+  createdAt     DateTime      @default(now())
 }
 
 model Provento {
-  id         String   @id @default(uuid())
+  id         String      @id @default(uuid())
   ativoId    String
-  ativo      Ativo    @relation(fields: [ativoId], references: [id], onDelete: Cascade)
-  data       DateTime @default(now())
-  tipo       String   // "DIVIDENDO" | "JCP" | "RENDIMENTO"
-  valorTotal Float    // Valor total em R$ creditado na conta
-  createdAt  DateTime @default(now())
+  ativo      Ativo       @relation(fields: [ativoId], references: [id], onDelete: Cascade)
+  data       DateTime    @default(now())
+  tipo       TipoProvento
+  valorTotal Float
+  createdAt  DateTime    @default(now())
 }
 
+/// Metas de alocação por classe — isoladas por usuário
 model MetaClasse {
-  classe          String   @id // "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA"
+  id              String     @id @default(uuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classe          TipoClasse
   percentualIdeal Float
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([userId, classe]) // Cada usuário tem sua própria meta por classe
 }
 
 model HistoricoPatrimonio {
@@ -122,7 +154,7 @@ model HistoricoPatrimonio {
   totalInvestido  Float
   lucroPrejuizo   Float
   createdAt       DateTime @default(now())
-  
-  userId          String?
-  user            User?    @relation(fields: [userId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

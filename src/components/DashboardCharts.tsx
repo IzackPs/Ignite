@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 "use client";
 
 import React, { useState } from "react";
@@ -141,7 +142,7 @@ export function DashboardCharts({
         setTimeout(() => setSnapshotSuccess(false), 4000);
       }
     } catch (err) {
-      console.error("Erro ao salvar foto mensal:", err);
+      logger.error("Erro ao salvar foto mensal:", err);
     } finally {
       setSavingSnapshot(false);
     }
@@ -157,7 +158,7 @@ export function DashboardCharts({
         onRefresh();
       }
     } catch (err) {
-      console.error("Erro ao excluir histórico:", err);
+      logger.error("Erro ao excluir histórico:", err);
     }
   };
 

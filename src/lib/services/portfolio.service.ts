@@ -1,0 +1,48 @@
+import { prisma } from "@/lib/prisma";
+import { calcularPortfolio, AtivoDTO } from "@/lib/calculator";
+
+/**
+ * Serviço de portfólio — orquestra acesso ao banco + cálculo financeiro.
+ * Centraliza a lógica que antes estava espalhada pelo route handler.
+ */
+export const portfolioService = {
+  /**
+   * Calcula o portfólio completo de um usuário:
+   * - busca ativos com transações
+   * - busca metas customizadas por classe
+   * - calcula indicadores via calculator.ts
+   * - busca histórico patrimonial
+   */
+  async calcularParaUsuario(userId: string) {
+    const [ativos, metasSalvas, historico] = await Promise.all([
+      prisma.ativo.findMany({
+        where: { userId },
+        include: { transacoes: true },
+        orderBy: { simbolo: "asc" },
+      }),
+      prisma.metaClasse.findMany({ where: { userId } }),
+      prisma.historicoPatrimonio.findMany({
+        where: { userId },
+        orderBy: { data: "asc" },
+      }),
+    ]);
+
+    const metasMap: Record<string, number> = {};
+    metasSalvas.forEach((m) => {
+      metasMap[m.classe] = m.percentualIdeal;
+    });
+
+    const ativosDTOS: AtivoDTO[] = ativos.map((a) => ({
+      ...a,
+      classe: a.classe as AtivoDTO["classe"],
+      transacoes: a.transacoes.map((t) => ({
+        ...t,
+        tipo: t.tipo as "COMPRA" | "VENDA",
+      })),
+    }));
+
+    const portfolio = calcularPortfolio(ativosDTOS, metasMap);
+
+    return { ...portfolio, historico };
+  },
+};

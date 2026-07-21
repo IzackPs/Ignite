@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import bcryptjs from "bcryptjs"
 import { z } from "zod"
-import { prisma } from "@/lib/prisma"
+import { userRepository } from "@/lib/repositories/user.repository"
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -28,9 +28,7 @@ export default {
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data
 
-          const user = await prisma.user.findUnique({
-            where: { email }
-          })
+          const user = await userRepository.findByEmail(email)
 
           if (!user?.password) {
             return null

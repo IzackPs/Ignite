@@ -1,12 +1,19 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import Decimal from "decimal.js";
+import { requireAuth } from "@/lib/auth-guard";
+import { proventoSchema } from "@/lib/validations";
 
 type DecimalInstance = InstanceType<typeof Decimal>;
 
 export async function GET() {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
     const proventos = await prisma.provento.findMany({
+      where: { ativo: { userId } },
       include: {
         ativo: {
           select: {
@@ -25,7 +32,13 @@ export async function GET() {
     let totalGeralRecebidoDec = new Decimal(0);
     const agrupamentoMeses: Record<
       string,
-      { total: DecimalInstance; dividendo: DecimalInstance; jcp: DecimalInstance; rendimento: DecimalInstance; dataRef: Date }
+      {
+        total: DecimalInstance;
+        dividendo: DecimalInstance;
+        jcp: DecimalInstance;
+        rendimento: DecimalInstance;
+        dataRef: Date;
+      }
     > = {};
 
     proventos.forEach((p) => {
@@ -58,7 +71,6 @@ export async function GET() {
       }
     });
 
-    // Converter agrupamento mensal para Array ordenado cronologicamente para o Recharts
     const historicoMensal = Object.entries(agrupamentoMeses)
       .map(([key, value]) => {
         const mesAnoFormatado = value.dataRef.toLocaleDateString("pt-BR", {
@@ -88,7 +100,7 @@ export async function GET() {
       proventos,
     });
   } catch (error) {
-    console.error("Erro ao buscar proventos:", error);
+    logger.error("Erro ao buscar proventos:", error);
     return NextResponse.json(
       { error: "Erro interno ao buscar extrato de proventos" },
       { status: 500 }
@@ -97,14 +109,30 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
     const body = await request.json();
-    const { ativoId, data, tipo, valorTotal } = body;
 
-    if (!ativoId || !valorTotal || !tipo) {
+    const parseResult = proventoSchema.safeParse(body);
+    if (!parseResult.success) {
+      const firstError =
+        parseResult.error.issues[0]?.message || "Dados do provento inválidos";
       return NextResponse.json(
-        { error: "Ativo, Tipo e Valor Total são obrigatórios" },
+        { error: firstError, errors: parseResult.error.flatten().fieldErrors },
         { status: 400 }
+      );
+    }
+
+    const { ativoId, data, tipo, valorTotal } = parseResult.data;
+
+    // Verificar que o ativo pertence ao usuário
+    const ativo = await prisma.ativo.findFirst({ where: { id: ativoId, userId } });
+    if (!ativo) {
+      return NextResponse.json(
+        { error: "Ativo não encontrado ou sem permissão." },
+        { status: 404 }
       );
     }
 
@@ -119,7 +147,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(novoProvento, { status: 201 });
   } catch (error) {
-    console.error("Erro ao cadastrar provento:", error);
+    logger.error("Erro ao cadastrar provento:", error);
     return NextResponse.json(
       { error: "Erro ao cadastrar provento" },
       { status: 500 }
@@ -128,24 +156,32 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     if (!id) {
+      return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
+    }
+
+    const provento = await prisma.provento.findFirst({
+      where: { id, ativo: { userId } },
+    });
+    if (!provento) {
       return NextResponse.json(
-        { error: "ID é obrigatório" },
-        { status: 400 }
+        { error: "Provento não encontrado ou sem permissão." },
+        { status: 404 }
       );
     }
 
-    await prisma.provento.delete({
-      where: { id },
-    });
+    await prisma.provento.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Erro ao excluir provento:", error);
+    logger.error("Erro ao excluir provento:", error);
     return NextResponse.json(
       { error: "Erro ao excluir provento" },
       { status: 500 }

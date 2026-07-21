@@ -108,8 +108,8 @@ describe("Motor de Cálculo (calculator.ts)", () => {
       const inicio = new Date();
       inicio.setHours(0,0,0,0);
       
-      // Quarta-feira, 1 de Janeiro de 2025 -> Quarta-feira, 8 de Janeiro de 2025 (5 dias úteis)
-      const transacaoData = new Date("2025-01-01T12:00:00Z");
+      // Quarta-feira, 5 de Março de 2025 -> Quarta-feira, 12 de Março de 2025 (5 dias úteis)
+      const transacaoData = new Date("2025-03-05T12:00:00Z");
       const OriginalDate = global.Date;
       
       // @ts-expect-error mock global date
@@ -118,7 +118,7 @@ describe("Motor de Cálculo (calculator.ts)", () => {
           if (arg) {
             super(arg);
           } else {
-            super("2025-01-08T12:00:00Z");
+            super("2025-03-12T12:00:00Z");
           }
         }
       };

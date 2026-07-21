@@ -1,50 +1,17 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { calcularPortfolio } from "@/lib/calculator";
-
+import { requireAuth } from "@/lib/auth-guard";
+import { portfolioService } from "@/lib/services/portfolio.service";
 
 export async function GET() {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
-    const ativos = await prisma.ativo.findMany({
-      include: {
-        transacoes: true,
-      },
-      orderBy: {
-        simbolo: "asc",
-      },
-    });
-
-    // Buscar metas customizadas salvas
-    const metasSalvas = await prisma.metaClasse.findMany();
-    const metasMap: Record<string, number> = {};
-    metasSalvas.forEach((m) => {
-      metasMap[m.classe] = m.percentualIdeal;
-    });
-
-    const ativosDTOS = ativos.map(a => ({
-      ...a,
-      classe: a.classe as "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA",
-      transacoes: a.transacoes.map(t => ({
-        ...t,
-        tipo: t.tipo as "COMPRA" | "VENDA"
-      }))
-    }));
-
-    const portfolio = calcularPortfolio(ativosDTOS, metasMap);
-
-    // Buscar histórico mensal de patrimônio
-    const historico = await prisma.historicoPatrimonio.findMany({
-      orderBy: {
-        data: "asc",
-      },
-    });
-
-    return NextResponse.json({
-      ...portfolio,
-      historico,
-    });
+    const portfolio = await portfolioService.calcularParaUsuario(userId);
+    return NextResponse.json(portfolio);
   } catch (error) {
-    console.error("Erro ao buscar portfólio:", error);
+    logger.error("Erro ao buscar portfólio:", error);
     return NextResponse.json(
       { error: "Erro interno ao calcular portfólio" },
       { status: 500 }

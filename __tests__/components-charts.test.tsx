@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DashboardCharts } from '../src/components/DashboardCharts';
@@ -89,7 +90,7 @@ describe('DashboardCharts', () => {
   it('salva foto mensal lida com erro', async () => {
     const portfolio = { resumoClasses: [], patrimonioTotal: 10000, totalInvestidoTotal: 8000, lucroPrejuizoTotalR$: 2000 } as any;
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     render(<DashboardCharts portfolio={portfolio} historico={[]} onOpenMetasModal={vi.fn()} onRefresh={vi.fn()} />);
 
@@ -98,15 +99,15 @@ describe('DashboardCharts', () => {
     
     // allow promise to resolve
     await Promise.resolve();
-    expect(consoleSpy).toHaveBeenCalledWith('Erro ao salvar foto mensal:', expect.any(Error));
-    consoleSpy.mockRestore();
+    expect(loggerSpy).toHaveBeenCalledWith('Erro ao salvar foto mensal:', expect.any(Error));
+    loggerSpy.mockRestore();
   });
 
   it('exclui historico lida com erro', async () => {
     const historico = [{ id: '1', data: '2026-07-20', patrimonioTotal: 1000, totalInvestido: 1000, lucroPrejuizo: 0 }] as any;
     global.confirm = vi.fn().mockReturnValue(true);
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     render(<DashboardCharts portfolio={{ resumoClasses: [] } as any} historico={historico} onOpenMetasModal={vi.fn()} onRefresh={vi.fn()} />);
 
@@ -114,7 +115,7 @@ describe('DashboardCharts', () => {
     fireEvent.click(deleteBtn);
     
     await Promise.resolve();
-    expect(consoleSpy).toHaveBeenCalledWith('Erro ao excluir histórico:', expect.any(Error));
-    consoleSpy.mockRestore();
+    expect(loggerSpy).toHaveBeenCalledWith('Erro ao excluir histórico:', expect.any(Error));
+    loggerSpy.mockRestore();
   });
 });

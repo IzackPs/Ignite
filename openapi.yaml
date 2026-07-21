@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Ignite Finanças API
+  description: API interna para o sistema de gestão inteligente de carteira e asset allocation do Ignite Finanças.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Servidor Local / Produção (Relativo)
+
+paths:
+  /portfolio:
+    get:
+      summary: Retorna o portfólio completo do usuário autenticado.
+      description: Calcula a posição de cada ativo baseada nas transações, lucro/prejuízo, balanceamento ideal e histórico de cotações recentes.
+      responses:
+        '200':
+          description: Portfólio calculado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  patrimonioTotal:
+                    type: number
+                  totalInvestidoTotal:
+                    type: number
+                  lucroPrejuizoTotalR$:
+                    type: number
+                  lucroPrejuizoTotalPercentual:
+                    type: number
+                  rendaMensalTotalEstimada:
+                    type: number
+                  ativos:
+                    type: array
+                    items:
+                      type: object
+                  resumoClasses:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: Não autorizado (sessão ausente ou inválida).
+        '500':
+          description: Erro interno no cálculo do portfólio.
+
+  /cotacoes:
+    post:
+      summary: Atualiza as cotações de mercado para os ativos do portfólio.
+      description: Possui Rate Limit de 30 segundos por usuário para evitar abusos. Busca os preços mais recentes das APIs Brapi ou Yahoo Finance (via Fallback).
+      responses:
+        '200':
+          description: Cotações atualizadas com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  updatedCount:
+                    type: number
+        '429':
+          description: Too Many Requests (Rate limit atingido).
+        '500':
+          description: Erro ao buscar cotações em provedores externos.
+
+  /ativos:
+    post:
+      summary: Cadastra ou atualiza as propriedades estruturais de um ativo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [simbolo, nome, classe]
+              properties:
+                id:
+                  type: string
+                  description: Se providenciado, edita o ativo existente.
+                simbolo:
+                  type: string
+                nome:
+                  type: string
+                classe:
+                  type: string
+                  enum: [ACOES, FIIS, ETFS, RENDA_FIXA]
+                percentualIdeal:
+                  type: number
+                precoAtual:
+                  type: number
+                ultimoProvento:
+                  type: number
+      responses:
+        '200':
+          description: Ativo atualizado com sucesso.
+        '201':
+          description: Novo ativo cadastrado.
+        '400':
+          description: Erros de validação (Zod).
+    delete:
+      summary: Remove um ativo e todas as suas transações/proventos em cascata.
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+          description: ID do ativo.
+      responses:
+        '200':
+          description: Ativo excluído com sucesso.
+
+  /historico:
+    post:
+      summary: Salva uma "fotografia" do patrimônio atual (Snapshots Mensais).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patrimonioTotal, totalInvestido, lucroPrejuizo]
+              properties:
+                patrimonioTotal:
+                  type: number
+                totalInvestido:
+                  type: number
+                lucroPrejuizo:
+                  type: number
+                lucroPrejuizoPercentual:
+                  type: number
+      responses:
+        '201':
+          description: Snapshot gravado.
+    delete:
+      summary: Remove um snapshot do histórico.
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Excluído com sucesso.
+
+  /metas-classes:
+    post:
+      summary: Atualiza os percentuais ideais (metas) por classe de ativos para o usuário.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metas:
+                  type: object
+                  additionalProperties:
+                    type: number
+                  description: Dicionário contendo a Classe como chave e a Meta (%) como valor.
+      responses:
+        '200':
+          description: Metas atualizadas (upsert).
+
+  /proventos:
+    get:
+      summary: Lista todos os proventos cadastrados, com agrupamento mensal.
+      responses:
+        '200':
+          description: Extrato de proventos.
+    post:
+      summary: Cadastra um novo recebimento de provento.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ativoId, tipo, valorTotal]
+              properties:
+                ativoId:
+                  type: string
+                tipo:
+                  type: string
+                  enum: [DIVIDENDO, JCP, RENDIMENTO]
+                valorTotal:
+                  type: number
+                data:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Provento registrado.
+    delete:
+      summary: Remove um provento.
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Provento removido.
+
+  /transacoes:
+    post:
+      summary: Registra uma operação de compra ou venda (Transação).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ativoId, tipo, quantidade, precoUnitario, data]
+              properties:
+                ativoId:
+                  type: string
+                tipo:
+                  type: string
+                  enum: [COMPRA, VENDA]
+                quantidade:
+                  type: number
+                precoUnitario:
+                  type: number
+                data:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Transação registrada.
+    delete:
+      summary: Remove uma transação (desfaz operação).
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Transação removida com sucesso.

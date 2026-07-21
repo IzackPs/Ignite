@@ -1,115 +1,59 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-guard";
+import { cotacaoService } from "@/lib/services/cotacao.service";
 
-async function fetchBrapiPrices(tickersString: string, pricesMap: Record<string, number>) {
-  try {
-    const brapiUrl = `https://brapi.dev/api/quote/${tickersString}?token=`;
-    const res = await fetch(brapiUrl, {
-      headers: { "User-Agent": "AntigravityPortfolio/1.0" },
-      next: { revalidate: 0 },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.results && Array.isArray(data.results)) {
-        data.results.forEach((item: any) => {
-          if (item.symbol && item.regularMarketPrice !== undefined) {
-            pricesMap[item.symbol.toUpperCase()] = Number(item.regularMarketPrice);
-          }
-        });
-      }
-    }
-  } catch (e) {
-    console.warn("Brapi API indisponível, tentando Yahoo Finance fallback...", e);
-  }
-}
-
-async function fetchYahooPrices(missingTickers: string[], pricesMap: Record<string, number>) {
-  try {
-    const yahooTickers = missingTickers.map((t) => `${t}.SA`).join(",");
-    const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${yahooTickers}`;
-    const resYahoo = await fetch(yahooUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      next: { revalidate: 0 },
-    });
-
-    if (resYahoo.ok) {
-      const dataYahoo = await resYahoo.json();
-      const quotes = dataYahoo?.quoteResponse?.result || [];
-      quotes.forEach((q: any) => {
-        const cleanSymbol = q.symbol.replace(".SA", "").toUpperCase();
-        if (q.regularMarketPrice !== undefined) {
-          pricesMap[cleanSymbol] = Number(q.regularMarketPrice);
-        }
-      });
-    }
-  } catch (err) {
-    console.warn("Erro no fallback do Yahoo Finance:", err);
-  }
-}
+// Rate limiting simples: armazena o timestamp da última chamada por userId em memória.
+// Em produção com múltiplas instâncias, substituir por Redis ou DB.
+const lastCallMap = new Map<string, number>();
+const COOLDOWN_MS = 30_000; // 30 segundos de cooldown server-side
 
 export async function POST() {
-  try {
-    // Buscar ativos das classes ACOES, FIIS e ETFS
-    const ativosMercado = await prisma.ativo.findMany({
-      where: {
-        classe: {
-          in: ["ACOES", "FIIS", "ETFS"],
-        },
-      },
-    });
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
 
-    if (ativosMercado.length === 0) {
+  // Rate limiting server-side por userId
+  const agora = Date.now();
+  const ultimaChamada = lastCallMap.get(userId) ?? 0;
+  const tempoRestante = Math.ceil((COOLDOWN_MS - (agora - ultimaChamada)) / 1000);
+
+  if (agora - ultimaChamada < COOLDOWN_MS) {
+    return NextResponse.json(
+      {
+        success: false,
+        cached: true,
+        message: `Aguarde ${tempoRestante}s antes de atualizar novamente.`,
+        cooldownRemainingSeconds: tempoRestante,
+      },
+      { status: 429 }
+    );
+  }
+
+  lastCallMap.set(userId, agora);
+
+  try {
+    const result = await cotacaoService.atualizarCotacoesParaUsuario(userId);
+
+    if (result.nothingToUpdate) {
       return NextResponse.json({
         message: "Nenhum ativo de renda variável para atualizar.",
         updatedCount: 0,
       });
     }
 
-    const tickers = ativosMercado.map((a) => a.simbolo.trim().toUpperCase());
-    const tickersString = tickers.join(",");
-
-    const pricesMap: Record<string, number> = {};
-
-    // 1. Tentar buscar cotações da API Brapi.dev
-    await fetchBrapiPrices(tickersString, pricesMap);
-
-    // 2. Fallback: Se algum ticker não foi atualizado pela Brapi, tenta Yahoo Finance (.SA)
-    const missingTickers = tickers.filter((t) => !pricesMap[t]);
-    if (missingTickers.length > 0) {
-      await fetchYahooPrices(missingTickers, pricesMap);
-    }
-
-    // 3. Atualizar no banco de dados SQLite
-    const updatedAtivos: { simbolo: string; precoAntigo: number; precoNovo: number }[] = [];
-
-    for (const ativo of ativosMercado) {
-      const novoPreco = pricesMap[ativo.simbolo.toUpperCase()];
-      if (novoPreco !== undefined && novoPreco > 0) {
-        await prisma.ativo.update({
-          where: { id: ativo.id },
-          data: { precoAtual: novoPreco },
-        });
-        updatedAtivos.push({
-          simbolo: ativo.simbolo,
-          precoAntigo: ativo.precoAtual,
-          precoNovo: novoPreco,
-        });
-      }
-    }
-
     return NextResponse.json({
-      success: updatedAtivos.length > 0,
-      cached: updatedAtivos.length === 0,
-      message: updatedAtivos.length > 0
-        ? "Cotações atualizadas com sucesso."
-        : "Não foi possível atualizar as cotações. Exibindo dados em cache.",
-      updatedCount: updatedAtivos.length,
-      updatedAtivos,
+      success: result.updatedCount > 0,
+      cached: result.updatedCount === 0,
+      message:
+        result.updatedCount > 0
+          ? "Cotações atualizadas com sucesso."
+          : "Não foi possível atualizar as cotações. Exibindo dados em cache.",
+      updatedCount: result.updatedCount,
+      updatedAtivos: result.updatedAtivos,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Erro ao atualizar cotações de mercado:", error);
+    logger.error("Erro ao atualizar cotações de mercado:", error);
     return NextResponse.json({
       success: false,
       cached: true,

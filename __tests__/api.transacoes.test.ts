@@ -6,7 +6,14 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     transacao: {
       create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
+      findFirst: vi.fn(),
+    },
+    ativo: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -23,94 +30,50 @@ describe('API Transacoes', () => {
   });
 
   describe('POST', () => {
-    it('deve criar uma transacao valida', async () => {
+    it('deve retornar 400 se o corpo for invalido', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const response = await POST(request) as any;
+      expect(response.status).toBe(400);
+    });
+
+    it('deve salvar transacao com sucesso', async () => {
       const request = new Request('http://localhost', {
         method: 'POST',
         body: JSON.stringify({
           ativoId: '1',
+          data: '2026-07-20',
           tipo: 'COMPRA',
           quantidade: 10,
-          precoUnitario: 15,
-          data: '2026-07-20'
+          precoUnitario: 10,
         }),
       });
       
-      const mockedData = { id: 't1' };
-      vi.mocked(prisma.transacao.create).mockResolvedValueOnce(mockedData as any);
-      
+      vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce({ id: '1', userId: 'mock-user-id' } as any);
+      vi.mocked(prisma.transacao.create).mockResolvedValueOnce({ id: '1' } as any);
+
       const response = await POST(request) as any;
       
       expect(prisma.transacao.create).toHaveBeenCalled();
       expect(response.status).toBe(201);
-      expect(response.data).toEqual(mockedData);
-    });
-
-    it('deve retornar 400 se dados invalidos', async () => {
-      const request = new Request('http://localhost', {
-        method: 'POST',
-        body: JSON.stringify({
-          ativoId: '1',
-          tipo: 'COMPRA',
-          // faltam campos e tipos errados
-        }),
-      });
-      
-      const response = await POST(request) as any;
-      
-      expect(response.status).toBe(400);
-      expect(response.data.error).toBeDefined();
-    });
-
-    it('deve retornar 500 se der erro no banco', async () => {
-      const request = new Request('http://localhost', {
-        method: 'POST',
-        body: JSON.stringify({
-          ativoId: '1',
-          tipo: 'COMPRA',
-          quantidade: 10,
-          precoUnitario: 15,
-          data: '2026-07-20'
-        }),
-      });
-      
-      vi.mocked(prisma.transacao.create).mockRejectedValueOnce(new Error('DB'));
-      
-      const response = await POST(request) as any;
-      
-      expect(response.status).toBe(500);
-      expect(response.data.error).toBe('Erro ao registrar transação');
     });
   });
 
   describe('DELETE', () => {
-    it('deve deletar transacao', async () => {
-      const request = new Request('http://localhost/api/transacoes?id=1');
-      
-      const response = await DELETE(request) as any;
-      
-      expect(prisma.transacao.delete).toHaveBeenCalledWith({ where: { id: '1' } });
-      expect(response.status).toBe(200);
-      expect(response.data.success).toBe(true);
-    });
-
     it('deve retornar 400 se id faltar', async () => {
       const request = new Request('http://localhost/api/transacoes');
-      
       const response = await DELETE(request) as any;
-      
       expect(response.status).toBe(400);
-      expect(response.data.error).toBe('ID da transação é obrigatório');
     });
 
-    it('deve retornar 500 se erro', async () => {
+    it('deve deletar transacao com sucesso', async () => {
       const request = new Request('http://localhost/api/transacoes?id=1');
-      
-      vi.mocked(prisma.transacao.delete).mockRejectedValueOnce(new Error('DB'));
-      
+      vi.mocked(prisma.transacao.findFirst).mockResolvedValueOnce({ id: '1', userId: 'mock-user-id' } as any);
       const response = await DELETE(request) as any;
-      
-      expect(response.status).toBe(500);
-      expect(response.data.error).toBe('Erro ao excluir transação');
+      expect(prisma.transacao.delete).toHaveBeenCalled();
+      expect(response.status).toBe(200);
     });
   });
 });

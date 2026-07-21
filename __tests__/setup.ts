@@ -19,6 +19,11 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+// Mock do Auth Guard para todos os testes de API não baterem no NextAuth
+vi.mock('@/lib/auth-guard', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ userId: 'mock-user-id', errorResponse: null }),
+}));
+
 // Mock ResizeObserver for Recharts
 class ResizeObserver {
   observe() {}

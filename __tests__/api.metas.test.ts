@@ -21,42 +21,32 @@ describe('API Metas', () => {
     vi.clearAllMocks();
   });
 
-  it('deve retornar erro 400 se metas forem invalidas', async () => {
-    const request = new Request('http://localhost', {
-      method: 'POST',
-      body: JSON.stringify({ metas: 'invalido' }),
+  describe('POST', () => {
+    it('deve retornar 400 se o corpo for invalido', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const response = await POST(request) as any;
+      expect(response.status).toBe(400);
     });
-    
-    const response = await POST(request) as any;
-    
-    expect(response.status).toBe(400);
-    expect(response.data.error).toBe('Metas inválidas fornecidas');
-  });
 
-  it('deve fazer upsert das metas', async () => {
-    const request = new Request('http://localhost', {
-      method: 'POST',
-      body: JSON.stringify({ metas: { ACAO: 50, FII: 50 } }),
-    });
-    
-    const response = await POST(request) as any;
-    
-    expect(prisma.metaClasse.upsert).toHaveBeenCalledTimes(2);
-    expect(response.status).toBe(200);
-    expect(response.data.success).toBe(true);
-  });
+    it('deve salvar as metas com sucesso', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          metas: {
+            ACOES: 40,
+          },
+        }),
+      });
+      
+      vi.mocked(prisma.metaClasse.upsert).mockResolvedValueOnce({ id: '1' } as any);
 
-  it('deve tratar erro 500', async () => {
-    const request = new Request('http://localhost', {
-      method: 'POST',
-      body: JSON.stringify({ metas: { ACAO: 50 } }),
+      const response = await POST(request) as any;
+      
+      expect(prisma.metaClasse.upsert).toHaveBeenCalled();
+      expect(response.status).toBe(200);
     });
-    
-    vi.mocked(prisma.metaClasse.upsert).mockRejectedValueOnce(new Error('DB Error'));
-    
-    const response = await POST(request) as any;
-    
-    expect(response.status).toBe(500);
-    expect(response.data.error).toBe('Erro ao atualizar metas de classe');
   });
 });

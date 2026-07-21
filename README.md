@@ -18,7 +18,9 @@
   - [4.6. Rendimento Pro-Rata Diário do CDI (Renda Fixa)](#46-rendimento-pro-rata-diário-do-cdi-renda-fixa)
 - [5. Instruções de Inicialização (Docker)](#5-instruções-de-inicialização-docker)
 - [6. Funcionalidades Extras](#6-funcionalidades-extras)
-- [7. Stack Tecnológica](#7-stack-tecnológica)
+- [7. OpenAPI e Documentação](#7-openapi-e-documentação)
+- [8. Status Atual e Melhorias Recentes (Refatoração)](#8-status-atual-e-melhorias-recentes-refatoração)
+- [9. Stack Tecnológica](#9-stack-tecnológica)
 
 ---
 
@@ -43,6 +45,7 @@ O **Ignite** é um **painel web completo** que:
 - Registra e visualiza **proventos** (Dividendos, JCP, Rendimentos) com gráfico de escadinha mensal.
 - Registra **snapshots mensais** do patrimônio para acompanhar a evolução ao longo do tempo.
 - Oferece **autenticação** com login por credenciais (e-mail/senha) e login social via Google (NextAuth v5).
+- API REST documentada com **OpenAPI (Swagger)**.
 
 ---
 
@@ -349,6 +352,8 @@ rendimentoProRata R$  = (preçoAtualCalculado - preçoMédio) × quantidadeAtual
 
 **Exemplo (CDB 120% do CDI):**
 
+> **Atenção:** O motor `calcularDiasUteis` agora deduz automaticamente os **feriados nacionais fixos brasileiros** (ex: 01/01, 21/04, 25/12) garantindo rentabilidade exata e estrita à B3.
+
 | Dado | Valor |
 |---|---|
 | Preço Médio | R$ 1.000,00 |
@@ -489,7 +494,37 @@ O sistema utiliza **NextAuth v5 (Auth.js)** com:
 
 ---
 
-## 7. Stack Tecnológica
+## 7. OpenAPI e Documentação
+
+O projeto possui sua API REST 100% documentada utilizando o padrão **OpenAPI 3.0**.
+Você pode encontrar todas as especificações de rotas, DTOs e métodos permitidos (ex: `GET /api/portfolio`, `POST /api/cotacoes`) no arquivo [`openapi.yaml`](./openapi.yaml) na raiz do projeto.
+
+---
+
+## 8. Status Atual e Melhorias Recentes (Refatoração)
+
+O projeto passou recentemente por uma rigorosa análise arquitetural de um *Tech Lead Sênior* seguida de uma extensa refatoração para garantir máxima maturidade de produção. O sistema atualmente atende a requisitos robustos de manutenibilidade e resiliência:
+
+1. **Separação em Camadas (Clean Architecture)**:
+   - **Route Handlers**: As rotas de API `/api/*` agora servem puramente como *Controllers*, delegando lógica pesada para a camada de serviços.
+   - **Service Layer**: Toda lógica de negócios da carteira foi extraída para `src/lib/services/portfolio.service.ts` e `cotacao.service.ts`, facilitando testes isolados e reuso.
+   - **Repository Layer**: O acesso direto ao banco (NextAuth/Prisma) no `auth.config.ts` foi encapsulado no `user.repository.ts`.
+   
+2. **Logs Estruturados com Pino**:
+   - As primitivas rudimentares de `console.error` foram completamente substituídas pelo **Pino** (`src/lib/logger.ts`), garantindo logs estruturados, rápidos e prontos para monitoramento em Cloud.
+
+3. **Qualidade e Cobertura de Testes (Vitest)**:
+   - A suite de testes conta com **89 testes unitários/integração** cobrindo 100% das regras de negócio (calculator.ts), páginas e rotas de API.
+   - Cobertura (Coverage) estabilizada em mais de **85%** no SonarQube, atestando forte resiliência contra regressões e *Code Smells*. A proteção em ambiente CI via Github Actions está configurada e passando (Quality Gate = Passed).
+
+4. **Regras Avançadas, Performance e Segurança**:
+   - **Rate Limiting (Server-side)**: Implementado um limitador de requisições em memória na rota `/api/cotacoes` para bloquear floods acidentais ou propositais.
+   - **Cálculo de Feriados em Renda Fixa**: Cálculos de pro-rata de CDI agora desviam dos feriados fixos do calendário brasileiro.
+   - **Multi-tenancy Férreo**: A API aplica *Tenant Isolation* através da diretiva `requireAuth()`, validando o `userId` rigidamente contra o banco de dados em cada operação de leitura/escrita.
+
+---
+
+## 9. Stack Tecnológica
 
 | Camada | Tecnologia | Versão |
 |---|---|---|

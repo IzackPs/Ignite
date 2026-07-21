@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 "use client";
 
 import React, { useState } from "react";
@@ -66,7 +67,7 @@ export function SimuladorAporteBar({
       onRefresh();
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err) {
-      console.error("Erro ao executar ordens de aporte:", err);
+      logger.error("Erro ao executar ordens de aporte:", err);
     } finally {
       setExecutingOrders(false);
     }

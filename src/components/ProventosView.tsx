@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -109,7 +110,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
         setProventosData(data);
       }
     } catch (err) {
-      console.error("Erro ao carregar proventos:", err);
+      logger.error("Erro ao carregar proventos:", err);
     }
   }, []);
 
@@ -127,7 +128,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
         fetchProventos();
       }
     } catch (err) {
-      console.error("Erro ao excluir provento:", err);
+      logger.error("Erro ao excluir provento:", err);
     }
   };
 

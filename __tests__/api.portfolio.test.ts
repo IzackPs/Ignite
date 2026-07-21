@@ -1,24 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from '../src/app/api/portfolio/route';
-import { prisma } from '@/lib/prisma';
-import { calcularPortfolio } from '@/lib/calculator';
+import { portfolioService } from '@/lib/services/portfolio.service';
 
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    ativo: {
-      findMany: vi.fn(),
-    },
-    metaClasse: {
-      findMany: vi.fn(),
-    },
-    historicoPatrimonio: {
-      findMany: vi.fn(),
-    },
+vi.mock('@/lib/services/portfolio.service', () => ({
+  portfolioService: {
+    calcularParaUsuario: vi.fn(),
   },
-}));
-
-vi.mock('@/lib/calculator', () => ({
-  calcularPortfolio: vi.fn(),
 }));
 
 vi.mock('next/server', () => ({
@@ -33,28 +20,18 @@ describe('API Portfolio', () => {
   });
 
   it('deve retornar o portfolio e historico com sucesso', async () => {
-    const mockAtivos = [{ id: '1', simbolo: 'ITUB4', transacoes: [] }];
-    const mockMetas = [{ classe: 'ACAO', percentualIdeal: 50 }];
-    const mockHistorico = [{ id: '1', data: new Date() }];
-    const mockPortfolio = { resumoClasses: [], patrimonioTotal: 1000 };
-
-    vi.mocked(prisma.ativo.findMany).mockResolvedValueOnce(mockAtivos as any);
-    vi.mocked(prisma.metaClasse.findMany).mockResolvedValueOnce(mockMetas as any);
-    vi.mocked(calcularPortfolio).mockReturnValueOnce(mockPortfolio as any);
-    vi.mocked(prisma.historicoPatrimonio.findMany).mockResolvedValueOnce(mockHistorico as any);
+    const mockPortfolio = { resumoClasses: [], patrimonioTotal: 1000, historico: [] };
+    vi.mocked(portfolioService.calcularParaUsuario).mockResolvedValueOnce(mockPortfolio as any);
 
     const response = await GET() as any;
 
-    expect(prisma.ativo.findMany).toHaveBeenCalled();
-    expect(prisma.metaClasse.findMany).toHaveBeenCalled();
-    expect(calcularPortfolio).toHaveBeenCalledWith(mockAtivos, { ACAO: 50 });
-    expect(prisma.historicoPatrimonio.findMany).toHaveBeenCalled();
+    expect(portfolioService.calcularParaUsuario).toHaveBeenCalledWith('mock-user-id');
     expect(response.status).toBe(200);
-    expect(response.data).toEqual({ ...mockPortfolio, historico: mockHistorico });
+    expect(response.data).toEqual(mockPortfolio);
   });
 
   it('deve tratar erro 500 no cálculo do portfólio', async () => {
-    vi.mocked(prisma.ativo.findMany).mockRejectedValueOnce(new Error('DB Error'));
+    vi.mocked(portfolioService.calcularParaUsuario).mockRejectedValueOnce(new Error('Service Error'));
 
     const response = await GET() as any;
 

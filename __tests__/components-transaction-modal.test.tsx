@@ -89,6 +89,9 @@ describe('TransactionModal', () => {
     const sellTab = screen.getByText(/Venda/i);
     fireEvent.click(sellTab);
 
+    const dataInput = screen.getByLabelText(/Data da Operação/i);
+    fireEvent.change(dataInput, { target: { value: '2026-07-20' } });
+
     const qtdInput = screen.getByLabelText(/Quantidade/i);
     fireEvent.change(qtdInput, { target: { value: '50' } });
 

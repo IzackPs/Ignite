@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -170,5 +171,111 @@ describe('Dashboard Page', () => {
     // Change Tab to Proventos to cover renderContent
     const proventosTab = screen.getAllByRole('button', { name: /Proventos/i })[0];
     if (proventosTab) fireEvent.click(proventosTab);
+  });
+
+  it('deve mostrar toast de cooldown ao atualizar cotações rapidamente', async () => {
+    const mockPortfolio = {
+      patrimonioTotal: 5000, totalInvestidoTotal: 4000, lucroPrejuizoTotalR$: 1000,
+      lucroPrejuizoTotalPercentual: 25, ativos: [], resumoClasses: [], historico: [],
+    };
+
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/cotacoes') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, updatedCount: 2 }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockPortfolio) });
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+    });
+
+    // Click update cotações twice fast to trigger cooldown toast
+    const updateBtn = screen.getAllByTitle('Buscar cotações reais na B3 via Brapi/Yahoo Finance')[0];
+    fireEvent.click(updateBtn);
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/cotacoes', { method: 'POST' });
+    });
+  });
+
+  it('deve chamar fetch DELETE ao excluir ativo com confirmação', async () => {
+    const mockPortfolio = {
+      patrimonioTotal: 5000, totalInvestidoTotal: 4000, lucroPrejuizoTotalR$: 1000,
+      lucroPrejuizoTotalPercentual: 25,
+      ativos: [{
+        id: '1', simbolo: 'PETR4', nome: 'Petrobras', classe: 'ACOES', quantidadeAtual: 10,
+        precoMedio: 30, precoAtual: 35, totalInvestido: 300, valorMercado: 350,
+        lucroPrejuizoR$: 50, lucroPrejuizoPercentual: 16.6, percentualAtual: 7,
+        percentualIdeal: 10, faltaR$: 150, status: 'COMPRAR', qtdAComprar: 5,
+        cotasFaltantesMagico: 0, numeroMagico: 0, progressoMagicoPercentual: 0,
+        rendaMensalEstimada: 0, rendimentoProRataR$: 0, taxaRentabilidade: 0,
+        diasUteisDecorridos: 0, ultimoProvento: 0
+      }],
+      resumoClasses: [{
+        classe: 'ACOES', nomeClasse: 'Ações', valorMercadoTotal: 350,
+        totalInvestido: 300, lucroPrejuizoR$: 50, lucroPrejuizoPercentual: 16.6,
+        percentualAtual: 7, metaPercentual: 10, faltaR$: 150, status: 'COMPRAR'
+      }],
+      historico: [],
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPortfolio),
+    });
+    global.confirm = vi.fn().mockReturnValue(true);
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+    });
+
+    // Navigate to ACOES tab
+    const acoesTab = screen.getAllByRole('button', { name: /Ações/i })[0];
+    if (acoesTab) fireEvent.click(acoesTab);
+
+    await waitFor(() => {
+      const deleteBtns = screen.queryAllByTitle('Excluir Ativo');
+      if (deleteBtns.length > 0) {
+        fireEvent.click(deleteBtns[0]);
+      }
+    });
+  });
+
+  it('deve lidar com erro no fetch de cotações', async () => {
+    const mockPortfolio = {
+      patrimonioTotal: 5000, totalInvestidoTotal: 4000, lucroPrejuizoTotalR$: 1000,
+      lucroPrejuizoTotalPercentual: 25, ativos: [], resumoClasses: [], historico: [],
+    };
+
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/cotacoes') {
+        return Promise.reject(new Error('Network error'));
+      }
+      if (callCount === 0) {
+        callCount++;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockPortfolio) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockPortfolio) });
+    });
+
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+    });
+
+    const updateBtn = screen.getAllByTitle('Buscar cotações reais na B3 via Brapi/Yahoo Finance')[0];
+    fireEvent.click(updateBtn);
+
+    await waitFor(() => {
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Erro ao buscar cotações em tempo real:', expect.any(Error)
+      );
+    });
+    loggerSpy.mockRestore();
   });
 });

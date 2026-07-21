@@ -1,12 +1,35 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-guard";
+import { ativoSchema } from "@/lib/validations";
 
 // POST: Criar ou Atualizar Ativo
 export async function POST(request: Request) {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
     const body = await request.json();
+
+    const parseResult = ativoSchema.safeParse({
+      ...body,
+      percentualIdeal: Number(body.percentualIdeal ?? 0),
+      precoAtual: Number(body.precoAtual ?? 0),
+      ultimoProvento: Number(body.ultimoProvento ?? 0),
+      taxaRentabilidade: Number(body.taxaRentabilidade ?? 100),
+    });
+
+    if (!parseResult.success) {
+      const firstError =
+        parseResult.error.issues[0]?.message || "Dados do ativo inválidos";
+      return NextResponse.json(
+        { error: firstError, errors: parseResult.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
     const {
-      id,
       simbolo,
       nome,
       classe,
@@ -15,51 +38,54 @@ export async function POST(request: Request) {
       precoAtual,
       ultimoProvento,
       taxaRentabilidade,
-    } = body;
+    } = parseResult.data;
 
-    if (!simbolo || !nome || !classe) {
-      return NextResponse.json(
-        { error: "Símbolo, Nome e Classe são obrigatórios" },
-        { status: 400 }
-      );
-    }
-
-    const simboloUpper = simbolo.trim().toUpperCase();
+    const { id } = body;
 
     if (id) {
-      // Atualizar ativo existente
+      // Verificar que o ativo pertence ao usuário antes de atualizar
+      const ativoExistente = await prisma.ativo.findFirst({
+        where: { id, userId },
+      });
+      if (!ativoExistente) {
+        return NextResponse.json(
+          { error: "Ativo não encontrado ou sem permissão." },
+          { status: 404 }
+        );
+      }
+
       const ativoAtualizado = await prisma.ativo.update({
         where: { id },
         data: {
-          simbolo: simboloUpper,
+          simbolo: simbolo.trim().toUpperCase(),
           nome,
-          classe: classe.toUpperCase(),
-          setor: setor || null,
-          percentualIdeal: Number(percentualIdeal || 0),
-          precoAtual: Number(precoAtual || 0),
-          ultimoProvento: Number(ultimoProvento || 0),
-          taxaRentabilidade: Number(taxaRentabilidade || 100),
+          classe,
+          setor: setor ?? null,
+          percentualIdeal,
+          precoAtual,
+          ultimoProvento,
+          taxaRentabilidade,
         },
       });
       return NextResponse.json(ativoAtualizado);
     } else {
-      // Criar novo ativo
       const novoAtivo = await prisma.ativo.create({
         data: {
-          simbolo: simboloUpper,
+          simbolo: simbolo.trim().toUpperCase(),
           nome,
-          classe: classe.toUpperCase(),
-          setor: setor || null,
-          percentualIdeal: Number(percentualIdeal || 0),
-          precoAtual: Number(precoAtual || 0),
-          ultimoProvento: Number(ultimoProvento || 0),
-          taxaRentabilidade: Number(taxaRentabilidade || 100),
+          classe,
+          setor: setor ?? null,
+          percentualIdeal,
+          precoAtual,
+          ultimoProvento,
+          taxaRentabilidade,
+          userId,
         },
       });
       return NextResponse.json(novoAtivo, { status: 201 });
     }
   } catch (error: any) {
-    console.error("Erro ao salvar ativo:", error);
+    logger.error("Erro ao salvar ativo:", error);
     if (error?.code === "P2002") {
       return NextResponse.json(
         { error: "Já existe um ativo cadastrado com este símbolo." },
@@ -73,8 +99,11 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE: Deletar Ativo
+// DELETE: Deletar Ativo (somente o dono pode excluir)
 export async function DELETE(request: Request) {
+  const { userId, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -86,13 +115,19 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.ativo.delete({
-      where: { id },
-    });
+    const ativo = await prisma.ativo.findFirst({ where: { id, userId } });
+    if (!ativo) {
+      return NextResponse.json(
+        { error: "Ativo não encontrado ou sem permissão." },
+        { status: 404 }
+      );
+    }
+
+    await prisma.ativo.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Erro ao excluir ativo:", error);
+    logger.error("Erro ao excluir ativo:", error);
     return NextResponse.json(
       { error: "Erro ao excluir ativo" },
       { status: 500 }

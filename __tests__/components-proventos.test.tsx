@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ProventosView } from '../src/components/ProventosView';
@@ -123,7 +124,7 @@ describe('ProventosView', () => {
     });
 
     global.confirm = vi.fn().mockReturnValue(true);
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     render(<ProventosView ativos={[]} />);
 
@@ -135,8 +136,8 @@ describe('ProventosView', () => {
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Erro ao excluir provento:', expect.any(Error));
+      expect(loggerSpy).toHaveBeenCalledWith('Erro ao excluir provento:', expect.any(Error));
     });
-    consoleSpy.mockRestore();
+    loggerSpy.mockRestore();
   });
 });

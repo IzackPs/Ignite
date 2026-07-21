@@ -143,4 +143,84 @@ describe('Modals and Forms Coverage', () => {
     const execBtn = screen.getByRole('button', { name: /Executar/i });
     fireEvent.click(execBtn);
   });
+
+  it('AssetModal - Exibe erro de API', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ error: 'Ticker já existe' })
+    });
+    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={vi.fn()} initialClasse="ACOES" />);
+    
+    fireEvent.change(screen.getByLabelText(/Ticker/i), { target: { value: 'PETR4' } });
+    fireEvent.change(screen.getByLabelText(/Nome do Ativo/i), { target: { value: 'Petrobras' } });
+    
+    const saveBtn = screen.getByRole('button', { name: /Salvar Ativo/i });
+    fireEvent.click(saveBtn);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Ticker já existe')).toBeInTheDocument();
+    });
+  });
+
+  it('AssetModal - troca classe para RENDA_FIXA via select', async () => {
+    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={vi.fn()} initialClasse="ACOES" />);
+    
+    const classeSelect = screen.getByLabelText(/Classe \*/i);
+    fireEvent.change(classeSelect, { target: { value: 'RENDA_FIXA' } });
+    
+    expect(screen.getByLabelText(/% do CDI/i)).toBeInTheDocument();
+  });
+
+  it('AssetModal - fecha ao clicar cancelar', () => {
+    const onClose = vi.fn();
+    render(<AssetModal isOpen={true} onClose={onClose} onSave={vi.fn()} />);
+    
+    const cancelBtn = screen.getByRole('button', { name: /Cancelar/i });
+    fireEvent.click(cancelBtn);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('SimuladorAporteBar - Executar com confirmação', async () => {
+    global.confirm = vi.fn().mockReturnValue(true);
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ success: true }) });
+
+    const portfolio = {
+      patrimonioTotal: 10000,
+      ativos: [
+        { id: '1', simbolo: 'ITUB4', classe: 'ACOES', status: 'COMPRAR', qtdAComprar: 100, precoAtual: 35, faltaR$: 3500, percentualAtual: 0, percentualIdeal: 100, valorMercado: 0 }
+      ],
+      resumoClasses: []
+    } as any;
+    
+    const onRefresh = vi.fn();
+    render(<SimuladorAporteBar portfolio={portfolio} onRefresh={onRefresh} />);
+    
+    const execBtn = screen.getByRole('button', { name: /Executar/i });
+    fireEvent.click(execBtn);
+    
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/transacoes', expect.any(Object));
+      expect(onRefresh).toHaveBeenCalled();
+    });
+  });
+
+  it('SimuladorAporteBar - Cancelar confirmação', async () => {
+    global.confirm = vi.fn().mockReturnValue(false);
+
+    const portfolio = {
+      patrimonioTotal: 10000,
+      ativos: [
+        { id: '1', simbolo: 'ITUB4', classe: 'ACOES', status: 'COMPRAR', qtdAComprar: 100, precoAtual: 35, faltaR$: 3500, percentualAtual: 0, percentualIdeal: 100, valorMercado: 0 }
+      ],
+      resumoClasses: []
+    } as any;
+    
+    global.fetch = vi.fn();
+    render(<SimuladorAporteBar portfolio={portfolio} onRefresh={vi.fn()} />);
+    
+    const execBtn = screen.getByRole('button', { name: /Executar/i });
+    fireEvent.click(execBtn);
+    
+    expect(global.fetch).not.toHaveBeenCalledWith('/api/transacoes', expect.any(Object));
+  });
 });
