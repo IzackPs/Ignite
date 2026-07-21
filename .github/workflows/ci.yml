@@ -121,6 +121,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >-
+            -Dsonar.sourceEncoding=UTF-8
+          
 
       - name: Verificar Quality Gate do SonarQube
         uses: SonarSource/sonarqube-quality-gate-action@v1
