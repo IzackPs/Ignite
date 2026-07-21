@@ -59,6 +59,41 @@ describe('API Proventos', () => {
       expect(prisma.provento.create).toHaveBeenCalled();
       expect(response.status).toBe(201);
     });
+
+    it('deve retornar 404 se o ativo não for encontrado', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          ativoId: '999',
+          data: '2026-07-20',
+          tipo: 'DIVIDENDO',
+          valorTotal: 100,
+        }),
+      });
+      vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce(null);
+
+      const response = await POST(request) as any;
+      expect(response.status).toBe(404);
+      expect(response.data.error).toBe('Ativo não encontrado ou sem permissão.');
+    });
+
+    it('deve retornar 500 em caso de erro no BD', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          ativoId: '1',
+          data: '2026-07-20',
+          tipo: 'DIVIDENDO',
+          valorTotal: 100,
+        }),
+      });
+      vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce({ id: '1', userId: 'mock-user-id' } as any);
+      vi.mocked(prisma.provento.create).mockRejectedValueOnce(new Error('DB Error'));
+
+      const response = await POST(request) as any;
+      expect(response.status).toBe(500);
+      expect(response.data.error).toBe('Erro ao cadastrar provento');
+    });
   });
 
   describe('GET', () => {
@@ -89,6 +124,18 @@ describe('API Proventos', () => {
             nome: 'Vale',
             classe: 'ACOES',
           }
+        },
+        {
+          id: '3',
+          ativoId: 'a3',
+          data: new Date('2026-07-28'),
+          tipo: 'RENDIMENTO',
+          valorTotal: 30,
+          ativo: {
+            simbolo: 'KNCR11',
+            nome: 'Kinea',
+            classe: 'FIIS',
+          }
         }
       ];
 
@@ -96,10 +143,19 @@ describe('API Proventos', () => {
 
       const response = await GET() as any;
       expect(response.status).toBe(200);
-      expect(response.data.totalGeralRecebido).toBe(150);
-      expect(response.data.mediaMensal).toBe(150);
+      expect(response.data.totalGeralRecebido).toBe(180);
+      expect(response.data.mediaMensal).toBe(180);
       expect(response.data.historicoMensal.length).toBe(1);
-      expect(response.data.proventosCount).toBe(2);
+      expect(response.data.proventosCount).toBe(3);
+    });
+
+    it('deve retornar 500 em caso de erro no GET', async () => {
+      const { GET } = await import('../src/app/api/proventos/route');
+      vi.mocked(prisma.provento.findMany).mockRejectedValueOnce(new Error('DB Error'));
+
+      const response = await GET() as any;
+      expect(response.status).toBe(500);
+      expect(response.data.error).toBe('Erro interno ao buscar extrato de proventos');
     });
   });
 

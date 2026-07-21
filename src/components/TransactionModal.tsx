@@ -133,6 +133,15 @@ export function TransactionModal({
 
   const totalOperacao = Number(quantidade || 0) * Number(precoUnitario || 0);
 
+  const novoPrecoMedio = useMemo(() => {
+    if (tipo !== "COMPRA") {
+      return activeAtivo?.precoMedio || 0;
+    }
+    const novaQtd = (activeAtivo?.quantidadeAtual || 0) + Number(quantidade || 0);
+    if (novaQtd <= 0) return 0;
+    return ((activeAtivo?.totalInvestido || 0) + totalOperacao) / novaQtd;
+  }, [tipo, activeAtivo, quantidade, totalOperacao]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -291,13 +300,7 @@ export function TransactionModal({
                     R$ {(activeAtivo?.precoMedio || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   </span>
                   <span className="text-gold-main font-bold">
-                    R$ {
-                      tipo === "COMPRA" 
-                        ? ((activeAtivo?.quantidadeAtual || 0) + Number(quantidade || 0) > 0 
-                            ? ((activeAtivo?.totalInvestido || 0) + totalOperacao) / ((activeAtivo?.quantidadeAtual || 0) + Number(quantidade || 0))
-                            : 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })
-                        : (activeAtivo?.precoMedio || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })
-                    }
+                    R$ {novoPrecoMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   </span>
                 </div>
               </div>

@@ -63,4 +63,22 @@ describe('API Cotacoes', () => {
     expect(response.data.success).toBe(false);
     expect(response.data.cached).toBe(true);
   });
+
+  it('deve retornar status 429 se chamado novamente em menos de 30s', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1000);
+    vi.mocked(cotacaoService.atualizarCotacoesParaUsuario).mockResolvedValueOnce({
+      updatedCount: 1,
+      updatedAtivos: [],
+      nothingToUpdate: false,
+    } as any);
+
+    await POST(); // Primeira chamada at timestamp 1000
+
+    vi.spyOn(Date, 'now').mockReturnValue(2000); // Segunda chamada a 2s (delta < 30s)
+
+    const response = await POST() as any;
+    expect(response.status).toBe(429);
+    expect(response.data.success).toBe(false);
+    expect(response.data.message).toContain('Aguarde');
+  });
 });

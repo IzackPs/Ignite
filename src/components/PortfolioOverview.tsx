@@ -34,6 +34,26 @@ interface PortfolioOverviewProps {
   readonly cdiAnualPercentual?: number;
 }
 
+function getSaudeMetrics(score: number) {
+  if (score >= 80) {
+    return { stroke: "#34d399", textClass: "text-emerald-400", label: "Excelente" };
+  }
+  if (score >= 50) {
+    return { stroke: "#fbbf24", textClass: "text-amber-400", label: "Atenção" };
+  }
+  return { stroke: "#fb7185", textClass: "text-rose-400", label: "Desbalanceada" };
+}
+
+function getAlocacaoStyle(diffPercent: number) {
+  if (diffPercent < -2) {
+    return { textClass: "text-amber-400", barClass: "bg-amber-400" };
+  }
+  if (diffPercent > 2) {
+    return { textClass: "text-gold-main", barClass: "bg-gold-main" };
+  }
+  return { textClass: "text-emerald-400", barClass: "bg-emerald-400" };
+}
+
 export function PortfolioOverview({
   portfolio,
   onSelectTab,
@@ -55,6 +75,8 @@ export function PortfolioOverview({
     ativosComMeta.length > 0
       ? Math.round((ativosNaMeta.length / ativosComMeta.length) * 100)
       : 100;
+  const saudeInfo = getSaudeMetrics(saudeScore);
+
   const ativosDefasados = ativosComMeta.filter(
     (a) => a.status === "COMPRAR"
   ).length;
@@ -202,7 +224,7 @@ export function PortfolioOverview({
                   cy={ringSize / 2}
                   r={radius}
                   fill="none"
-                  stroke={saudeScore >= 80 ? "#34d399" : saudeScore >= 50 ? "#fbbf24" : "#fb7185"}
+                  stroke={saudeInfo.stroke}
                   strokeWidth={strokeWidth}
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -211,7 +233,7 @@ export function PortfolioOverview({
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-lg font-black ${saudeScore >= 80 ? "text-emerald-400" : saudeScore >= 50 ? "text-amber-400" : "text-rose-400"}`}>
+                <span className={`text-lg font-black ${saudeInfo.textClass}`}>
                   {saudeScore}%
                 </span>
               </div>
@@ -219,7 +241,7 @@ export function PortfolioOverview({
 
             <div className="space-y-2 flex-1">
               <div className="text-sm font-bold text-white">
-                {saudeScore >= 80 ? "Excelente" : saudeScore >= 50 ? "Atenção" : "Desbalanceada"}
+                {saudeInfo.label}
               </div>
               <div className="text-[11px] text-zinc-400">
                 {ativosNaMeta.length}/{ativosComMeta.length} ativos dentro da meta (±2%)
@@ -323,13 +345,7 @@ export function PortfolioOverview({
                   <div className="mt-4 space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-zinc-400">Atual:</span>
-                      <span
-                        className={(() => {
-                          if (diffPercent < -2) return "text-amber-400";
-                          if (diffPercent > 2) return "text-gold-main";
-                          return "text-emerald-400";
-                        })()}
-                      >
+                      <span className={getAlocacaoStyle(diffPercent).textClass}>
                         {formatPercent(resumo.percentualAtual)} / {resumo.metaPercentual}%
                         <span className="ml-1 text-[10px] opacity-70">
                           ({diffPercent > 0 ? "+" : ""}{diffPercent.toFixed(1)}%)
@@ -339,11 +355,7 @@ export function PortfolioOverview({
                     {/* Barra de progresso com indicador de meta */}
                     <div className="relative w-full h-2.5 bg-zinc-900 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-1000 ease-out rounded-full ${(() => {
-                          if (diffPercent < -2) return "bg-amber-400";
-                          if (diffPercent > 2) return "bg-gold-main";
-                          return "bg-emerald-400";
-                        })()}`}
+                        className={`h-full transition-all duration-1000 ease-out rounded-full ${getAlocacaoStyle(diffPercent).barClass}`}
                         style={{
                           width: `${Math.min(
                             100,

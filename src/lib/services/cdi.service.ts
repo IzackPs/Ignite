@@ -60,7 +60,7 @@ async function fetchTaxaFromBCB(): Promise<number> {
       throw new Error("Resposta vazia da API BCB");
     }
 
-    const ultimoRegistro = data[data.length - 1];
+    const ultimoRegistro = data.at(-1);
     const valorString = ultimoRegistro?.valor;
 
     if (!valorString) {
@@ -70,7 +70,7 @@ async function fetchTaxaFromBCB(): Promise<number> {
     // O valor vem como string com vírgula ou ponto (ex: "14.25" ou "14,25")
     const valorNumerico = Number(String(valorString).replace(",", "."));
 
-    if (isNaN(valorNumerico) || valorNumerico <= 0) {
+    if (Number.isNaN(valorNumerico) || valorNumerico <= 0) {
       throw new Error(`Valor de taxa inválido: ${valorString}`);
     }
 

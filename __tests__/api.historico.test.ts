@@ -50,6 +50,23 @@ describe('API Historico', () => {
       expect(prisma.historicoPatrimonio.create).toHaveBeenCalled();
       expect(response.status).toBe(201);
     });
+
+    it('deve retornar 500 em caso de erro no BD', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          patrimonioTotal: 1000,
+          totalInvestido: 900,
+          lucroPrejuizo: 100,
+          lucroPrejuizoPercentual: 10,
+        }),
+      });
+      vi.mocked(prisma.historicoPatrimonio.create).mockRejectedValueOnce(new Error('DB Error'));
+
+      const response = await POST(request) as any;
+      expect(response.status).toBe(500);
+      expect(response.data.error).toBe('Erro ao salvar foto de patrimônio');
+    });
   });
 
   describe('DELETE', () => {

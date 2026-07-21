@@ -12,6 +12,44 @@ interface AssetModalProps {
   readonly editingAtivo?: AtivoCalculado | null;
 }
 
+interface AutoSearchState {
+  readonly nome: string;
+  readonly precoAtual: number;
+  readonly setor: string;
+  readonly logoUrl: string;
+}
+
+interface AutoSearchSetters {
+  readonly setIsSearching: (v: boolean) => void;
+  readonly setNome: (v: string) => void;
+  readonly setPrecoAtual: (v: number) => void;
+  readonly setClasse: (v: string) => void;
+  readonly setSetor: (v: string) => void;
+  readonly setLogoUrl: (v: string) => void;
+}
+
+async function autoSearchAsset(
+  ticker: string,
+  current: AutoSearchState,
+  setters: AutoSearchSetters
+) {
+  setters.setIsSearching(true);
+  try {
+    const res = await fetch(`/api/ativos/search?ticker=${encodeURIComponent(ticker)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.nome && !current.nome) setters.setNome(data.nome);
+    if (data.precoAtual && !current.precoAtual) setters.setPrecoAtual(data.precoAtual);
+    if (data.classe) setters.setClasse(data.classe);
+    if (data.setor && !current.setor) setters.setSetor(data.setor);
+    if (data.logoUrl && !current.logoUrl) setters.setLogoUrl(data.logoUrl);
+  } catch {
+    // Ignore silent errors during auto-typing
+  } finally {
+    setters.setIsSearching(false);
+  }
+}
+
 export function AssetModal({
   isOpen,
   onClose,
@@ -61,23 +99,12 @@ export function AssetModal({
     if (!simbolo || simbolo.length < 4) return;
     if (editingAtivo && editingAtivo.simbolo === simbolo) return;
 
-    const timer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const res = await fetch(`/api/ativos/search?ticker=${encodeURIComponent(simbolo)}`);
-        const data = await res.json();
-        if (res.ok) {
-          if (data.nome && !nome) setNome(data.nome);
-          if (data.precoAtual && !precoAtual) setPrecoAtual(data.precoAtual);
-          if (data.classe) setClasse(data.classe);
-          if (data.setor && !setor) setSetor(data.setor);
-          if (data.logoUrl && !logoUrl) setLogoUrl(data.logoUrl);
-        }
-      } catch {
-        // Ignore silent errors during auto-typing
-      } finally {
-        setIsSearching(false);
-      }
+    const timer = setTimeout(() => {
+      autoSearchAsset(
+        simbolo,
+        { nome, precoAtual, setor, logoUrl },
+        { setIsSearching, setNome, setPrecoAtual, setClasse, setSetor, setLogoUrl }
+      );
     }, 600);
 
     return () => clearTimeout(timer);

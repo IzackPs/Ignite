@@ -96,8 +96,9 @@ export function SimuladorAporteBar({
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         
         {/* Lado Esquerdo: Título e Toggle */}
-        <div 
-          className="flex items-center gap-3 cursor-pointer group w-full lg:w-auto"
+        <button 
+          type="button"
+          className="flex items-center gap-3 cursor-pointer group w-full lg:w-auto text-left focus:outline-none focus:ring-2 focus:ring-gold-main/50 rounded-xl p-1 -m-1"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="p-2.5 bg-gold-main/10 rounded-xl group-hover:bg-gold-main/20 transition-colors">
@@ -118,7 +119,7 @@ export function SimuladorAporteBar({
               </p>
             )}
           </div>
-        </div>
+        </button>
 
         {/* Lado Direito: Input e Botões */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">

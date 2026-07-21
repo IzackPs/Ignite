@@ -12,7 +12,14 @@ export default defineConfig({
       exclude: [
         'src/components/ui/**', 
         'src/types/**', 
-        'src/**/*.d.ts'
+        'src/**/*.d.ts',
+        'src/auth.ts',
+        'src/auth.config.ts',
+        'src/proxy.ts',
+        'src/app/layout.tsx',
+        'src/app/page.tsx',
+        'src/app/api/auth/**',
+        'src/lib/prisma.ts'
       ]
     }
   }

@@ -143,6 +143,33 @@ describe('auth actions', () => {
       const result = await register(undefined, formData);
       expect(result).toBe('Erro ao fazer login automático após registro.');
     });
+
+    it('should handle generic AuthError during registration', async () => {
+      const formData = new FormData();
+      formData.append('name', 'User');
+      formData.append('email', 'test@test.com');
+      formData.append('password', '123456');
+      
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+      vi.mocked(bcryptjs.hash).mockResolvedValueOnce('hashed_password' as any);
+      
+      const error = new AuthError('OtherError');
+      vi.mocked(signIn).mockRejectedValueOnce(error);
+      
+      const result = await register(undefined, formData);
+      expect(result).toBe('Algo deu errado durante o registro.');
+    });
+
+    it('should throw non-AuthError during registration', async () => {
+      const formData = new FormData();
+      formData.append('name', 'User');
+      formData.append('email', 'test@test.com');
+      formData.append('password', '123456');
+      
+      vi.mocked(prisma.user.findUnique).mockRejectedValueOnce(new Error('DB failure'));
+      
+      await expect(register(undefined, formData)).rejects.toThrow('DB failure');
+    });
   });
 
   describe('logout', () => {

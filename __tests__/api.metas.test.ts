@@ -48,5 +48,21 @@ describe('API Metas', () => {
       expect(prisma.metaClasse.upsert).toHaveBeenCalled();
       expect(response.status).toBe(200);
     });
+
+    it('deve retornar 500 em caso de erro no BD', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          metas: {
+            ACOES: 40,
+          },
+        }),
+      });
+      vi.mocked(prisma.metaClasse.upsert).mockRejectedValueOnce(new Error('DB Error'));
+
+      const response = await POST(request) as any;
+      expect(response.status).toBe(500);
+      expect(response.data.error).toBe('Erro ao atualizar metas de classe');
+    });
   });
 });

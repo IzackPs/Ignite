@@ -93,6 +93,12 @@ const CustomAreaTooltip = (props: any) => {
   );
 };
 
+function getDefasagemProgressColor(diff: number): string {
+  if (diff < -2) return "bg-amber-400";
+  if (diff > 2) return "bg-rose-400";
+  return "bg-emerald-400";
+}
+
 export function DashboardCharts({
   portfolio,
   historico,
@@ -259,7 +265,7 @@ export function DashboardCharts({
                 >
                   {portfolio.resumoClasses.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${entry.classe || index}`}
                       fill={CLASS_COLORS[entry.classe] || "#fbbf24"}
                       stroke="rgba(0,0,0,0.1)"
                       strokeWidth={2}
@@ -301,11 +307,9 @@ export function DashboardCharts({
                 {/* Visual Progress Bar (Defasagem) */}
                 <div className="relative w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden mt-1">
                   <div
-                    className={`h-full transition-all duration-1000 ease-out rounded-full ${
-                      r.percentualAtual - r.metaPercentual < -2 ? "bg-amber-400" :
-                      r.percentualAtual - r.metaPercentual > 2 ? "bg-rose-400" :
-                      "bg-emerald-400"
-                    }`}
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${getDefasagemProgressColor(
+                      r.percentualAtual - r.metaPercentual
+                    )}`}
                     style={{
                       width: `${Math.min(
                         100,

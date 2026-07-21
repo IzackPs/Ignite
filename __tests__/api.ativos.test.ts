@@ -73,6 +73,55 @@ describe('API Ativos', () => {
       expect(prisma.ativo.update).toHaveBeenCalled();
       expect(response.status).toBe(200);
     });
+    it('deve retornar erro 404 se o ativo a ser atualizado não existir ou for de outro usuário', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: '999',
+          simbolo: 'ITUB4',
+          nome: 'Itaú',
+          classe: 'ACOES',
+        }),
+      });
+      vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce(null);
+      const response = await POST(request) as any;
+      expect(response.status).toBe(404);
+      expect(response.data.error).toBe('Ativo não encontrado ou sem permissão.');
+    });
+
+    it('deve retornar erro 400 em caso de P2002 (símbolo duplicado)', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          simbolo: 'ITUB4',
+          nome: 'Itaú',
+          classe: 'ACOES',
+        }),
+      });
+      const p2002Error = new Error('Unique constraint failed') as any;
+      p2002Error.code = 'P2002';
+      vi.mocked(prisma.ativo.create).mockRejectedValueOnce(p2002Error);
+      
+      const response = await POST(request) as any;
+      expect(response.status).toBe(400);
+      expect(response.data.error).toBe('Já existe um ativo cadastrado com este símbolo.');
+    });
+
+    it('deve retornar erro 500 em caso de erro desconhecido no BD', async () => {
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({
+          simbolo: 'ITUB4',
+          nome: 'Itaú',
+          classe: 'ACOES',
+        }),
+      });
+      vi.mocked(prisma.ativo.create).mockRejectedValueOnce(new Error('Fatal DB Error'));
+      
+      const response = await POST(request) as any;
+      expect(response.status).toBe(500);
+      expect(response.data.error).toBe('Erro interno ao salvar ativo');
+    });
   });
 
   describe('DELETE', () => {

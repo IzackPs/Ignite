@@ -5,15 +5,15 @@ import { Eye, EyeOff, PieChart, Clock, Zap, LogOut, Settings } from "lucide-reac
 import { formatCurrency } from "@/lib/utils";
 
 interface WalletHeaderProps {
-  userName?: string;
-  patrimonioInvestido: number;
-  isBalanceVisible: boolean;
-  onToggleBalance: () => void;
-  lastPriceUpdate?: string;
-  updatingPrices?: boolean;
-  onUpdatePrices?: () => void;
-  onLogout?: () => void;
-  onOpenSettings?: () => void;
+  readonly userName?: string;
+  readonly patrimonioInvestido: number;
+  readonly isBalanceVisible: boolean;
+  readonly onToggleBalance: () => void;
+  readonly lastPriceUpdate?: string;
+  readonly updatingPrices?: boolean;
+  readonly onUpdatePrices?: () => void;
+  readonly onLogout?: () => void;
+  readonly onOpenSettings?: () => void;
 }
 
 export function WalletHeader({

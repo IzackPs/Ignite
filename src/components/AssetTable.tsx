@@ -30,6 +30,291 @@ interface AssetTableProps {
   readonly cdiAnualFormatada?: string;
 }
 
+function formatFalta(falta: number, isVisible: boolean): string {
+  if (falta <= 0) return "R$ 0,00";
+  return isVisible ? formatCurrency(falta) : "R$ ••••";
+}
+
+function getAlocacaoBarColor(diff: number): string {
+  if (diff < -2) return "bg-amber-400";
+  if (diff > 2) return "bg-rose-400";
+  return "bg-emerald-400";
+}
+
+function getDefasagemTextColor(diff: number): string {
+  if (Math.abs(diff) <= 2) return "text-emerald-500 font-bold";
+  if (diff < 0) return "text-amber-500 font-bold";
+  return "text-rose-500 font-bold";
+}
+
+interface AssetTableRowProps {
+  readonly ativo: AtivoCalculado;
+  readonly isFIIsTab: boolean;
+  readonly isRendaFixaTab: boolean;
+  readonly isBalanceVisible: boolean;
+  readonly onAddTransacao?: (ativo: AtivoCalculado) => void;
+  readonly onEditAtivo?: (ativo: AtivoCalculado) => void;
+  readonly onDeleteAtivo?: (id: string, simbolo: string) => void;
+}
+
+function AssetTableRow({
+  ativo,
+  isFIIsTab,
+  isRendaFixaTab,
+  isBalanceVisible,
+  onAddTransacao,
+  onEditAtivo,
+  onDeleteAtivo,
+}: AssetTableRowProps) {
+  const isLucro = ativo.lucroPrejuizoR$ >= 0;
+  const isComprar = ativo.status === "COMPRAR";
+  const diffAlocacao = ativo.percentualAtual - ativo.percentualIdeal;
+
+  return (
+    <tr className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors group">
+      {/* Ativo / Ticker */}
+      <td className="py-3 px-4">
+        <div className="flex items-center gap-2.5">
+          {ativo.logoUrl ? (
+            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border-subtle">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ativo.logoUrl} alt={ativo.simbolo} className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="font-mono font-bold text-base text-foreground bg-zinc-100 dark:bg-white/10 px-2.5 py-1 rounded border border-border-subtle group-hover:border-gold-main/50 transition-colors">
+              {ativo.simbolo}
+            </div>
+          )}
+          <div>
+            <div className="font-medium text-foreground text-xs truncate max-w-[140px] flex items-center gap-2">
+              {ativo.logoUrl && (
+                <span className="font-mono font-bold text-zinc-400 group-hover:text-gold-main transition-colors text-[10px]">
+                  {ativo.simbolo}
+                </span>
+              )}
+              {ativo.nome}
+            </div>
+            {ativo.setor && (
+              <div className="text-[10px] text-zinc-500">
+                {ativo.setor}
+              </div>
+            )}
+          </div>
+        </div>
+      </td>
+
+      {/* Quantidade */}
+      <td className="py-3 px-3 text-right font-mono text-xs">
+        {formatNumber(ativo.quantidadeAtual)}
+      </td>
+
+      {/* Preço Médio */}
+      <td className="py-3 px-3 text-right font-mono text-xs text-zinc-500 dark:text-zinc-400">
+        {formatCurrency(ativo.precoMedio)}
+      </td>
+
+      {/* Total Investido */}
+      <td className="py-3 px-3 text-right font-mono text-xs text-zinc-500 dark:text-zinc-400">
+        {isBalanceVisible ? formatCurrency(ativo.totalInvestido) : "R$ ••••"}
+      </td>
+
+      {/* Preço Atual */}
+      <td className="py-3 px-3 text-right font-mono text-xs font-semibold text-foreground">
+        {formatCurrency(ativo.precoAtual)}
+      </td>
+
+      {/* Coluna Provento / Cota (se FII) */}
+      {isFIIsTab && (
+        <td className="py-3 px-3 text-right font-mono text-xs font-semibold text-purple-300 bg-purple-950/20">
+          {formatCurrency(ativo.ultimoProvento)}
+        </td>
+      )}
+
+      {/* Coluna Número Mágico (se FII) */}
+      {isFIIsTab && (
+        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-purple-200 bg-purple-950/20">
+          {ativo.numeroMagico > 0 ? (
+            <div>
+              <span>{ativo.numeroMagico} cotas</span>
+              <span className="block text-[9px] text-zinc-400 font-normal">
+                Faltam: {ativo.cotasFaltantesMagico}
+              </span>
+            </div>
+          ) : (
+            <span className="text-zinc-500 font-normal">-</span>
+          )}
+        </td>
+      )}
+
+      {/* Colunas Exclusivas de Renda Fixa Pro-Rata */}
+      {isRendaFixaTab && (
+        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-emerald-400 bg-emerald-950/20">
+          {ativo.taxaRentabilidade}% CDI
+        </td>
+      )}
+
+      {isRendaFixaTab && (
+        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-emerald-300 bg-emerald-950/20">
+          + {formatCurrency(ativo.rendimentoProRataR$)}
+          <span className="block text-[9px] text-zinc-400 font-normal">
+            ({ativo.diasUteisDecorridos} d.ú.)
+          </span>
+        </td>
+      )}
+
+      {/* Valor de Mercado */}
+      <td className="py-3 px-3 text-right font-mono text-xs font-bold text-foreground">
+        {isBalanceVisible ? formatCurrency(ativo.valorMercado) : "R$ ••••"}
+      </td>
+
+      {/* Lucro / Prejuízo */}
+      <td className="py-3 px-3 text-right font-mono text-xs">
+        <div
+          className={`flex items-center justify-end gap-1 ${
+            isLucro ? "text-emerald-400" : "text-rose-400"
+          }`}
+        >
+          {isLucro ? (
+            <TrendingUp className="w-3 h-3 shrink-0" aria-hidden="true" />
+          ) : (
+            <TrendingDown className="w-3 h-3 shrink-0" aria-hidden="true" />
+          )}
+          <span>{isBalanceVisible ? formatCurrency(ativo.lucroPrejuizoR$) : "R$ ••••"}</span>
+        </div>
+        <div
+          className={`text-[10px] font-semibold ${
+            isLucro ? "text-emerald-500" : "text-rose-500"
+          }`}
+        >
+          {isLucro ? "+" : ""}
+          {formatPercent(ativo.lucroPrejuizoPercentual)}
+        </div>
+      </td>
+
+      {/* Alocação / Defasagem (Barra Visual) */}
+      <td className="py-3 px-3 align-middle w-48">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-[10px] font-mono">
+            <span className="text-zinc-300 font-semibold">{formatPercent(ativo.percentualAtual)}</span>
+            <span className="text-gold-main font-semibold">Meta: {formatPercent(ativo.percentualIdeal, 1)}</span>
+          </div>
+          <div className="relative w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-1000 ease-out rounded-full ${getAlocacaoBarColor(diffAlocacao)}`}
+              style={{
+                width: `${Math.min(
+                  100,
+                  (ativo.percentualAtual / (ativo.percentualIdeal || 1)) * 100
+                )}%`,
+              }}
+            />
+            {/* Meta marker line */}
+            <div
+              className="absolute top-0 h-full w-0.5 bg-white/40"
+              style={{ left: "100%" }}
+              title={`Meta: ${ativo.percentualIdeal}%`}
+            />
+          </div>
+          {/* Label de defasagem */}
+          <div className="flex justify-between text-[9px] font-mono">
+            <span className="text-zinc-500">Defasagem:</span>
+            <span className={getDefasagemTextColor(diffAlocacao)}>
+              {diffAlocacao > 0 ? "+" : ""}
+              {diffAlocacao.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      </td>
+
+      {/* Falta (R$) */}
+      <td className="py-3 px-3 text-right font-mono text-xs font-semibold">
+        <span
+          className={
+            ativo.faltaR$ > 0
+              ? "text-emerald-400"
+              : "text-zinc-500"
+          }
+        >
+          {formatFalta(ativo.faltaR$, isBalanceVisible)}
+        </span>
+      </td>
+
+      {/* Status */}
+      <td className="py-3 px-3 text-center">
+        <span
+          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${
+            isComprar
+              ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/30"
+              : "bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 border-border-subtle"
+          }`}
+        >
+          {isComprar ? (
+            <>
+              <ShoppingCart className="w-3 h-3" /> COMPRAR
+            </>
+          ) : (
+            "AGUARDAR"
+          )}
+        </span>
+      </td>
+
+      {/* Qtd. a Comprar */}
+      <td className="py-3 px-3 text-right font-mono text-sm font-bold">
+        <span
+          className={
+            ativo.qtdAComprar > 0
+              ? "text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+              : "text-zinc-500"
+          }
+        >
+          {ativo.qtdAComprar}
+        </span>
+      </td>
+
+      {/* Botões de Ação */}
+      <td className="py-3 px-4 text-center">
+        <div className="flex items-center justify-center gap-1">
+          {onAddTransacao && (
+            <button
+              type="button"
+              onClick={() => onAddTransacao(ativo)}
+              title="Registrar Compra/Venda"
+              aria-label={`Registrar transação para ${ativo.simbolo}`}
+              className="p-2 rounded text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <PlusCircle className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+          {onEditAtivo && (
+            <button
+              type="button"
+              onClick={() => onEditAtivo(ativo)}
+              title="Editar Meta/Preço/CDI"
+              aria-label={`Editar configurações do ativo ${ativo.simbolo}`}
+              className="p-2 rounded text-zinc-400 hover:text-gold-main hover:bg-gold-main/10 transition-colors focus:outline-none focus:ring-2 focus:ring-gold-main"
+            >
+              <Pencil className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+          {onDeleteAtivo && (
+            <button
+              type="button"
+              onClick={() =>
+                onDeleteAtivo(ativo.id, ativo.simbolo)
+              }
+              title="Excluir Ativo"
+              aria-label={`Excluir ativo ${ativo.simbolo}`}
+              className="p-2 rounded text-zinc-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export function AssetTable({
   ativos,
   resumoClasse,
@@ -302,9 +587,7 @@ export function AssetTable({
                   resumoClasse.faltaR$ > 0 ? "text-emerald-400" : "text-zinc-400"
                 }`}
               >
-                {resumoClasse.faltaR$ > 0
-                  ? (isBalanceVisible ? formatCurrency(resumoClasse.faltaR$) : "R$ ••••")
-                  : "R$ 0,00"}
+                {formatFalta(resumoClasse.faltaR$, isBalanceVisible)}
               </div>
             </div>
           </div>
@@ -317,7 +600,7 @@ export function AssetTable({
         {/* Barra de Ferramentas da Tabela */}
         <div className="p-4 border-b border-border-subtle flex items-center justify-between bg-zinc-50/50 dark:bg-white-[0.02]">
           <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
-            Meus Ativos
+            <span>Meus Ativos</span>
             <span className="bg-zinc-200 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded-full font-bold">
               {ativos.length}
             </span>
@@ -391,269 +674,18 @@ export function AssetTable({
                   </td>
                 </tr>
               ) : (
-                ativos.map((ativo) => {
-                  const isLucro = ativo.lucroPrejuizoR$ >= 0;
-                  const isComprar = ativo.status === "COMPRAR";
-
-                  return (
-                    <tr
-                      key={ativo.id}
-                      className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors group"
-                    >
-                      {/* Ativo / Ticker */}
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2.5">
-                          {ativo.logoUrl ? (
-                            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border-subtle">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={ativo.logoUrl} alt={ativo.simbolo} className="w-full h-full object-contain" />
-                            </div>
-                          ) : (
-                            <div className="font-mono font-bold text-base text-foreground bg-zinc-100 dark:bg-white/10 px-2.5 py-1 rounded border border-border-subtle group-hover:border-gold-main/50 transition-colors">
-                              {ativo.simbolo}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-foreground text-xs truncate max-w-[140px] flex items-center gap-2">
-                              {ativo.logoUrl && (
-                                <span className="font-mono font-bold text-zinc-400 group-hover:text-gold-main transition-colors text-[10px]">
-                                  {ativo.simbolo}
-                                </span>
-                              )}
-                              {ativo.nome}
-                            </div>
-                            {ativo.setor && (
-                              <div className="text-[10px] text-zinc-500">
-                                {ativo.setor}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Quantidade */}
-                      <td className="py-3 px-3 text-right font-mono text-xs">
-                        {formatNumber(ativo.quantidadeAtual)}
-                      </td>
-
-                      {/* Preço Médio */}
-                      <td className="py-3 px-3 text-right font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                        {formatCurrency(ativo.precoMedio)}
-                      </td>
-
-                      {/* Total Investido */}
-                      <td className="py-3 px-3 text-right font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                        {isBalanceVisible ? formatCurrency(ativo.totalInvestido) : "R$ ••••"}
-                      </td>
-
-                      {/* Preço Atual */}
-                      <td className="py-3 px-3 text-right font-mono text-xs font-semibold text-foreground">
-                        {formatCurrency(ativo.precoAtual)}
-                      </td>
-
-                      {/* Coluna Provento / Cota (se FII) */}
-                      {isFIIsTab && (
-                        <td className="py-3 px-3 text-right font-mono text-xs font-semibold text-purple-300 bg-purple-950/20">
-                          {formatCurrency(ativo.ultimoProvento)}
-                        </td>
-                      )}
-
-                      {/* Coluna Número Mágico (se FII) */}
-                      {isFIIsTab && (
-                        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-purple-200 bg-purple-950/20">
-                          {ativo.numeroMagico > 0 ? (
-                            <div>
-                              <span>{ativo.numeroMagico} cotas</span>
-                              <span className="block text-[9px] text-zinc-400 font-normal">
-                                Faltam: {ativo.cotasFaltantesMagico}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-zinc-500 font-normal">-</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* Colunas Exclusivas de Renda Fixa Pro-Rata */}
-                      {isRendaFixaTab && (
-                        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-emerald-400 bg-emerald-950/20">
-                          {ativo.taxaRentabilidade}% CDI
-                        </td>
-                      )}
-
-                      {isRendaFixaTab && (
-                        <td className="py-3 px-3 text-right font-mono text-xs font-bold text-emerald-300 bg-emerald-950/20">
-                          + {formatCurrency(ativo.rendimentoProRataR$)}
-                          <span className="block text-[9px] text-zinc-400 font-normal">
-                            ({ativo.diasUteisDecorridos} d.ú.)
-                          </span>
-                        </td>
-                      )}
-
-                      {/* Valor de Mercado */}
-                      <td className="py-3 px-3 text-right font-mono text-xs font-bold text-foreground">
-                        {isBalanceVisible ? formatCurrency(ativo.valorMercado) : "R$ ••••"}
-                      </td>
-
-                      {/* Lucro / Prejuízo */}
-                      <td className="py-3 px-3 text-right font-mono text-xs">
-                        <div
-                          className={`flex items-center justify-end gap-1 ${
-                            isLucro ? "text-emerald-400" : "text-rose-400"
-                          }`}
-                        >
-                          {isLucro ? (
-                            <TrendingUp className="w-3 h-3 shrink-0" aria-hidden="true" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 shrink-0" aria-hidden="true" />
-                          )}
-                          <span>{isBalanceVisible ? formatCurrency(ativo.lucroPrejuizoR$) : "R$ ••••"}</span>
-                        </div>
-                        <div
-                          className={`text-[10px] font-semibold ${
-                            isLucro ? "text-emerald-500" : "text-rose-500"
-                          }`}
-                        >
-                          {isLucro ? "+" : ""}
-                          {formatPercent(ativo.lucroPrejuizoPercentual)}
-                        </div>
-                      </td>
-
-                      {/* Alocação / Defasagem (Barra Visual) */}
-                      <td className="py-3 px-3 align-middle w-48">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex justify-between text-[10px] font-mono">
-                            <span className="text-zinc-300 font-semibold">{formatPercent(ativo.percentualAtual)}</span>
-                            <span className="text-gold-main font-semibold">Meta: {formatPercent(ativo.percentualIdeal, 1)}</span>
-                          </div>
-                          <div className="relative w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-1000 ease-out rounded-full ${
-                                ativo.percentualAtual - ativo.percentualIdeal < -2 ? "bg-amber-400" :
-                                ativo.percentualAtual - ativo.percentualIdeal > 2 ? "bg-rose-400" :
-                                "bg-emerald-400"
-                              }`}
-                              style={{
-                                width: `${Math.min(
-                                  100,
-                                  (ativo.percentualAtual / (ativo.percentualIdeal || 1)) * 100
-                                )}%`,
-                              }}
-                            />
-                            {/* Meta marker line */}
-                            <div
-                              className="absolute top-0 h-full w-0.5 bg-white/40"
-                              style={{ left: "100%" }}
-                              title={`Meta: ${ativo.percentualIdeal}%`}
-                            />
-                          </div>
-                          {/* Label de defasagem */}
-                          <div className="flex justify-between text-[9px] font-mono">
-                            <span className="text-zinc-500">Defasagem:</span>
-                            <span className={
-                              Math.abs(ativo.percentualAtual - ativo.percentualIdeal) <= 2
-                                ? "text-emerald-500 font-bold"
-                                : ativo.percentualAtual - ativo.percentualIdeal < 0
-                                ? "text-amber-500 font-bold"
-                                : "text-rose-500 font-bold"
-                            }>
-                              {ativo.percentualAtual - ativo.percentualIdeal > 0 ? "+" : ""}
-                              {(ativo.percentualAtual - ativo.percentualIdeal).toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Falta (R$) */}
-                      <td className="py-3 px-3 text-right font-mono text-xs font-semibold">
-                        <span
-                          className={
-                            ativo.faltaR$ > 0
-                              ? "text-emerald-400"
-                              : "text-zinc-500"
-                          }
-                        >
-                          {ativo.faltaR$ > 0
-                            ? (isBalanceVisible ? formatCurrency(ativo.faltaR$) : "R$ ••••")
-                            : "R$ 0,00"}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-3 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${
-                            isComprar
-                              ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/30"
-                              : "bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 border-border-subtle"
-                          }`}
-                        >
-                          {isComprar ? (
-                            <>
-                              <ShoppingCart className="w-3 h-3" /> COMPRAR
-                            </>
-                          ) : (
-                            "AGUARDAR"
-                          )}
-                        </span>
-                      </td>
-
-                      {/* Qtd. a Comprar */}
-                      <td className="py-3 px-3 text-right font-mono text-sm font-bold">
-                        <span
-                          className={
-                            ativo.qtdAComprar > 0
-                              ? "text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
-                              : "text-zinc-500"
-                          }
-                        >
-                          {ativo.qtdAComprar}
-                        </span>
-                      </td>
-
-                      {/* Botões de Ação */}
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {onAddTransacao && (
-                            <button
-                              type="button"
-                              onClick={() => onAddTransacao(ativo)}
-                              title="Registrar Compra/Venda"
-                              aria-label={`Registrar transação para ${ativo.simbolo}`}
-                              className="p-2 rounded text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                              <PlusCircle className="w-4 h-4" aria-hidden="true" />
-                            </button>
-                          )}
-                          {onEditAtivo && (
-                            <button
-                              type="button"
-                              onClick={() => onEditAtivo(ativo)}
-                              title="Editar Meta/Preço/CDI"
-                              aria-label={`Editar configurações do ativo ${ativo.simbolo}`}
-                              className="p-2 rounded text-zinc-400 hover:text-gold-main hover:bg-gold-main/10 transition-colors focus:outline-none focus:ring-2 focus:ring-gold-main"
-                            >
-                              <Pencil className="w-4 h-4" aria-hidden="true" />
-                            </button>
-                          )}
-                          {onDeleteAtivo && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onDeleteAtivo(ativo.id, ativo.simbolo)
-                              }
-                              title="Excluir Ativo"
-                              aria-label={`Excluir ativo ${ativo.simbolo}`}
-                              className="p-2 rounded text-zinc-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
-                            >
-                              <Trash2 className="w-4 h-4" aria-hidden="true" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                ativos.map((ativo) => (
+                  <AssetTableRow
+                    key={ativo.id}
+                    ativo={ativo}
+                    isFIIsTab={isFIIsTab}
+                    isRendaFixaTab={isRendaFixaTab}
+                    isBalanceVisible={isBalanceVisible}
+                    onAddTransacao={onAddTransacao}
+                    onEditAtivo={onEditAtivo}
+                    onDeleteAtivo={onDeleteAtivo}
+                  />
+                ))
               )}
             </tbody>
             {/* Totais do Rodapé */}

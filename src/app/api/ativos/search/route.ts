@@ -5,6 +5,31 @@ import { logger } from "@/lib/logger";
 
 const yahooFinance = new YahooFinance();
 
+async function fetchLogoUrl(symbolClean: string): Promise<string | null> {
+  try {
+    const brapiRes = await fetch(`https://brapi.dev/api/quote/${symbolClean}`, {
+      headers: { "User-Agent": "Antigravity/1.0" },
+      signal: AbortSignal.timeout(2000) // 2s timeout
+    });
+    if (!brapiRes.ok) return null;
+    const brapiData = await brapiRes.json();
+    return brapiData.results?.[0]?.logourl || null;
+  } catch {
+    return null;
+  }
+}
+
+function determineAssetClass(symbolClean: string, nameUpper: string): string {
+  if (symbolClean.endsWith('11')) {
+    const isEtf = nameUpper.includes('ETF') || nameUpper.includes('FUNDO DE INDICE') || nameUpper.includes('ISHARES');
+    return isEtf ? "ETFS" : "FIIS";
+  }
+  if (symbolClean.endsWith('39')) {
+    return nameUpper.includes('ETF') ? "ETFS" : "ACOES";
+  }
+  return "ACOES";
+}
+
 export async function GET(request: Request) {
   const { errorResponse } = await requireAuth();
   if (errorResponse) return errorResponse;
@@ -38,36 +63,10 @@ export async function GET(request: Request) {
     const setor = profile?.assetProfile?.industry || profile?.assetProfile?.sector || "";
 
     // Tentar buscar logo via API gratuita Brapi (fallback rápido)
-    let logoUrl = null;
-    try {
-      const brapiRes = await fetch(`https://brapi.dev/api/quote/${symbolClean}`, {
-        headers: { "User-Agent": "Antigravity/1.0" },
-        signal: AbortSignal.timeout(2000) // 2s timeout
-      });
-      if (brapiRes.ok) {
-        const brapiData = await brapiRes.json();
-        if (brapiData.results?.[0]?.logourl) {
-          logoUrl = brapiData.results[0].logourl;
-        }
-      }
-    } catch {
-      // Ignorar falha no logo
-    }
+    const logoUrl = await fetchLogoUrl(symbolClean);
 
-    let classe = "ACOES";
     const nameUpper = (quote.longName || quote.shortName || "").toUpperCase();
-    
-    if (symbolClean.endsWith('11')) {
-      if (nameUpper.includes('ETF') || nameUpper.includes('FUNDO DE INDICE') || nameUpper.includes('ISHARES')) {
-        classe = "ETFS";
-      } else {
-        classe = "FIIS";
-      }
-    } else if (symbolClean.endsWith('39')) {
-      classe = "ETFS";
-      if (nameUpper.includes('ETF')) classe = "ETFS";
-      else classe = "ACOES";
-    }
+    const classe = determineAssetClass(symbolClean, nameUpper);
 
     return NextResponse.json({
       simbolo: symbolClean,
