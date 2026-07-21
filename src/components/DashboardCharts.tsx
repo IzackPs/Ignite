@@ -273,7 +273,7 @@ export function DashboardCharts({
 
           {/* Legenda Customizada com Comparativo Percentual */}
           <div className="flex flex-col gap-3 pt-4 border-t border-border-subtle">
-            {portfolio.resumoClasses.map((r, idx) => (
+            {portfolio.resumoClasses.map((r) => (
               <div
                 key={r.classe}
                 className="bg-zinc-100 dark:bg-white/5 p-3 rounded-lg border border-border-subtle flex flex-col gap-2"

@@ -50,7 +50,7 @@ export async function GET(request: Request) {
           logoUrl = brapiData.results[0].logourl;
         }
       }
-    } catch (e) {
+    } catch {
       // Ignorar falha no logo
     }
 

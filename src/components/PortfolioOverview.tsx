@@ -7,7 +7,6 @@ import {
   ArrowRight,
   TrendingUp,
   TrendingDown,
-  ShoppingCart,
   CheckCircle2,
   ShieldCheck,
   Building,

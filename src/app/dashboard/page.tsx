@@ -11,7 +11,7 @@ import { SimuladorAporteBar } from "@/components/SimuladorAporteBar";
 import { AssetModal } from "@/components/AssetModal";
 import { TransactionModal } from "@/components/TransactionModal";
 import { ClassGoalsModal } from "@/components/ClassGoalsModal";
-import { RefreshCw, TrendingUp } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Toast } from "@/components/Toast";
 import { logout } from "@/actions/auth";
 import { usePortfolio } from "@/hooks/usePortfolio";

@@ -73,7 +73,7 @@ export function AssetModal({
           if (data.setor && !setor) setSetor(data.setor);
           if (data.logoUrl && !logoUrl) setLogoUrl(data.logoUrl);
         }
-      } catch (err: any) {
+      } catch {
         // Ignore silent errors during auto-typing
       } finally {
         setIsSearching(false);
@@ -81,7 +81,7 @@ export function AssetModal({
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [simbolo, editingAtivo, nome, precoAtual]);
+  }, [simbolo, editingAtivo, nome, precoAtual, logoUrl, setor]);
 
   if (!isOpen) return null;
 

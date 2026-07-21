@@ -3,15 +3,12 @@
 import React from "react";
 import { PortfolioCalculado } from "@/lib/calculator";
 import {
-  LayoutDashboard,
   TrendingUp,
   Building,
   Globe,
   ShieldCheck,
   Coins,
-  Calculator,
   PieChart,
-  User,
 } from "lucide-react";
 
 interface ClassTabsProps {
