@@ -140,7 +140,7 @@ describe('Modals and Forms Coverage', () => {
     const input = screen.getByPlaceholderText(/Ex: 2000/i);
     fireEvent.change(input, { target: { value: '3500' } });
     
-    const execBtn = screen.getByRole('button', { name: /Executar/i });
+    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
     fireEvent.click(execBtn);
   });
 
@@ -195,7 +195,9 @@ describe('Modals and Forms Coverage', () => {
     const onRefresh = vi.fn();
     render(<SimuladorAporteBar portfolio={portfolio} onRefresh={onRefresh} />);
     
-    const execBtn = screen.getByRole('button', { name: /Executar/i });
+    fireEvent.click(screen.getByRole('button', { name: /^Simular$/i }));
+
+    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
     fireEvent.click(execBtn);
     
     await waitFor(() => {
@@ -218,7 +220,9 @@ describe('Modals and Forms Coverage', () => {
     global.fetch = vi.fn();
     render(<SimuladorAporteBar portfolio={portfolio} onRefresh={vi.fn()} />);
     
-    const execBtn = screen.getByRole('button', { name: /Executar/i });
+    fireEvent.click(screen.getByRole('button', { name: /^Simular$/i }));
+
+    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
     fireEvent.click(execBtn);
     
     expect(global.fetch).not.toHaveBeenCalledWith('/api/transacoes', expect.any(Object));

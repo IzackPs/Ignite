@@ -86,7 +86,7 @@ describe('TransactionModal', () => {
 
     render(<TransactionModal isOpen={true} onClose={vi.fn()} onSave={onSave} ativo={ativo} />);
 
-    const sellTab = screen.getByText(/Venda/i);
+    const sellTab = screen.getByRole('button', { name: /^Venda$/i });
     fireEvent.click(sellTab);
 
     const dataInput = screen.getByLabelText(/Data da Operação/i);

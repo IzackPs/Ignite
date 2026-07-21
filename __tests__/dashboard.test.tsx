@@ -64,11 +64,11 @@ describe('Dashboard Page', () => {
     render(<Home />);
     
     // Check loading state
-    expect(screen.getByText('Carregando carteira de investimentos...')).toBeInTheDocument();
+    expect(screen.getByText('Carregando dados da conta...')).toBeInTheDocument();
 
     // Wait for the fetch to resolve and render DashboardCharts and others
     await waitFor(() => {
-      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+      expect(screen.getByText(/Dashboard & Evolução Patrimonial/i)).toBeInTheDocument();
     });
   });
 
@@ -127,32 +127,27 @@ describe('Dashboard Page', () => {
     render(<Home />);
     
     await waitFor(() => {
-      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+      expect(screen.getByText(/Dashboard & Evolução Patrimonial/i)).toBeInTheDocument();
     });
     
-    // Click "Metas" button
-    const metasBtn = screen.getAllByRole('button', { name: /Metas/i })[0];
-    fireEvent.click(metasBtn);
+    // Click "Ações" tab button
+    const acoesTab = screen.getAllByText('Ações')[0];
+    fireEvent.click(acoesTab);
 
-    // Click "Novo Ativo" button
-    const novoAtivoBtn = screen.getAllByRole('button', { name: /Novo Ativo/i })[0];
+    // Click "Adicionar" button
+    const novoAtivoBtn = await screen.findByRole('button', { name: /Adicionar/i });
     fireEvent.click(novoAtivoBtn);
 
     // Click "Sair" button
     const sairBtn = screen.getAllByTitle('Sair')[0];
     fireEvent.click(sairBtn);
 
-    // Click "Recarregar Dados"
-    const reloadBtn = screen.getAllByTitle('Recarregar Dados')[0];
-    fireEvent.click(reloadBtn);
-
-    // Click "Atualizar Cotações"
-    const updateBtn = screen.getAllByTitle('Buscar cotações reais na B3 via Brapi/Yahoo Finance')[0];
+    // Click "Sincronizar"
+    const updateBtn = screen.getAllByTitle('Sincronizar')[0];
     fireEvent.click(updateBtn);
-    
     // Click "Ações" tab to show AssetTable
-    const acoesTab = screen.getAllByRole('button', { name: /Ações/i })[0];
-    if (acoesTab) fireEvent.click(acoesTab);
+    const acoesTab2 = screen.getAllByText('Ações')[0];
+    if (acoesTab2) fireEvent.click(acoesTab2);
     
     // Find AssetTable action buttons
     // "Editar ativo"
@@ -192,7 +187,7 @@ describe('Dashboard Page', () => {
     });
 
     // Click update cotações twice fast to trigger cooldown toast
-    const updateBtn = screen.getAllByTitle('Buscar cotações reais na B3 via Brapi/Yahoo Finance')[0];
+    const updateBtn = screen.getAllByTitle('Sincronizar')[0];
     fireEvent.click(updateBtn);
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/cotacoes', { method: 'POST' });
@@ -265,10 +260,10 @@ describe('Dashboard Page', () => {
 
     render(<Home />);
     await waitFor(() => {
-      expect(screen.getByText('Dashboard & Evolução Patrimonial')).toBeInTheDocument();
+      expect(screen.getByText(/Dashboard & Evolução Patrimonial/i)).toBeInTheDocument();
     });
 
-    const updateBtn = screen.getAllByTitle('Buscar cotações reais na B3 via Brapi/Yahoo Finance')[0];
+    const updateBtn = screen.getAllByTitle('Sincronizar')[0];
     fireEvent.click(updateBtn);
 
     await waitFor(() => {

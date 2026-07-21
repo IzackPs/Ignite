@@ -131,13 +131,13 @@ export const METAS_CLASSES_PADRAO: Record<
 /**
  * TAXA CDI ANUAL PADRÃO (Fallback)
  * O valor real é obtido dinamicamente via API do Banco Central (cdi.service.ts).
- * Este fallback (14,15% a.a. — Jul/2026) é usado apenas quando o CDI não é
+ * Este fallback (0% a.a.) é usado apenas quando o CDI não é
  * passado como parâmetro para calcularPortfolio().
  *
  * Taxa diária útil pro-rata com base no ano comercial de 252 dias úteis:
  * (1 + CDI_anual)^(1/252) - 1
  */
-const TAXA_CDI_ANUAL_FALLBACK = 0.1415;
+const TAXA_CDI_ANUAL_FALLBACK = 0;
 
 const FERIADOS_NACIONAIS_FIXOS = new Set([
   "01-01", // Ano Novo

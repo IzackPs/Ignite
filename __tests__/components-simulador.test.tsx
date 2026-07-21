@@ -26,8 +26,8 @@ describe('SimuladorAporteBar', () => {
     fireEvent.change(input, { target: { value: '1000' } });
 
     // Execute
-    const executeBtn = screen.getByRole('button', { name: /Executar/i });
-    fireEvent.click(executeBtn);
+    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
+    fireEvent.click(execBtn);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();

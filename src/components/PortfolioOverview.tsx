@@ -42,7 +42,7 @@ export function PortfolioOverview({
   onNovoAtivo,
   onAddTransacao,
   onOpenMetasModal,
-  cdiAnualPercentual = 14.15,
+  cdiAnualPercentual = 0,
 }: PortfolioOverviewProps) {
   const isLucroGeral = portfolio.lucroPrejuizoTotalR$ >= 0;
 

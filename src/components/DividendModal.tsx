@@ -46,6 +46,11 @@ export function DividendModal({
     }
   }, [activeAtivo]);
 
+  const estimatedDY = useMemo(() => {
+    if (!valorTotal || !activeAtivo || activeAtivo.valorMercado <= 0) return 0;
+    return (Number(valorTotal) / activeAtivo.valorMercado) * 100;
+  }, [valorTotal, activeAtivo]);
+
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -78,11 +83,6 @@ export function DividendModal({
       setLoading(false);
     }
   }
-
-  const estimatedDY = useMemo(() => {
-    if (!valorTotal || !activeAtivo || activeAtivo.valorMercado <= 0) return 0;
-    return (Number(valorTotal) / activeAtivo.valorMercado) * 100;
-  }, [valorTotal, activeAtivo]);
 
   return (
     <Modal

@@ -13,12 +13,14 @@ interface TransactionModalProps {
   readonly ativos?: AtivoCalculado[];
 }
 
+const EMPTY_ARRAY: any[] = [];
+
 export function TransactionModal({
   isOpen,
   onClose,
   onSave,
   ativo,
-  ativos = [],
+  ativos = EMPTY_ARRAY,
 }: TransactionModalProps) {
   const [tipo, setTipo] = useState<"COMPRA" | "VENDA">("COMPRA");
   const [selectedAtivoId, setSelectedAtivoId] = useState<string>("");

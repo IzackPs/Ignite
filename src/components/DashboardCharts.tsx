@@ -112,7 +112,7 @@ export function DashboardCharts({
   }));
 
   // Dados para o Gráfico de Linha / Área (Evolução Mensal do Patrimônio)
-  const taxaCdiAnual = (portfolio as any).cdiInfo?.taxaCdiAnual || 0.1415;
+  const taxaCdiAnual = (portfolio as any).cdiInfo?.taxaCdiAnual || 0;
   const firstDate = historico.length > 0 ? new Date(historico[0].data).getTime() : 0;
   const firstTotalInvestido = historico.length > 0 ? historico[0].totalInvestido : 0;
 
