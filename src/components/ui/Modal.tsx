@@ -10,7 +10,7 @@ interface ModalProps {
   maxWidth?: string;
 }
 
-export function Modal({ isOpen, onClose, title, description, children, maxWidth = "max-w-md" }: ModalProps) {
+export function Modal({ isOpen, onClose, title, description, children, maxWidth = "max-w-md" }: Readonly<ModalProps>) {
   if (!isOpen) return null;
 
   return (
