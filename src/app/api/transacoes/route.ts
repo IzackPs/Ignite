@@ -43,14 +43,14 @@ export async function POST(request: Request) {
       data: {
         ativoId,
         data: new Date(data),
-        tipo: tipo.toUpperCase(),
+        tipo: tipo.toUpperCase() as any,
         quantidade,
         precoUnitario,
       },
     });
 
     return NextResponse.json(novaTransacao, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao registrar transação:", error);
     return NextResponse.json(
       { error: "Erro ao registrar transação" },
@@ -88,7 +88,7 @@ export async function DELETE(request: Request) {
     await prisma.transacao.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao excluir transação:", error);
     return NextResponse.json(
       { error: "Erro ao excluir transação" },

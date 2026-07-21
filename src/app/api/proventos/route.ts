@@ -99,7 +99,7 @@ export async function GET() {
       historicoMensal,
       proventos,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao buscar proventos:", error);
     return NextResponse.json(
       { error: "Erro interno ao buscar extrato de proventos" },
@@ -140,13 +140,13 @@ export async function POST(request: Request) {
       data: {
         ativoId,
         data: data ? new Date(data) : new Date(),
-        tipo: tipo.toUpperCase(),
+        tipo: tipo.toUpperCase() as any,
         valorTotal: Number(valorTotal),
       },
     });
 
     return NextResponse.json(novoProvento, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao cadastrar provento:", error);
     return NextResponse.json(
       { error: "Erro ao cadastrar provento" },
@@ -180,7 +180,7 @@ export async function DELETE(request: Request) {
     await prisma.provento.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao excluir provento:", error);
     return NextResponse.json(
       { error: "Erro ao excluir provento" },

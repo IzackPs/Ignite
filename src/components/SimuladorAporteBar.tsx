@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger';
 "use client";
+import { logger } from '@/lib/logger';
 
 import React, { useState } from "react";
 import { PortfolioCalculado, simularAporteGreedy } from "@/lib/calculator";
@@ -66,7 +66,7 @@ export function SimuladorAporteBar({
       );
       onRefresh();
       setTimeout(() => setSuccessMessage(null), 5000);
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao executar ordens de aporte:", err);
     } finally {
       setExecutingOrders(false);

@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger';
 "use client";
+import { logger } from '@/lib/logger';
 
 import React, { useState } from "react";
 import { PortfolioCalculado } from "@/lib/calculator";
@@ -141,7 +141,7 @@ export function DashboardCharts({
         onRefresh();
         setTimeout(() => setSnapshotSuccess(false), 4000);
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao salvar foto mensal:", err);
     } finally {
       setSavingSnapshot(false);
@@ -157,7 +157,7 @@ export function DashboardCharts({
       if (res.ok) {
         onRefresh();
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao excluir histórico:", err);
     }
   };

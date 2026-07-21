@@ -126,7 +126,7 @@ export async function DELETE(request: Request) {
     await prisma.ativo.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao excluir ativo:", error);
     return NextResponse.json(
       { error: "Erro ao excluir ativo" },

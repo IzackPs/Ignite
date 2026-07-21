@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger';
 "use client";
+import { logger } from '@/lib/logger';
 
 import React, { useEffect, useState, useCallback } from "react";
 import { formatCurrency } from "@/lib/utils";
@@ -109,7 +109,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
       if (res.ok) {
         setProventosData(data);
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao carregar proventos:", err);
     }
   }, []);
@@ -127,7 +127,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
       if (res.ok) {
         fetchProventos();
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao excluir provento:", err);
     }
   };

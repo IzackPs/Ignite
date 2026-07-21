@@ -31,7 +31,7 @@ export const cotacaoService = {
           });
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.warn("Brapi API indisponível, tentando Yahoo Finance fallback...", e);
     }
   },
@@ -61,7 +61,7 @@ export const cotacaoService = {
           }
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.warn("Erro no fallback do Yahoo Finance:", err);
     }
   },

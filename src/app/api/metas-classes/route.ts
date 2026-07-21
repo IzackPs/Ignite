@@ -27,14 +27,14 @@ export async function POST(request: Request) {
     const entries = Object.entries(metas);
     for (const [classe, percentualIdeal] of entries) {
       await prisma.metaClasse.upsert({
-        where: { userId_classe: { userId, classe } },
+        where: { userId_classe: { userId, classe: classe as any } },
         update: { percentualIdeal: Number(percentualIdeal) },
-        create: { userId, classe, percentualIdeal: Number(percentualIdeal) },
+        create: { userId, classe: classe as any, percentualIdeal: Number(percentualIdeal) },
       });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao atualizar metas de classe:", error);
     return NextResponse.json(
       { error: "Erro ao atualizar metas de classe" },

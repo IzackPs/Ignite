@@ -9,18 +9,30 @@ async function main() {
   await prisma.metaClasse.deleteMany();
   await prisma.historicoPatrimonio.deleteMany();
 
+  let user = await prisma.user.findFirst({ where: { email: "admin@ignite.com" } });
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        name: "Admin Ignite",
+        email: "admin@ignite.com",
+      }
+    });
+  }
+  const userId = user.id;
+
   await prisma.metaClasse.createMany({
     data: [
-      { classe: "ACOES", percentualIdeal: 40 },
-      { classe: "FIIS", percentualIdeal: 10 },
-      { classe: "ETFS", percentualIdeal: 10 },
-      { classe: "RENDA_FIXA", percentualIdeal: 40 },
+      { userId, classe: "ACOES", percentualIdeal: 40 },
+      { userId, classe: "FIIS", percentualIdeal: 10 },
+      { userId, classe: "ETFS", percentualIdeal: 10 },
+      { userId, classe: "RENDA_FIXA", percentualIdeal: 40 },
     ],
   });
 
   // 1. AÇÕES
   const petr4 = await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "PETR4",
       nome: "Petrobras PN",
       classe: "ACOES",
@@ -39,6 +51,7 @@ async function main() {
 
   const vale3 = await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "VALE3",
       nome: "Vale ON",
       classe: "ACOES",
@@ -57,6 +70,7 @@ async function main() {
   // 2. FIIs
   const hglg11 = await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "HGLG11",
       nome: "CSHG Logística FII",
       classe: "FIIS",
@@ -74,6 +88,7 @@ async function main() {
 
   const mxrf11 = await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "MXRF11",
       nome: "Maxi Renda FII",
       classe: "FIIS",
@@ -92,6 +107,7 @@ async function main() {
   // 3. ETFs
   await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "IVVB11",
       nome: "iShares S&P 500 ETF",
       classe: "ETFS",
@@ -110,6 +126,7 @@ async function main() {
   // 4. RENDA FIXA
   await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "TESOURO-IPCA+2035",
       nome: "Tesouro IPCA+ 2035",
       classe: "RENDA_FIXA",
@@ -127,6 +144,7 @@ async function main() {
 
   await prisma.ativo.create({
     data: {
+      userId,
       simbolo: "CDB-NUBANK-100CDI",
       nome: "CDB Nubank 100% CDI",
       classe: "RENDA_FIXA",
@@ -171,12 +189,12 @@ async function main() {
   // 6. HISTÓRICO PATRIMONIAL
   await prisma.historicoPatrimonio.createMany({
     data: [
-      { data: new Date("2026-02-01"), patrimonioTotal: 38500.0, totalInvestido: 37000.0, lucroPrejuizo: 1500.0 },
-      { data: new Date("2026-03-01"), patrimonioTotal: 41200.0, totalInvestido: 40000.0, lucroPrejuizo: 1200.0 },
-      { data: new Date("2026-04-01"), patrimonioTotal: 45800.0, totalInvestido: 44000.0, lucroPrejuizo: 1800.0 },
-      { data: new Date("2026-05-01"), patrimonioTotal: 48900.0, totalInvestido: 47500.0, lucroPrejuizo: 1400.0 },
-      { data: new Date("2026-06-01"), patrimonioTotal: 51200.0, totalInvestido: 49000.0, lucroPrejuizo: 2200.0 },
-      { data: new Date("2026-07-01"), patrimonioTotal: 53875.0, totalInvestido: 51610.0, lucroPrejuizo: 2265.0 },
+      { userId, data: new Date("2026-02-01"), patrimonioTotal: 38500.0, totalInvestido: 37000.0, lucroPrejuizo: 1500.0 },
+      { userId, data: new Date("2026-03-01"), patrimonioTotal: 41200.0, totalInvestido: 40000.0, lucroPrejuizo: 1200.0 },
+      { userId, data: new Date("2026-04-01"), patrimonioTotal: 45800.0, totalInvestido: 44000.0, lucroPrejuizo: 1800.0 },
+      { userId, data: new Date("2026-05-01"), patrimonioTotal: 48900.0, totalInvestido: 47500.0, lucroPrejuizo: 1400.0 },
+      { userId, data: new Date("2026-06-01"), patrimonioTotal: 51200.0, totalInvestido: 49000.0, lucroPrejuizo: 2200.0 },
+      { userId, data: new Date("2026-07-01"), patrimonioTotal: 53875.0, totalInvestido: 51610.0, lucroPrejuizo: 2265.0 },
     ],
   });
 

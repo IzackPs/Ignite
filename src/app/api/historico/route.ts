@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(novoSnapshot, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao salvar foto de patrimônio:", error);
     return NextResponse.json(
       { error: "Erro ao salvar foto de patrimônio" },
@@ -69,7 +69,7 @@ export async function DELETE(request: Request) {
     await prisma.historicoPatrimonio.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao remover registro de histórico:", error);
     return NextResponse.json(
       { error: "Erro ao remover registro" },

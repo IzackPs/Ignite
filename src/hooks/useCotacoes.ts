@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger';
 "use client";
+import { logger } from '@/lib/logger';
 
 import { useState, useCallback, useEffect, useRef } from "react";
 
@@ -84,7 +84,7 @@ export function useCotacoes(onSuccess: () => Promise<void>): UseCotacoesReturn {
             type: "warning",
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         logger.error("Erro ao buscar cotações em tempo real:", err);
         setToast({
           message: "Não foi possível atualizar as cotações. Exibindo dados em cache.",

@@ -52,7 +52,7 @@ export async function POST() {
       updatedAtivos: result.updatedAtivos,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao atualizar cotações de mercado:", error);
     return NextResponse.json({
       success: false,

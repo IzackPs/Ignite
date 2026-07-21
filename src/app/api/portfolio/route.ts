@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const portfolio = await portfolioService.calcularParaUsuario(userId);
     return NextResponse.json(portfolio);
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Erro ao buscar portfólio:", error);
     return NextResponse.json(
       { error: "Erro interno ao calcular portfólio" },

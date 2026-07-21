@@ -18,7 +18,7 @@ export async function authenticate(
 ) {
   try {
     await signIn("credentials", formData)
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
         return "Credenciais inválidas."
@@ -60,7 +60,7 @@ export async function register(prevState: string | undefined, formData: FormData
 
     // Depois de registrar, faz o login automaticamente
     await signIn("credentials", formData)
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
         return "Erro ao fazer login automático após registro."

@@ -179,7 +179,7 @@ describe('Dashboard Page', () => {
       lucroPrejuizoTotalPercentual: 25, ativos: [], resumoClasses: [], historico: [],
     };
 
-    global.fetch = vi.fn().mockImplementation((url, opts) => {
+    global.fetch = vi.fn().mockImplementation((url, _opts) => {
       if (url === '/api/cotacoes') {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, updatedCount: 2 }) });
       }
@@ -250,7 +250,7 @@ describe('Dashboard Page', () => {
     };
 
     let callCount = 0;
-    global.fetch = vi.fn().mockImplementation((url, opts) => {
+    global.fetch = vi.fn().mockImplementation((url, _opts) => {
       if (url === '/api/cotacoes') {
         return Promise.reject(new Error('Network error'));
       }

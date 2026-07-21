@@ -1,8 +1,7 @@
-import { logger } from '@/lib/logger';
 "use client";
 
+import { logger } from '@/lib/logger';
 import { useState, useCallback, useEffect } from "react";
-import { AtivoCalculado } from "@/lib/calculator";
 import { PortfolioComHistorico } from "@/app/dashboard/page";
 
 /**
@@ -21,7 +20,7 @@ export function usePortfolio() {
       if (res.ok) {
         setPortfolio(data);
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Erro ao carregar portfólio:", err);
     } finally {
       setLoading(false);
@@ -46,7 +45,7 @@ export function usePortfolio() {
         if (res.ok) {
           await fetchPortfolio();
         }
-      } catch (err) {
+      } catch (err: any) {
         logger.error("Erro ao excluir ativo:", err);
       }
     },
