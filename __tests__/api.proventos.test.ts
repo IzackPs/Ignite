@@ -9,6 +9,7 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       delete: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     ativo: {
       findUnique: vi.fn(),
@@ -57,6 +58,48 @@ describe('API Proventos', () => {
       
       expect(prisma.provento.create).toHaveBeenCalled();
       expect(response.status).toBe(201);
+    });
+  });
+
+  describe('GET', () => {
+    it('deve retornar a lista de proventos com estatísticas mensais', async () => {
+      const { GET } = await import('../src/app/api/proventos/route');
+      
+      const proventosMock = [
+        {
+          id: '1',
+          ativoId: 'a1',
+          data: new Date('2026-07-20'),
+          tipo: 'DIVIDENDO',
+          valorTotal: 100,
+          ativo: {
+            simbolo: 'PETR4',
+            nome: 'Petrobras',
+            classe: 'ACOES',
+          }
+        },
+        {
+          id: '2',
+          ativoId: 'a2',
+          data: new Date('2026-07-25'),
+          tipo: 'JCP',
+          valorTotal: 50,
+          ativo: {
+            simbolo: 'VALE3',
+            nome: 'Vale',
+            classe: 'ACOES',
+          }
+        }
+      ];
+
+      vi.mocked(prisma.provento.findMany).mockResolvedValueOnce(proventosMock as any);
+
+      const response = await GET() as any;
+      expect(response.status).toBe(200);
+      expect(response.data.totalGeralRecebido).toBe(150);
+      expect(response.data.mediaMensal).toBe(150);
+      expect(response.data.historicoMensal.length).toBe(1);
+      expect(response.data.proventosCount).toBe(2);
     });
   });
 

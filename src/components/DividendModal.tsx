@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { AtivoCalculado } from "@/lib/calculator";
-import { X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 
 interface DividendModalProps {
   readonly isOpen: boolean;
@@ -65,118 +65,104 @@ export function DividendModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Registrar Recebimento de Provento"
+      description="Adicione o valor total do dividendo/rendimento creditado na sua conta."
+    >
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-4 text-sm">
         <div>
-          <h3 className="text-xl font-bold text-white">
-            Registrar Recebimento de Provento
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Adicione o valor total do dividendo/rendimento creditado na sua conta.
-          </p>
+          <label htmlFor="ativoId" className="block text-xs font-semibold text-slate-300 mb-1">
+            Ativo *
+          </label>
+          <select
+            id="ativoId"
+            required
+            value={ativoId}
+            onChange={(e) => setAtivoId(e.target.value)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono"
+          >
+            {ativos.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.simbolo} - {a.nome} ({a.classe})
+              </option>
+            ))}
+          </select>
         </div>
 
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="ativoId" className="block text-xs font-semibold text-slate-300 mb-1">
-              Ativo *
+            <label htmlFor="tipo" className="block text-xs font-semibold text-slate-300 mb-1">
+              Tipo de Provento *
             </label>
             <select
-              id="ativoId"
-              required
-              value={ativoId}
-              onChange={(e) => setAtivoId(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono"
+              id="tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             >
-              {ativos.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.simbolo} - {a.nome} ({a.classe})
-                </option>
-              ))}
+              <option value="RENDIMENTO">Rendimento (FII)</option>
+              <option value="DIVIDENDO">Dividendo (Ação/ETF)</option>
+              <option value="JCP">JCP (Juros s/ Capital)</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="tipo" className="block text-xs font-semibold text-slate-300 mb-1">
-                Tipo de Provento *
-              </label>
-              <select
-                id="tipo"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="RENDIMENTO">Rendimento (FII)</option>
-                <option value="DIVIDENDO">Dividendo (Ação/ETF)</option>
-                <option value="JCP">JCP (Juros s/ Capital)</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="data" className="block text-xs font-semibold text-slate-300 mb-1">
-                Data do Pagamento *
-              </label>
-              <input
-                id="data"
-                type="date"
-                required
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
-
           <div>
-            <label htmlFor="valorTotal" className="block text-xs font-semibold text-slate-300 mb-1">
-              Valor Total Recebido (R$) *
+            <label htmlFor="data" className="block text-xs font-semibold text-slate-300 mb-1">
+              Data do Pagamento *
             </label>
             <input
-              id="valorTotal"
-              type="number"
-              step="0.01"
-              min="0.01"
+              id="data"
+              type="date"
               required
-              placeholder="Ex: 45.00"
-              value={valorTotal || ""}
-              onChange={(e) => setValorTotal(Number(e.target.value))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-base font-bold focus:outline-none focus:border-blue-500"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             />
           </div>
+        </div>
 
-          <div className="pt-3 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-md shadow-emerald-600/20"
-            >
-              {loading ? "Registrando..." : "Confirmar Recebimento"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label htmlFor="valorTotal" className="block text-xs font-semibold text-slate-300 mb-1">
+            Valor Total Recebido (R$) *
+          </label>
+          <input
+            id="valorTotal"
+            type="number"
+            step="0.01"
+            min="0.01"
+            required
+            placeholder="Ex: 45.00"
+            value={valorTotal || ""}
+            onChange={(e) => setValorTotal(Number(e.target.value))}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-base font-bold focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div className="pt-3 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-md shadow-emerald-600/20"
+          >
+            {loading ? "Registrando..." : "Confirmar Recebimento"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

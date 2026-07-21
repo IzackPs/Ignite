@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from '../src/app/api/historico/route';
+import { POST, DELETE } from '../src/app/api/historico/route';
 import { prisma } from '@/lib/prisma';
 
 vi.mock('@/lib/prisma', () => ({
@@ -7,6 +7,7 @@ vi.mock('@/lib/prisma', () => ({
     historicoPatrimonio: {
       findFirst: vi.fn(),
       create: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }));
@@ -42,14 +43,28 @@ describe('API Historico', () => {
           lucroPrejuizoPercentual: 10,
         }),
       });
-      
-      vi.mocked(prisma.historicoPatrimonio.findFirst).mockResolvedValueOnce(null);
       vi.mocked(prisma.historicoPatrimonio.create).mockResolvedValueOnce({ id: '1' } as any);
 
       const response = await POST(request) as any;
       
       expect(prisma.historicoPatrimonio.create).toHaveBeenCalled();
       expect(response.status).toBe(201);
+    });
+  });
+
+  describe('DELETE', () => {
+    it('deve retornar 400 se id faltar', async () => {
+      const request = new Request('http://localhost/api/historico');
+      const response = await DELETE(request) as any;
+      expect(response.status).toBe(400);
+    });
+
+    it('deve deletar historico com sucesso', async () => {
+      const request = new Request('http://localhost/api/historico?id=1');
+      vi.mocked(prisma.historicoPatrimonio.findFirst).mockResolvedValueOnce({ id: '1', userId: 'mock-user-id' } as any);
+      const response = await DELETE(request) as any;
+      expect(response.status).toBe(200);
+      expect(prisma.historicoPatrimonio.delete).toHaveBeenCalled();
     });
   });
 });

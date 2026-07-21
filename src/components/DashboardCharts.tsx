@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Trash2,
 } from "lucide-react";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import {
   ResponsiveContainer,
   PieChart,
@@ -44,46 +45,44 @@ interface DashboardChartsProps {
 
 const COLORS = ["#3b82f6", "#a855f7", "#f59e0b", "#10b981"];
 
-const CustomDonutTooltip = ({ active, payload }: any) => {
-  if (active && payload?.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-        <div className="font-bold text-white">{data.name}</div>
-        <div className="text-slate-300">
-          Valor: <strong>{formatCurrency(data.atual)}</strong>
-        </div>
-        <div className="text-blue-400">
-          Atual: <strong>{formatPercent(data.percentualAtual)}</strong>
-        </div>
-        <div className="text-slate-400">
-          Meta Ideal: <strong>{data.metaPercentual}%</strong>
-        </div>
-      </div>
-    );
-  }
-  return null;
+const CustomDonutTooltip = (props: any) => {
+  return (
+    <ChartTooltip {...props} titleKey="name">
+      {(data) => (
+        <>
+          <div className="text-slate-300">
+            Valor: <strong>{formatCurrency(data.atual)}</strong>
+          </div>
+          <div className="text-blue-400">
+            Atual: <strong>{formatPercent(data.percentualAtual)}</strong>
+          </div>
+          <div className="text-slate-400">
+            Meta Ideal: <strong>{data.metaPercentual}%</strong>
+          </div>
+        </>
+      )}
+    </ChartTooltip>
+  );
 };
 
-const CustomAreaTooltip = ({ active, payload }: any) => {
-  if (active && payload?.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-        <div className="font-bold text-white">{data.mesAno}</div>
-        <div className="text-emerald-400 font-bold">
-          Patrimônio: {formatCurrency(data.patrimonioTotal)}
-        </div>
-        <div className="text-blue-400">
-          Investido: {formatCurrency(data.totalInvestido)}
-        </div>
-        <div className="text-slate-400 text-[10px]">
-          Lucro acumulado: {formatCurrency(data.lucroPrejuizo)}
-        </div>
-      </div>
-    );
-  }
-  return null;
+const CustomAreaTooltip = (props: any) => {
+  return (
+    <ChartTooltip {...props}>
+      {(data) => (
+        <>
+          <div className="text-emerald-400 font-bold">
+            Patrimônio: {formatCurrency(data.patrimonioTotal)}
+          </div>
+          <div className="text-blue-400">
+            Investido: {formatCurrency(data.totalInvestido)}
+          </div>
+          <div className="text-slate-400 text-[10px]">
+            Lucro acumulado: {formatCurrency(data.lucroPrejuizo)}
+          </div>
+        </>
+      )}
+    </ChartTooltip>
+  );
 };
 
 export function DashboardCharts({

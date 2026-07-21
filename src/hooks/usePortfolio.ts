@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { PortfolioComHistorico } from "@/app/dashboard/page";
 
 /**
- * Hook que encapsula todo o estado e lógica de fetch do portfólio.
+ * Hook que encapsula o estado completo e a lógica de fetch do portfólio.
  * Separa responsabilidades de dados do componente de página.
  */
 export function usePortfolio() {

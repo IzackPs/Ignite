@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Decimal from "decimal.js";
 import { requireAuth } from "@/lib/auth-guard";
 import { proventoSchema } from "@/lib/validations";
+import { createDeleteHandler, parseBody } from "@/lib/api-handler";
 
 type DecimalInstance = InstanceType<typeof Decimal>;
 
@@ -115,17 +116,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const parseResult = proventoSchema.safeParse(body);
-    if (!parseResult.success) {
-      const firstError =
-        parseResult.error.issues[0]?.message || "Dados do provento inválidos";
-      return NextResponse.json(
-        { error: firstError, errors: parseResult.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
+    const parsed = parseBody(proventoSchema, body, "Dados do provento inválidos");
+    if (!parsed.success) return parsed.response;
 
-    const { ativoId, data, tipo, valorTotal } = parseResult.data;
+    const { ativoId, data, tipo, valorTotal } = parsed.data;
 
     // Verificar que o ativo pertence ao usuário
     const ativo = await prisma.ativo.findFirst({ where: { id: ativoId, userId } });
@@ -155,36 +149,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
-  const { userId, errorResponse } = await requireAuth();
-  if (errorResponse) return errorResponse;
-
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
-    }
-
-    const provento = await prisma.provento.findFirst({
+export const DELETE = createDeleteHandler({
+  modelName: "provento",
+  findQuery: (id, userId) =>
+    prisma.provento.findFirst({
       where: { id, ativo: { userId } },
-    });
-    if (!provento) {
-      return NextResponse.json(
-        { error: "Provento não encontrado ou sem permissão." },
-        { status: 404 }
-      );
-    }
-
-    await prisma.provento.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    logger.error("Erro ao excluir provento:", error);
-    return NextResponse.json(
-      { error: "Erro ao excluir provento" },
-      { status: 500 }
-    );
-  }
-}
+    }),
+  deleteQuery: (id) => prisma.provento.delete({ where: { id } }),
+  missingIdMsg: "ID é obrigatório",
+  notFoundMsg: "Provento não encontrado ou sem permissão.",
+  errorMsg: "Erro ao excluir provento",
+});

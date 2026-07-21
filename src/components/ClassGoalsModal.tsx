@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { ResumoClasse } from "@/lib/calculator";
-import { X, Save, AlertCircle } from "lucide-react";
+import { Save, AlertCircle } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 
 interface ClassGoalsModalProps {
   readonly isOpen: boolean;
@@ -79,158 +80,84 @@ export function ClassGoalsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 relative space-y-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Configurar Metas de Alocação (%)"
+      description="Ajuste a distribuição ideal da sua carteira pelas 4 grandes classes."
+    >
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        <div>
-          <h3 className="text-xl font-bold text-white">
-            Configurar Metas de Alocação (%)
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Ajuste a distribuição ideal da sua carteira pelas 4 grandes classes.
-          </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Lista de Metas */}
+        <div className="space-y-3">
+          {(
+            [
+              { key: "ACOES", label: "📈 Ações", color: "text-blue-400", defaultVal: 40 },
+              { key: "FIIS", label: "🏢 FIIs (Fundos Imobiliários)", color: "text-purple-400", defaultVal: 10 },
+              { key: "ETFS", label: "🌐 ETFs", color: "text-amber-400", defaultVal: 10 },
+              { key: "RENDA_FIXA", label: "💰 Renda Fixa", color: "text-emerald-400", defaultVal: 40 },
+            ] as const
+          ).map(({ key, label, color, defaultVal }) => (
+            <div key={key} className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
+              <div>
+                <label htmlFor={`meta${key}`} className={`text-xs font-bold ${color} block`}>
+                  {label}
+                </label>
+                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  id={`meta${key}`}
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="100"
+                  value={metas[key] ?? defaultVal}
+                  onChange={(e) => handleChangeMeta(key, Number(e.target.value))}
+                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
+                />
+                <span className="text-sm font-bold text-slate-400">%</span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3 rounded-lg flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Validador de Soma */}
+        <div
+          className={`p-3 rounded-lg text-xs font-semibold flex items-center justify-between ${
+            isValidSoma
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+          }`}
+        >
+          <span>Total da Distribuição:</span>
+          <span className="font-mono text-sm font-bold">{somaMetas}% / 100%</span>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-3">
-            {/* Ações */}
-            <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
-              <div>
-                <label htmlFor="metaAcoes" className="text-xs font-bold text-blue-400 block">
-                  📈 Ações
-                </label>
-                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  id="metaAcoes"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="100"
-                  value={metas.ACOES ?? 40}
-                  onChange={(e) => handleChangeMeta("ACOES", Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
-                />
-                <span className="text-sm font-bold text-slate-400">%</span>
-              </div>
-            </div>
-
-            {/* FIIs */}
-            <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
-              <div>
-                <label htmlFor="metaFiis" className="text-xs font-bold text-purple-400 block">
-                  🏢 FIIs (Fundos Imobiliários)
-                </label>
-                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  id="metaFiis"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="100"
-                  value={metas.FIIS ?? 10}
-                  onChange={(e) => handleChangeMeta("FIIS", Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
-                />
-                <span className="text-sm font-bold text-slate-400">%</span>
-              </div>
-            </div>
-
-            {/* ETFs */}
-            <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
-              <div>
-                <label htmlFor="metaEtfs" className="text-xs font-bold text-amber-400 block">
-                  🌐 ETFs
-                </label>
-                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  id="metaEtfs"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="100"
-                  value={metas.ETFS ?? 10}
-                  onChange={(e) => handleChangeMeta("ETFS", Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
-                />
-                <span className="text-sm font-bold text-slate-400">%</span>
-              </div>
-            </div>
-
-            {/* Renda Fixa */}
-            <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
-              <div>
-                <label htmlFor="metaRendaFixa" className="text-xs font-bold text-emerald-400 block">
-                  💰 Renda Fixa
-                </label>
-                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  id="metaRendaFixa"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="100"
-                  value={metas.RENDA_FIXA ?? 40}
-                  onChange={(e) => handleChangeMeta("RENDA_FIXA", Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
-                />
-                <span className="text-sm font-bold text-slate-400">%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Validador de Soma */}
-          <div
-            className={`p-3 rounded-lg text-xs font-semibold flex items-center justify-between ${
-              isValidSoma
-                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-            }`}
+        <div className="pt-2 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors text-xs"
           >
-            <span>Total da Distribuição:</span>
-            <span className="font-mono text-sm font-bold">{somaMetas}% / 100%</span>
-          </div>
-
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors text-xs"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !isValidSoma}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-600/20 flex items-center gap-1.5"
-            >
-              <Save className="w-4 h-4" />
-              {loading ? "Salvar..." : "Salvar Metas"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !isValidSoma}
+            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-600/20 flex items-center gap-1.5"
+          >
+            <Save className="w-4 h-4" />
+            {loading ? "Salvar..." : "Salvar Metas"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

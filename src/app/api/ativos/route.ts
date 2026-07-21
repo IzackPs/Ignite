@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ativoSchema } from "@/lib/validations";
+import { createDeleteHandler, parseBody } from "@/lib/api-handler";
 
 // POST: Criar ou Atualizar Ativo
 export async function POST(request: Request) {
@@ -12,22 +13,16 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const parseResult = ativoSchema.safeParse({
+    const parsed = parseBody(ativoSchema, {
       ...body,
       percentualIdeal: Number(body.percentualIdeal ?? 0),
       precoAtual: Number(body.precoAtual ?? 0),
       ultimoProvento: Number(body.ultimoProvento ?? 0),
       taxaRentabilidade: Number(body.taxaRentabilidade ?? 100),
-    });
+    }, "Dados do ativo inválidos");
+    if (!parsed.success) return parsed.response;
 
-    if (!parseResult.success) {
-      const firstError =
-        parseResult.error.issues[0]?.message || "Dados do ativo inválidos";
-      return NextResponse.json(
-        { error: firstError, errors: parseResult.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
+    const parseResult = parsed;
 
     const {
       simbolo,
@@ -100,37 +95,11 @@ export async function POST(request: Request) {
 }
 
 // DELETE: Deletar Ativo (somente o dono pode excluir)
-export async function DELETE(request: Request) {
-  const { userId, errorResponse } = await requireAuth();
-  if (errorResponse) return errorResponse;
-
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID do ativo é necessário" },
-        { status: 400 }
-      );
-    }
-
-    const ativo = await prisma.ativo.findFirst({ where: { id, userId } });
-    if (!ativo) {
-      return NextResponse.json(
-        { error: "Ativo não encontrado ou sem permissão." },
-        { status: 404 }
-      );
-    }
-
-    await prisma.ativo.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    logger.error("Erro ao excluir ativo:", error);
-    return NextResponse.json(
-      { error: "Erro ao excluir ativo" },
-      { status: 500 }
-    );
-  }
-}
+export const DELETE = createDeleteHandler({
+  modelName: "ativo",
+  findQuery: (id, userId) => prisma.ativo.findFirst({ where: { id, userId } }),
+  deleteQuery: (id) => prisma.ativo.delete({ where: { id } }),
+  missingIdMsg: "ID do ativo é necessário",
+  notFoundMsg: "Ativo não encontrado ou sem permissão.",
+  errorMsg: "Erro ao excluir ativo",
+});

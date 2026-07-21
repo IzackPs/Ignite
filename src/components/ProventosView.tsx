@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 
 import React, { useEffect, useState, useCallback } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import { AtivoCalculado } from "@/lib/calculator";
 import { DividendModal } from "@/components/DividendModal";
 import {
@@ -47,34 +48,33 @@ export interface HistoricoMensalProvento {
   rendimento: number;
 }
 
-const CustomProventoTooltip = ({ active, payload }: any) => {
-  if (active && payload?.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
-        <div className="font-bold text-white">{data.mesAno}</div>
-        <div className="text-emerald-400 font-bold text-sm">
-          Total: {formatCurrency(data.total)}
-        </div>
-        {data.rendimento > 0 && (
-          <div className="text-purple-400">
-            Rendimentos (FIIs): {formatCurrency(data.rendimento)}
+const CustomProventoTooltip = (props: any) => {
+  return (
+    <ChartTooltip {...props}>
+      {(data) => (
+        <>
+          <div className="text-emerald-400 font-bold text-sm">
+            Total: {formatCurrency(data.total)}
           </div>
-        )}
-        {data.dividendo > 0 && (
-          <div className="text-emerald-300">
-            Dividendos: {formatCurrency(data.dividendo)}
-          </div>
-        )}
-        {data.jcp > 0 && (
-          <div className="text-blue-400">
-            JCP: {formatCurrency(data.jcp)}
-          </div>
-        )}
-      </div>
-    );
-  }
-  return null;
+          {data.rendimento > 0 && (
+            <div className="text-purple-400">
+              Rendimentos (FIIs): {formatCurrency(data.rendimento)}
+            </div>
+          )}
+          {data.dividendo > 0 && (
+            <div className="text-emerald-300">
+              Dividendos: {formatCurrency(data.dividendo)}
+            </div>
+          )}
+          {data.jcp > 0 && (
+            <div className="text-blue-400">
+              JCP: {formatCurrency(data.jcp)}
+            </div>
+          )}
+        </>
+      )}
+    </ChartTooltip>
+  );
 };
 
 const getTipoProventoClass = (tipo: string) => {

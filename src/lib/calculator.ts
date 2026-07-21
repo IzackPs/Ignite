@@ -118,7 +118,7 @@ export const METAS_CLASSES_PADRAO: Record<
 const TAXA_CDI_ANUAL_DEFAULT = Number(process.env.TAXA_CDI_ANUAL ?? "0.11");
 const TAXA_CDI_DIARIA = Math.pow(1 + TAXA_CDI_ANUAL_DEFAULT, 1 / 252) - 1;
 
-const FERIADOS_NACIONAIS_FIXOS = [
+const FERIADOS_NACIONAIS_FIXOS = new Set([
   "01-01", // Ano Novo
   "04-21", // Tiradentes
   "05-01", // Dia do Trabalhador
@@ -127,7 +127,7 @@ const FERIADOS_NACIONAIS_FIXOS = [
   "11-02", // Finados
   "11-15", // Proclamação da República
   "12-25", // Natal
-];
+]);
 
 /**
  * Conta o número de dias úteis (segunda a sexta) entre duas datas,
@@ -145,7 +145,7 @@ export function calcularDiasUteis(dataInicio: Date, dataFim: Date): number {
       const dayStr = String(curDate.getDate()).padStart(2, "0");
       const mmdd = `${monthStr}-${dayStr}`;
       
-      if (!FERIADOS_NACIONAIS_FIXOS.includes(mmdd)) {
+      if (!FERIADOS_NACIONAIS_FIXOS.has(mmdd)) {
         count++;
       }
     }
