@@ -331,11 +331,24 @@ rendaMensalEstimada       = quantidadeAtual × últimoProvento
 
 Para ativos da classe `RENDA_FIXA`, o sistema calcula o rendimento acumulado com base na taxa CDI e na rentabilidade percentual do título.
 
+#### Obtenção Dinâmica do CDI
+
+O CDI é obtido **automaticamente** via API pública do **Banco Central do Brasil** (SGS — Sistema Gerenciador de Séries Temporais):
+
+```
+Endpoint: https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json
+Série:    4389 (Taxa CDI Anual)
+Cache:    24 horas em memória (o CDI muda apenas nas reuniões do Copom, ~8x/ano)
+Fallback: 14,15% a.a. (caso a API esteja indisponível)
+```
+
+O serviço está implementado em `src/lib/services/cdi.service.ts` e é consumido pelo `portfolio.service.ts` antes de cada cálculo. A rota `/api/cdi` expõe o CDI atual para o front-end.
+
 #### Constantes
 
 ```
-TAXA_CDI_ANUAL     = 11,00% (0.11)
-TAXA_CDI_DIÁRIA    = (1 + 0.11)^(1/252) - 1  ≈  0,0004134%
+TAXA_CDI_ANUAL     = Obtida via API BCB (ex: 14,15% → 0.1415)
+TAXA_CDI_DIÁRIA    = (1 + CDI_anual)^(1/252) - 1
 ```
 
 > O ano comercial utilizado é de **252 dias úteis**.
@@ -350,7 +363,7 @@ preçoAtualCalculado   = preçoMédio × fatorAcumulado
 rendimentoProRata R$  = (preçoAtualCalculado - preçoMédio) × quantidadeAtual
 ```
 
-**Exemplo (CDB 120% do CDI):**
+**Exemplo (CDB 120% do CDI com CDI a 14,15% a.a.):**
 
 > **Atenção:** O motor `calcularDiasUteis` agora deduz automaticamente os **feriados nacionais fixos brasileiros** (ex: 01/01, 21/04, 25/12) garantindo rentabilidade exata e estrita à B3.
 
@@ -359,10 +372,10 @@ rendimentoProRata R$  = (preçoAtualCalculado - preçoMédio) × quantidadeAtual
 | Preço Médio | R$ 1.000,00 |
 | Taxa Rentabilidade | 120% do CDI |
 | Dias Úteis | 126 (≈ 6 meses) |
-| Taxa Diária Efetiva | `0,0004134 × 1,20` = 0,0004961 |
-| Fator Acumulado | `(1,0004961)^126` ≈ 1,0644 |
-| Preço Calculado | R$ 1.064,40 |
-| **Rendimento** | **(1.064,40 - 1.000) × 1** = **R$ 64,40** |
+| Taxa Diária Efetiva | `CDI_diária × 1,20` |
+| Fator Acumulado | `(1 + taxa_diária_efetiva)^126` |
+| Preço Calculado | R$ 1.000,00 × fator |
+| **Rendimento** | **(preço_calculado - 1.000) × qtd** |
 
 ---
 
@@ -514,7 +527,7 @@ O projeto passou recentemente por uma rigorosa análise arquitetural de um *Tech
    - As primitivas rudimentares de `console.error` foram completamente substituídas pelo **Pino** (`src/lib/logger.ts`), garantindo logs estruturados, rápidos e prontos para monitoramento em Cloud.
 
 3. **Qualidade e Cobertura de Testes (Vitest)**:
-   - A suite de testes conta com **89 testes unitários/integração** cobrindo 100% das regras de negócio (calculator.ts), páginas e rotas de API.
+   - A suite de testes conta com **105 testes unitários/integração** cobrindo 100% das regras de negócio (calculator.ts), páginas e rotas de API.
    - Cobertura (Coverage) estabilizada em mais de **85%** no SonarQube, atestando forte resiliência contra regressões e *Code Smells*. A proteção em ambiente CI via Github Actions está configurada e passando (Quality Gate = Passed).
 
 4. **Regras Avançadas, Performance e Segurança**:

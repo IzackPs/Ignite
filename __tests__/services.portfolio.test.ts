@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { portfolioService } from "../src/lib/services/portfolio.service";
 import { prisma } from "../src/lib/prisma";
 import * as calculator from "../src/lib/calculator";
+import * as cdiService from "../src/lib/services/cdi.service";
 
 vi.mock("../src/lib/prisma", () => ({
   prisma: {
@@ -23,12 +24,16 @@ vi.mock("../src/lib/calculator", () => {
   };
 });
 
+vi.mock("../src/lib/services/cdi.service", () => ({
+  getCdiAtual: vi.fn(),
+}));
+
 describe("portfolioService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("deve calcular portfólio de um usuário", async () => {
+  it("deve calcular portfólio de um usuário com CDI dinâmico", async () => {
     const userId = "user1";
 
     const ativosMock = [
@@ -68,9 +73,16 @@ describe("portfolioService", () => {
       },
     ];
 
+    const cdiMock = {
+      taxaCdiAnual: 0.1415,
+      taxaCdiDiaria: 0.000525,
+      fonte: "BCB_API" as const,
+    };
+
     vi.mocked(prisma.ativo.findMany).mockResolvedValue(ativosMock as any);
     vi.mocked(prisma.metaClasse.findMany).mockResolvedValue(metasMock as any);
     vi.mocked(prisma.historicoPatrimonio.findMany).mockResolvedValue(historicoMock as any);
+    vi.mocked(cdiService.getCdiAtual).mockResolvedValue(cdiMock);
 
     const portfolioMockResult = {
       patrimonioTotal: 3000,
@@ -101,6 +113,8 @@ describe("portfolioService", () => {
       orderBy: { data: "asc" },
     });
 
+    expect(cdiService.getCdiAtual).toHaveBeenCalled();
+
     expect(calculator.calcularPortfolio).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
@@ -108,12 +122,19 @@ describe("portfolioService", () => {
           classe: "ACOES",
         }),
       ]),
-      { ACOES: 30 }
+      { ACOES: 30 },
+      0.1415
     );
 
     expect(res).toEqual({
       ...portfolioMockResult,
       historico: historicoMock,
+      cdiInfo: {
+        taxaCdiAnual: 0.1415,
+        taxaCdiAnualFormatada: "14,15%",
+        fonte: "BCB_API",
+      },
     });
   });
 });
+

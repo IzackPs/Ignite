@@ -23,11 +23,13 @@ export function AssetModal({
   const [nome, setNome] = useState("");
   const [classe, setClasse] = useState("ACOES");
   const [setor, setSetor] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [percentualIdeal, setPercentualIdeal] = useState(0);
   const [precoAtual, setPrecoAtual] = useState(0);
-  const [ultimoProvento, setUltimoProvento] = useState(0);
+  const [ultimoProvento, setUltimoProvento] = useState<number | string>("");
   const [taxaRentabilidade, setTaxaRentabilidade] = useState(100);
   const [loading, setLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ export function AssetModal({
       setNome(editingAtivo.nome);
       setClasse(editingAtivo.classe);
       setSetor(editingAtivo.setor || "");
+      setLogoUrl(editingAtivo.logoUrl || "");
       setPercentualIdeal(editingAtivo.percentualIdeal);
       setPrecoAtual(editingAtivo.precoAtual);
       setUltimoProvento(editingAtivo.ultimoProvento || 0);
@@ -45,13 +48,40 @@ export function AssetModal({
       setNome("");
       setClasse(initialClasse);
       setSetor("");
+      setLogoUrl("");
       setPercentualIdeal(0);
       setPrecoAtual(0);
-      setUltimoProvento(0);
+      setUltimoProvento("");
       setTaxaRentabilidade(100);
     }
     setError(null);
   }, [editingAtivo, initialClasse, isOpen]);
+
+  useEffect(() => {
+    if (!simbolo || simbolo.length < 4) return;
+    if (editingAtivo && editingAtivo.simbolo === simbolo) return;
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/ativos/search?ticker=${encodeURIComponent(simbolo)}`);
+        const data = await res.json();
+        if (res.ok) {
+          if (data.nome && !nome) setNome(data.nome);
+          if (data.precoAtual && !precoAtual) setPrecoAtual(data.precoAtual);
+          if (data.classe) setClasse(data.classe);
+          if (data.setor && !setor) setSetor(data.setor);
+          if (data.logoUrl && !logoUrl) setLogoUrl(data.logoUrl);
+        }
+      } catch (err: any) {
+        // Ignore silent errors during auto-typing
+      } finally {
+        setIsSearching(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [simbolo, editingAtivo, nome, precoAtual]);
 
   if (!isOpen) return null;
 
@@ -70,6 +100,7 @@ export function AssetModal({
           nome,
           classe,
           setor,
+          logoUrl,
           percentualIdeal: Number(percentualIdeal),
           precoAtual: Number(precoAtual),
           ultimoProvento: Number(ultimoProvento),
@@ -91,6 +122,8 @@ export function AssetModal({
     }
   }
 
+
+
   const isRendaFixa = classe === "RENDA_FIXA";
 
   return (
@@ -107,22 +140,35 @@ export function AssetModal({
 
       <form onSubmit={handleSubmit} className="space-y-4 text-sm">
         <div>
-          <label htmlFor="simbolo" className="block text-xs font-semibold text-slate-300 mb-1">
+          <label htmlFor="simbolo" className="block text-xs font-semibold text-zinc-300 mb-1">
             Ticker / Símbolo *
           </label>
-          <input
-            id="simbolo"
-            type="text"
-            required
-            placeholder="Ex: CDB-NUBANK-100CDI, PETR4, HGLG11"
-            value={simbolo}
-            onChange={(e) => setSimbolo(e.target.value.toUpperCase())}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-          />
+          <div className="relative">
+            <input
+              id="simbolo"
+              type="text"
+              required
+              placeholder="Ex: CDB-NUBANK-100CDI, PETR4, HGLG11"
+              value={simbolo}
+              onChange={(e) => setSimbolo(e.target.value.toUpperCase())}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-20 py-2 text-white font-mono placeholder:text-zinc-500 focus:outline-none focus:border-gold-main"
+            />
+            {logoUrl && (
+              <div className="absolute left-2.5 top-2.5 w-5 h-5 rounded-full bg-white overflow-hidden flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt={simbolo} className="w-full h-full object-contain" />
+              </div>
+            )}
+            {isSearching && (
+              <div className="absolute right-3 top-2.5 text-zinc-500 text-xs font-semibold animate-pulse">
+                Buscando...
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
-          <label htmlFor="nome" className="block text-xs font-semibold text-slate-300 mb-1">
+          <label htmlFor="nome" className="block text-xs font-semibold text-zinc-300 mb-1">
             Nome do Ativo *
           </label>
           <input
@@ -132,20 +178,20 @@ export function AssetModal({
             placeholder="Ex: CDB Nubank 120% CDI"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:border-gold-main"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="classe" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="classe" className="block text-xs font-semibold text-zinc-300 mb-1">
               Classe *
             </label>
             <select
               id="classe"
               value={classe}
               onChange={(e) => setClasse(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-main"
             >
               <option value="ACOES">Ações</option>
               <option value="FIIS">FIIs (Fundos Imobiliários)</option>
@@ -155,7 +201,7 @@ export function AssetModal({
           </div>
 
           <div>
-            <label htmlFor="setor" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="setor" className="block text-xs font-semibold text-zinc-300 mb-1">
               Setor / Emissor
             </label>
             <input
@@ -164,14 +210,14 @@ export function AssetModal({
               placeholder="Ex: Bancário, Governo"
               value={setor}
               onChange={(e) => setSetor(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:border-gold-main"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label htmlFor="percentualIdeal" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="percentualIdeal" className="block text-xs font-semibold text-zinc-300 mb-1">
               % Ideal
             </label>
             <input
@@ -182,12 +228,12 @@ export function AssetModal({
               max="100"
               value={percentualIdeal}
               onChange={(e) => setPercentualIdeal(Number(e.target.value))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-gold-main"
             />
           </div>
 
           <div>
-            <label htmlFor="precoAtual" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="precoAtual" className="block text-xs font-semibold text-zinc-300 mb-1">
               Preço Base (R$)
             </label>
             <input
@@ -197,7 +243,7 @@ export function AssetModal({
               min="0"
               value={precoAtual}
               onChange={(e) => setPrecoAtual(Number(e.target.value))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-gold-main"
             />
           </div>
 
@@ -214,13 +260,13 @@ export function AssetModal({
                 placeholder="Ex: 120"
                 value={taxaRentabilidade}
                 onChange={(e) => setTaxaRentabilidade(Number(e.target.value))}
-                className="w-full bg-slate-800 border border-emerald-500/50 rounded-lg px-2.5 py-2 text-emerald-300 font-mono font-bold focus:outline-none focus:border-emerald-400"
+                className="w-full bg-zinc-900 border border-emerald-500/50 rounded-lg px-2.5 py-2 text-emerald-300 font-mono font-bold focus:outline-none focus:border-emerald-400"
               />
             </div>
           ) : (
             <div>
-              <label htmlFor="ultimoProvento" className="block text-xs font-semibold text-slate-300 mb-1">
-                Provento (R$)
+              <label htmlFor="ultimoProvento" className="block text-xs font-semibold text-zinc-300 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                Provento <span className="text-zinc-500 font-normal">(Opcional)</span>
               </label>
               <input
                 id="ultimoProvento"
@@ -230,7 +276,7 @@ export function AssetModal({
                 placeholder="Ex: 1.10"
                 value={ultimoProvento}
                 onChange={(e) => setUltimoProvento(Number(e.target.value))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-2 text-white font-mono focus:outline-none focus:border-gold-main"
               />
             </div>
           )}
@@ -240,14 +286,14 @@ export function AssetModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-lg text-zinc-400 hover:bg-zinc-900 transition-colors"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-600/20"
+            className="bg-gold-main hover:bg-gold-main text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-md shadow-gold-main/20"
           >
             {loading ? "Salvando..." : "Salvar Ativo"}
           </button>

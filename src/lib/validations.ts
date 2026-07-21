@@ -23,6 +23,7 @@ export const ativoSchema = z.object({
     message: "A classe deve ser ACOES, FIIS, ETFS ou RENDA_FIXA.",
   }),
   setor: z.string().max(50, "O setor deve ter no máximo 50 caracteres.").optional(),
+  logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
   percentualIdeal: z
     .number({ message: "O percentual ideal deve ser um número." })
     .min(0, "O percentual ideal não pode ser negativo.")

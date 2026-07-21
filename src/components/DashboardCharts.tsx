@@ -41,22 +41,29 @@ interface DashboardChartsProps {
   readonly historico: HistoricoItem[];
   readonly onOpenMetasModal: () => void;
   readonly onRefresh: () => void;
+  readonly isBalanceVisible?: boolean;
 }
 
-const COLORS = ["#3b82f6", "#a855f7", "#f59e0b", "#10b981"];
+const CLASS_COLORS: Record<string, string> = {
+  ACOES: "#3b82f6", // blue-500
+  FIIS: "#a855f7", // purple-500
+  ETFS: "#f59e0b", // amber-500
+  RENDA_FIXA: "#10b981", // emerald-500
+};
 
 const CustomDonutTooltip = (props: any) => {
+  const { isBalanceVisible = true } = props;
   return (
     <ChartTooltip {...props} titleKey="name">
       {(data) => (
         <>
-          <div className="text-slate-300">
-            Valor: <strong>{formatCurrency(data.atual)}</strong>
+          <div className="text-zinc-300">
+            Valor: <strong>{isBalanceVisible ? formatCurrency(data.atual) : "R$ ••••"}</strong>
           </div>
-          <div className="text-blue-400">
+          <div className="text-gold-main">
             Atual: <strong>{formatPercent(data.percentualAtual)}</strong>
           </div>
-          <div className="text-slate-400">
+          <div className="text-zinc-400">
             Meta Ideal: <strong>{data.metaPercentual}%</strong>
           </div>
         </>
@@ -66,18 +73,19 @@ const CustomDonutTooltip = (props: any) => {
 };
 
 const CustomAreaTooltip = (props: any) => {
+  const { isBalanceVisible = true } = props;
   return (
     <ChartTooltip {...props}>
       {(data) => (
         <>
           <div className="text-emerald-400 font-bold">
-            Patrimônio: {formatCurrency(data.patrimonioTotal)}
+            Patrimônio: {isBalanceVisible ? formatCurrency(data.patrimonioTotal) : "R$ ••••"}
           </div>
-          <div className="text-blue-400">
-            Investido: {formatCurrency(data.totalInvestido)}
+          <div className="text-gold-main">
+            Investido: {isBalanceVisible ? formatCurrency(data.totalInvestido) : "R$ ••••"}
           </div>
-          <div className="text-slate-400 text-[10px]">
-            Lucro acumulado: {formatCurrency(data.lucroPrejuizo)}
+          <div className="text-zinc-400 text-[10px]">
+            Lucro acumulado: {isBalanceVisible ? formatCurrency(data.lucroPrejuizo) : "R$ ••••"}
           </div>
         </>
       )}
@@ -90,6 +98,7 @@ export function DashboardCharts({
   historico,
   onOpenMetasModal,
   onRefresh,
+  isBalanceVisible = true,
 }: DashboardChartsProps) {
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
@@ -103,12 +112,21 @@ export function DashboardCharts({
   }));
 
   // Dados para o Gráfico de Linha / Área (Evolução Mensal do Patrimônio)
+  const taxaCdiAnual = (portfolio as any).cdiInfo?.taxaCdiAnual || 0.1415;
+  const firstDate = historico.length > 0 ? new Date(historico[0].data).getTime() : 0;
+  const firstTotalInvestido = historico.length > 0 ? historico[0].totalInvestido : 0;
+
   const lineData = historico.map((item) => {
     const d = new Date(item.data);
     const mesAno = d.toLocaleDateString("pt-BR", {
       month: "short",
       year: "2-digit",
     });
+
+    const daysDiff = (d.getTime() - firstDate) / (1000 * 60 * 60 * 24);
+    // Compounded theoretical CDI starting from the initial invested amount
+    const cdiAcumulado = firstTotalInvestido * Math.pow(1 + taxaCdiAnual, daysDiff / 365);
+
     return {
       id: item.id,
       dataOriginal: item.data,
@@ -116,6 +134,7 @@ export function DashboardCharts({
       patrimonioTotal: item.patrimonioTotal,
       totalInvestido: item.totalInvestido,
       lucroPrejuizo: item.lucroPrejuizo,
+      cdiAcumulado: cdiAcumulado > 0 ? cdiAcumulado : item.totalInvestido,
     };
   });
 
@@ -164,13 +183,13 @@ export function DashboardCharts({
   return (
     <div className="space-y-8">
       {/* Top Bar de Ações do Dashboard */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-surface border border-border-subtle rounded-2xl p-5 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <PieChartIcon className="w-5 h-5 text-blue-400" />
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <PieChartIcon className="w-5 h-5 text-gold-main" />
             Dashboard & Evolução Patrimonial
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Acompanhe a distribuição por classe de ativo e o crescimento do seu patrimônio ao longo do tempo.
           </p>
         </div>
@@ -179,9 +198,9 @@ export function DashboardCharts({
           <button
             type="button"
             onClick={onOpenMetasModal}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 shadow-md"
+            className="bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-foreground border border-border-subtle text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
           >
-            <Settings className="w-4 h-4 text-blue-400" />
+            <Settings className="w-4 h-4 text-zinc-400" />
             Editar Metas por Classe
           </button>
 
@@ -213,14 +232,14 @@ export function DashboardCharts({
       {/* Grid de 2 Gráficos Lado a Lado */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* GRÁFICO 1: Rosca (Alocação Atual vs Ideal por Classe) */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+        <div className="bg-surface border border-border-subtle rounded-2xl p-6 shadow-md space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-400" />
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <Layers className="w-4 h-4 text-gold-main" />
                 Alocação por Classe (Atual vs Ideal)
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-zinc-400">
                 Distribuição patrimonial real comparada às metas configuradas
               </p>
             </div>
@@ -238,43 +257,67 @@ export function DashboardCharts({
                   paddingAngle={4}
                   dataKey="atual"
                 >
-                  {donutData.map((entry, index) => (
+                  {portfolio.resumoClasses.map((entry, index) => (
                     <Cell
-                      key={`cell-${entry.name}`}
-                      fill={COLORS[index % COLORS.length]}
-                      stroke="#0f172a"
+                      key={`cell-${index}`}
+                      fill={CLASS_COLORS[entry.classe] || "#fbbf24"}
+                      stroke="rgba(0,0,0,0.1)"
                       strokeWidth={2}
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomDonutTooltip />} />
+                <Tooltip content={<CustomDonutTooltip isBalanceVisible={isBalanceVisible} />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
           {/* Legenda Customizada com Comparativo Percentual */}
-          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800/80">
+          <div className="flex flex-col gap-3 pt-4 border-t border-border-subtle">
             {portfolio.resumoClasses.map((r, idx) => (
               <div
                 key={r.classe}
-                className="bg-slate-800/50 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between text-xs"
+                className="bg-zinc-100 dark:bg-white/5 p-3 rounded-lg border border-border-subtle flex flex-col gap-2"
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                  />
-                  <span className="font-medium text-slate-300 truncate">
-                    {r.nomeClasse}
-                  </span>
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                      style={{ backgroundColor: CLASS_COLORS[r.classe] || "#fbbf24" }}
+                    />
+                    <span className="font-medium text-foreground truncate">
+                      {r.nomeClasse}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-foreground">
+                      {formatPercent(r.percentualAtual, 1)}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 block">
+                      Meta: {r.metaPercentual}%
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="font-bold text-white">
-                    {formatPercent(r.percentualAtual, 1)}
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">
-                    Meta: {r.metaPercentual}%
-                  </span>
+                
+                {/* Visual Progress Bar (Defasagem) */}
+                <div className="relative w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden mt-1">
+                  <div
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${
+                      r.percentualAtual - r.metaPercentual < -2 ? "bg-amber-400" :
+                      r.percentualAtual - r.metaPercentual > 2 ? "bg-rose-400" :
+                      "bg-emerald-400"
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        (r.percentualAtual / (r.metaPercentual || 1)) * 100
+                      )}%`,
+                    }}
+                  />
+                  {/* Meta marker line */}
+                  <div
+                    className="absolute top-0 h-full w-0.5 bg-white/40"
+                    style={{ left: "100%" }}
+                  />
                 </div>
               </div>
             ))}
@@ -282,14 +325,14 @@ export function DashboardCharts({
         </div>
 
         {/* GRÁFICO 2: Linha / Área (Evolução Mensal do Patrimônio) */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+        <div className="bg-surface border border-border-subtle rounded-2xl p-6 shadow-md space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 Evolução do Patrimônio Total (Mensal)
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-zinc-400">
                 Histórico temporal de crescimento do valor de mercado vs total investido
               </p>
             </div>
@@ -297,7 +340,7 @@ export function DashboardCharts({
 
           <div className="h-64 w-full">
             {lineData.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 text-xs gap-2">
+              <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-xs gap-2">
                 <Calendar className="w-8 h-8 opacity-40" />
                 Nenhum registro histórico salvo ainda. Clique em &quot;Salvar Foto Mensal&quot; para começar.
               </div>
@@ -313,18 +356,18 @@ export function DashboardCharts({
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorInvestido" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="mesAno" stroke="#64748b" fontSize={11} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="mesAno" stroke="#a1a1aa" fontSize={11} />
                   <YAxis
-                    stroke="#64748b"
+                    stroke="#a1a1aa"
                     fontSize={11}
                     tickFormatter={(val) => `R$ ${(val / 1000).toFixed(0)}k`}
                   />
-                  <Tooltip content={<CustomAreaTooltip />} />
+                  <Tooltip content={<CustomAreaTooltip isBalanceVisible={isBalanceVisible} />} />
                   <Area
                     type="monotone"
                     dataKey="patrimonioTotal"
@@ -338,11 +381,20 @@ export function DashboardCharts({
                     type="monotone"
                     dataKey="totalInvestido"
                     name="Total Investido"
-                    stroke="#3b82f6"
+                    stroke="#f59e0b"
                     strokeWidth={2}
                     strokeDasharray="4 4"
                     fillOpacity={1}
                     fill="url(#colorInvestido)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="cdiAcumulado"
+                    name="Benchmark CDI"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    strokeDasharray="3 3"
+                    fillOpacity={0}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -351,15 +403,15 @@ export function DashboardCharts({
 
           {/* Resumo da Linha do Tempo e opção de gerenciar */}
           {lineData.length > 0 && (
-            <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-zinc-400">
               <span>
                 Última foto:{" "}
-                <strong className="text-slate-200">
+                <strong className="text-foreground">
                   {lineData.at(-1)?.mesAno}
                 </strong>
               </span>
               <span className="font-mono text-emerald-400 font-bold">
-                {formatCurrency(lineData.at(-1)?.patrimonioTotal || 0)}
+                {isBalanceVisible ? formatCurrency(lineData.at(-1)?.patrimonioTotal || 0) : "R$ •••••"}
               </span>
             </div>
           )}
@@ -368,13 +420,13 @@ export function DashboardCharts({
 
       {/* Lista / Histórico Registrado de Fotos Mensais */}
       {lineData.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-4">
+        <div className="bg-surface border border-border-subtle rounded-2xl p-6 shadow-md space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-400" />
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gold-main" />
               Histórico de Fotos Registradas
             </h3>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-zinc-500">
               {lineData.length} foto(s) registrada(s)
             </span>
           </div>
@@ -382,45 +434,45 @@ export function DashboardCharts({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold">
-                  <th className="py-2.5 px-4">Data do Snapshot</th>
+                <tr className="bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-semibold">
+                  <th className="py-2.5 px-4 rounded-l-lg">Data do Snapshot</th>
                   <th className="py-2.5 px-3 text-right">Patrimônio Total</th>
                   <th className="py-2.5 px-3 text-right">Total Investido</th>
                   <th className="py-2.5 px-3 text-right">Lucro / Prejuízo</th>
-                  <th className="py-2.5 px-4 text-center">Ações</th>
+                  <th className="py-2.5 px-4 text-center rounded-r-lg">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-border-subtle">
                 {lineData.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-slate-800/40 transition-colors font-mono"
+                    className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors font-mono"
                   >
-                    <td className="py-2.5 px-4 text-slate-300 font-sans font-medium">
+                    <td className="py-2.5 px-4 text-zinc-700 dark:text-zinc-300 font-sans font-medium">
                       {new Date(item.dataOriginal).toLocaleDateString("pt-BR", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",
                       })}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-bold text-white">
-                      {formatCurrency(item.patrimonioTotal)}
+                    <td className="py-2.5 px-3 text-right font-bold text-foreground">
+                      {isBalanceVisible ? formatCurrency(item.patrimonioTotal) : "R$ ••••"}
                     </td>
-                    <td className="py-2.5 px-3 text-right text-slate-400">
-                      {formatCurrency(item.totalInvestido)}
+                    <td className="py-2.5 px-3 text-right text-zinc-500 dark:text-zinc-400">
+                      {isBalanceVisible ? formatCurrency(item.totalInvestido) : "R$ ••••"}
                     </td>
                     <td
                       className={`py-2.5 px-3 text-right font-bold ${
                         item.lucroPrejuizo >= 0 ? "text-emerald-400" : "text-rose-400"
                       }`}
                     >
-                      {formatCurrency(item.lucroPrejuizo)}
+                      {isBalanceVisible ? formatCurrency(item.lucroPrejuizo) : "R$ ••••"}
                     </td>
                     <td className="py-2.5 px-4 text-center font-sans">
                       <button
                         type="button"
                         onClick={() => handleExcluirHistorico(item.id)}
-                        className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+                        className="text-zinc-400 hover:text-rose-400 p-1 rounded transition-colors"
                         title="Excluir este registro"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

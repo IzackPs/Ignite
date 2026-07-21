@@ -101,7 +101,7 @@ describe("Motor de Cálculo (calculator.ts)", () => {
 
   describe("Renda Fixa (Pro-rata CDI)", () => {
     it("deve calcular a progressão diária baseada em CDI pro-rata em dias úteis", () => {
-      // 11% a.a -> CDI = 0.0004134... por dia
+      // 11% a.a -> CDI = 0.0004134... por dia (passado explicitamente como parâmetro)
       // 120% CDI
       // Dias = 5 (seg a sex)
       
@@ -138,7 +138,8 @@ describe("Motor de Cálculo (calculator.ts)", () => {
         },
       ];
 
-      const portfolio = calcularPortfolio(ativos);
+      // Passa CDI explicitamente como 11% a.a. (0.11) para manter o teste determinístico
+      const portfolio = calcularPortfolio(ativos, undefined, 0.11);
       const cdb = portfolio.ativos[0];
 
       // Restaurar Date original

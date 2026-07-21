@@ -98,18 +98,18 @@ export function ClassGoalsModal({
         <div className="space-y-3">
           {(
             [
-              { key: "ACOES", label: "📈 Ações", color: "text-blue-400", defaultVal: 40 },
-              { key: "FIIS", label: "🏢 FIIs (Fundos Imobiliários)", color: "text-purple-400", defaultVal: 10 },
-              { key: "ETFS", label: "🌐 ETFs", color: "text-amber-400", defaultVal: 10 },
-              { key: "RENDA_FIXA", label: "💰 Renda Fixa", color: "text-emerald-400", defaultVal: 40 },
+              { key: "ACOES", label: "📈 Ações", color: "text-blue-500", defaultVal: 40 },
+              { key: "FIIS", label: "🏢 FIIs (Fundos Imobiliários)", color: "text-purple-500", defaultVal: 10 },
+              { key: "ETFS", label: "🌐 ETFs", color: "text-amber-500", defaultVal: 10 },
+              { key: "RENDA_FIXA", label: "💰 Renda Fixa", color: "text-emerald-500", defaultVal: 40 },
             ] as const
           ).map(({ key, label, color, defaultVal }) => (
-            <div key={key} className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 flex items-center justify-between">
+            <div key={key} className="bg-zinc-900/80 p-3 rounded-xl border border-zinc-800/80 flex items-center justify-between">
               <div>
                 <label htmlFor={`meta${key}`} className={`text-xs font-bold ${color} block`}>
                   {label}
                 </label>
-                <span className="text-[10px] text-slate-400">Meta Ideal (%)</span>
+                <span className="text-[10px] text-zinc-400">Meta Ideal (%)</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
@@ -120,9 +120,9 @@ export function ClassGoalsModal({
                   max="100"
                   value={metas[key] ?? defaultVal}
                   onChange={(e) => handleChangeMeta(key, Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-20 bg-surface border border-zinc-800 rounded-lg px-2.5 py-1.5 text-right font-mono font-bold text-white text-sm focus:outline-none focus:border-gold-main"
                 />
-                <span className="text-sm font-bold text-slate-400">%</span>
+                <span className="text-sm font-bold text-zinc-400">%</span>
               </div>
             </div>
           ))}
@@ -144,14 +144,14 @@ export function ClassGoalsModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors text-xs"
+            className="px-4 py-2 rounded-lg text-zinc-400 hover:bg-zinc-900 transition-colors text-xs"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading || !isValidSoma}
-            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-600/20 flex items-center gap-1.5"
+            className="bg-gold-main hover:bg-gold-main disabled:opacity-50 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shadow-md shadow-gold-main/20 flex items-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             {loading ? "Salvar..." : "Salvar Metas"}

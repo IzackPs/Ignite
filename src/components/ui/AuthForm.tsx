@@ -29,7 +29,7 @@ export function AuthForm({
   footerLinkLabel,
 }: Readonly<AuthFormProps>) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 dark:bg-surface p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">{title}</CardTitle>
@@ -73,9 +73,9 @@ export function AuthForm({
             <Button className="w-full" type="submit">
               {submitLabel}
             </Button>
-            <div className="text-sm text-center text-slate-500 dark:text-slate-400">
+            <div className="text-sm text-center text-zinc-500 dark:text-zinc-400">
               {footerText}{" "}
-              <NextLink href={footerLinkHref} className="text-blue-600 hover:underline dark:text-blue-500">
+              <NextLink href={footerLinkHref} className="text-gold-hover hover:underline dark:text-gold-main">
                 {footerLinkLabel}
               </NextLink>
             </div>

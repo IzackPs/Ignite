@@ -2,7 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import { useState, useCallback, useEffect } from "react";
-import { PortfolioComHistorico } from "@/app/dashboard/page";
+import { PortfolioComHistorico } from "@/lib/calculator";
 
 /**
  * Hook que encapsula o estado completo e a lógica de fetch do portfólio.

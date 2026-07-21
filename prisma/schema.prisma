@@ -97,10 +97,11 @@ model VerificationToken {
 
 model Ativo {
   id                String       @id @default(uuid())
-  simbolo           String       @unique
+  simbolo           String
   nome              String
   classe            TipoClasse
   setor             String?
+  logoUrl           String?
   percentualIdeal   Float        @default(0)
   precoAtual        Float        @default(0)
   ultimoProvento    Float        @default(0)
@@ -112,6 +113,8 @@ model Ativo {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, simbolo])
 }
 
 model Transacao {

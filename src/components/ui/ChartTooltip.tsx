@@ -16,7 +16,7 @@ export function ChartTooltip({
   if (active && payload?.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl text-xs space-y-1">
+      <div className="bg-zinc-950 border border-border-subtle p-3 rounded-lg shadow-xl text-xs space-y-1">
         {titleKey && <div className="font-bold text-white">{data[titleKey]}</div>}
         {children(data)}
       </div>

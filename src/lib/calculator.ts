@@ -20,6 +20,7 @@ export interface AtivoDTO {
   nome: string;
   classe: TipoClasse;
   setor?: string | null;
+  logoUrl?: string | null;
   percentualIdeal: number; // Ex: 10 para 10%
   precoAtual: number;
   ultimoProvento?: number; // Último provento pago por cota (R$)
@@ -33,6 +34,7 @@ export interface AtivoCalculado {
   nome: string;
   classe: string;
   setor?: string | null;
+  logoUrl?: string | null;
   percentualIdeal: number;
   precoAtual: number;
   ultimoProvento: number;
@@ -81,6 +83,23 @@ export interface PortfolioCalculado {
   resumoClasses: ResumoClasse[];
 }
 
+export interface CdiInfo {
+  taxaCdiAnual: number;
+  taxaCdiAnualFormatada: string;
+  fonte: "BCB_API" | "CACHE" | "FALLBACK";
+}
+
+export interface PortfolioComHistorico extends PortfolioCalculado {
+  historico: {
+    id: string;
+    data: string | Date;
+    patrimonioTotal: number;
+    totalInvestido: number;
+    lucroPrejuizo: number;
+  }[];
+  cdiInfo?: CdiInfo;
+}
+
 export interface ItemAporteSimulado {
   ativoId: string;
   simbolo: string;
@@ -110,13 +129,15 @@ export const METAS_CLASSES_PADRAO: Record<
 };
 
 /**
- * TAXA CDI ANUAL PADRÃO
- * Tenta ler da variável de ambiente TAXA_CDI_ANUAL, fallback para 11,00% ao ano (0.11)
- * Calcula a taxa diária útil pro-rata com base no ano comercial de 252 dias úteis:
+ * TAXA CDI ANUAL PADRÃO (Fallback)
+ * O valor real é obtido dinamicamente via API do Banco Central (cdi.service.ts).
+ * Este fallback (14,15% a.a. — Jul/2026) é usado apenas quando o CDI não é
+ * passado como parâmetro para calcularPortfolio().
+ *
+ * Taxa diária útil pro-rata com base no ano comercial de 252 dias úteis:
  * (1 + CDI_anual)^(1/252) - 1
  */
-const TAXA_CDI_ANUAL_DEFAULT = Number(process.env.TAXA_CDI_ANUAL ?? "0.11");
-const TAXA_CDI_DIARIA = Math.pow(1 + TAXA_CDI_ANUAL_DEFAULT, 1 / 252) - 1;
+const TAXA_CDI_ANUAL_FALLBACK = 0.1415;
 
 const FERIADOS_NACIONAIS_FIXOS = new Set([
   "01-01", // Ano Novo
@@ -211,9 +232,12 @@ export function calcularPosicaoAtivo(transacoes: TransacaoDTO[] = []): {
  */
 export function calcularPortfolio(
   ativos: AtivoDTO[],
-  metasCustomizadasClasses?: Record<string, number>
+  metasCustomizadasClasses?: Record<string, number>,
+  taxaCdiAnual?: number
 ): PortfolioCalculado {
   const agora = new Date();
+  const cdiAnual = taxaCdiAnual ?? TAXA_CDI_ANUAL_FALLBACK;
+  const taxaCdiDiaria = Math.pow(1 + cdiAnual, 1 / 252) - 1;
 
   const ativosComPosicao = ativos.map((ativo) => {
     const { quantidadeAtual, precoMedio, totalInvestido, primeiraDataCompra } =
@@ -231,7 +255,7 @@ export function calcularPortfolio(
       diasUteis = calcularDiasUteis(primeiraDataCompra, agora);
       if (diasUteis > 0) {
         // Rentabilidade diária efetiva = TAXA_CDI_DIARIA * (taxaRentabilidade / 100)
-        const taxaDiariaAtivoDec = new Decimal(TAXA_CDI_DIARIA).times(
+        const taxaDiariaAtivoDec = new Decimal(taxaCdiDiaria).times(
           new Decimal(taxaRentabilidade).dividedBy(100)
         );
         // Fator acumulado pro-rata = (1 + taxaDiariaAtivo)^diasUteis
@@ -337,6 +361,7 @@ export function calcularPortfolio(
       nome: a.nome,
       classe: a.classe,
       setor: a.setor,
+      logoUrl: a.logoUrl,
       percentualIdeal: a.percentualIdeal || 0,
       precoAtual: a.precoAtual || 0,
       ultimoProvento: Number(ultimoProventoDec.toFixed(2)),

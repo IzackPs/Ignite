@@ -1,74 +1,15 @@
 import { logger } from '@/lib/logger';
 import { prisma } from "@/lib/prisma";
+import YahooFinance from 'yahoo-finance2';
+
+const yahooFinance = new YahooFinance();
 
 /**
- * Serviço de cotações — encapsula a lógica de fallback Brapi → Yahoo Finance
- * e a atualização dos preços no banco de dados.
+ * Serviço de cotações — utiliza yahoo-finance2 para atualização robusta.
  */
 export const cotacaoService = {
   /**
-   * Busca cotações da API Brapi.dev para os tickers informados.
-   * Preenche o `pricesMap` com os preços encontrados.
-   */
-  async fetchBrapiPrices(
-    tickersString: string,
-    pricesMap: Record<string, number>
-  ): Promise<void> {
-    try {
-      const brapiUrl = `https://brapi.dev/api/quote/${tickersString}?token=`;
-      const res = await fetch(brapiUrl, {
-        headers: { "User-Agent": "AntigravityPortfolio/1.0" },
-        next: { revalidate: 0 },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.results && Array.isArray(data.results)) {
-          data.results.forEach((item: any) => {
-            if (item.symbol && item.regularMarketPrice !== undefined) {
-              pricesMap[item.symbol.toUpperCase()] = Number(item.regularMarketPrice);
-            }
-          });
-        }
-      }
-    } catch (e: any) {
-      logger.warn("Brapi API indisponível, tentando Yahoo Finance fallback...", e);
-    }
-  },
-
-  /**
-   * Fallback: busca cotações do Yahoo Finance (.SA) para tickers ausentes.
-   */
-  async fetchYahooPrices(
-    missingTickers: string[],
-    pricesMap: Record<string, number>
-  ): Promise<void> {
-    try {
-      const yahooTickers = missingTickers.map((t) => `${t}.SA`).join(",");
-      const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${yahooTickers}`;
-      const resYahoo = await fetch(yahooUrl, {
-        headers: { "User-Agent": "Mozilla/5.0" },
-        next: { revalidate: 0 },
-      });
-
-      if (resYahoo.ok) {
-        const dataYahoo = await resYahoo.json();
-        const quotes = dataYahoo?.quoteResponse?.result || [];
-        quotes.forEach((q: any) => {
-          const cleanSymbol = q.symbol.replace(".SA", "").toUpperCase();
-          if (q.regularMarketPrice !== undefined) {
-            pricesMap[cleanSymbol] = Number(q.regularMarketPrice);
-          }
-        });
-      }
-    } catch (err: any) {
-      logger.warn("Erro no fallback do Yahoo Finance:", err);
-    }
-  },
-
-  /**
    * Atualiza os preços dos ativos de renda variável de um usuário.
-   * Tenta Brapi primeiro, Yahoo Finance como fallback.
    */
   async atualizarCotacoesParaUsuario(userId: string) {
     const ativosMercado = await prisma.ativo.findMany({
@@ -82,31 +23,29 @@ export const cotacaoService = {
       return { updatedCount: 0, updatedAtivos: [], nothingToUpdate: true };
     }
 
-    const tickers = ativosMercado.map((a) => a.simbolo.trim().toUpperCase());
-    const tickersString = tickers.join(",");
-    const pricesMap: Record<string, number> = {};
-
-    await this.fetchBrapiPrices(tickersString, pricesMap);
-
-    const missingTickers = tickers.filter((t) => !pricesMap[t]);
-    if (missingTickers.length > 0) {
-      await this.fetchYahooPrices(missingTickers, pricesMap);
-    }
-
     const updatedAtivos: { simbolo: string; precoAntigo: number; precoNovo: number }[] = [];
 
     for (const ativo of ativosMercado) {
-      const novoPreco = pricesMap[ativo.simbolo.toUpperCase()];
-      if (novoPreco !== undefined && novoPreco > 0) {
-        await prisma.ativo.update({
-          where: { id: ativo.id },
-          data: { precoAtual: novoPreco },
-        });
-        updatedAtivos.push({
-          simbolo: ativo.simbolo,
-          precoAntigo: ativo.precoAtual,
-          precoNovo: novoPreco,
-        });
+      try {
+        const symbolClean = ativo.simbolo.trim().toUpperCase();
+        const searchTicker = symbolClean.includes('.') ? symbolClean : `${symbolClean}.SA`;
+        
+        const quote = await yahooFinance.quote(searchTicker);
+        const novoPreco = quote?.regularMarketPrice;
+
+        if (novoPreco !== undefined && novoPreco > 0) {
+          await prisma.ativo.update({
+            where: { id: ativo.id },
+            data: { precoAtual: novoPreco },
+          });
+          updatedAtivos.push({
+            simbolo: ativo.simbolo,
+            precoAntigo: ativo.precoAtual,
+            precoNovo: novoPreco,
+          });
+        }
+      } catch (err: any) {
+        logger.warn(`Erro ao atualizar cotação para ${ativo.simbolo}: ${err.message || String(err)}`);
       }
     }
 

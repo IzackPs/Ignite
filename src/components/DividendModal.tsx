@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AtivoCalculado } from "@/lib/calculator";
 import { Modal } from "@/components/ui/Modal";
 
@@ -19,10 +19,14 @@ export function DividendModal({
 }: DividendModalProps) {
   const [ativoId, setAtivoId] = useState("");
   const [tipo, setTipo] = useState("RENDIMENTO");
-  const [valorTotal, setValorTotal] = useState<number>(0);
+  const [valorTotal, setValorTotal] = useState<number | "">("");
   const [data, setData] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const activeAtivo = useMemo(() => {
+    return ativos.find((a) => a.id === ativoId) || null;
+  }, [ativos, ativoId]);
 
   useEffect(() => {
     if (ativos && ativos.length > 0 && !ativoId) {
@@ -30,6 +34,17 @@ export function DividendModal({
     }
     setError(null);
   }, [ativos, isOpen, ativoId]);
+
+  // Auto-detect type when asset changes
+  useEffect(() => {
+    if (activeAtivo) {
+      if (activeAtivo.classe === "FIIS") {
+        setTipo("RENDIMENTO");
+      } else {
+        setTipo("DIVIDENDO");
+      }
+    }
+  }, [activeAtivo]);
 
   if (!isOpen) return null;
 
@@ -64,6 +79,11 @@ export function DividendModal({
     }
   }
 
+  const estimatedDY = useMemo(() => {
+    if (!valorTotal || !activeAtivo || activeAtivo.valorMercado <= 0) return 0;
+    return (Number(valorTotal) / activeAtivo.valorMercado) * 100;
+  }, [valorTotal, activeAtivo]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -77,9 +97,9 @@ export function DividendModal({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+      <form onSubmit={handleSubmit} className="space-y-4 text-sm mt-4">
         <div>
-          <label htmlFor="ativoId" className="block text-xs font-semibold text-slate-300 mb-1">
+          <label htmlFor="ativoId" className="block text-xs font-semibold text-zinc-300 mb-1">
             Ativo *
           </label>
           <select
@@ -87,7 +107,7 @@ export function DividendModal({
             required
             value={ativoId}
             onChange={(e) => setAtivoId(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 font-mono"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-main font-mono"
           >
             {ativos.map((a) => (
               <option key={a.id} value={a.id}>
@@ -99,14 +119,14 @@ export function DividendModal({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="tipo" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="tipo" className="block text-xs font-semibold text-zinc-300 mb-1">
               Tipo de Provento *
             </label>
             <select
               id="tipo"
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-main"
             >
               <option value="RENDIMENTO">Rendimento (FII)</option>
               <option value="DIVIDENDO">Dividendo (Ação/ETF)</option>
@@ -115,7 +135,7 @@ export function DividendModal({
           </div>
 
           <div>
-            <label htmlFor="data" className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="data" className="block text-xs font-semibold text-zinc-300 mb-1">
               Data do Pagamento *
             </label>
             <input
@@ -124,13 +144,13 @@ export function DividendModal({
               required
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-main"
             />
           </div>
         </div>
 
-        <div>
-          <label htmlFor="valorTotal" className="block text-xs font-semibold text-slate-300 mb-1">
+        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/80">
+          <label htmlFor="valorTotal" className="block text-xs font-semibold text-zinc-300 mb-2">
             Valor Total Recebido (R$) *
           </label>
           <input
@@ -140,17 +160,24 @@ export function DividendModal({
             min="0.01"
             required
             placeholder="Ex: 45.00"
-            value={valorTotal || ""}
-            onChange={(e) => setValorTotal(Number(e.target.value))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-base font-bold focus:outline-none focus:border-blue-500"
+            value={valorTotal}
+            onChange={(e) => setValorTotal(e.target.value === "" ? "" : Number(e.target.value))}
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-3 text-white font-mono text-xl font-bold focus:outline-none focus:border-gold-main mb-2"
           />
+          
+          <div className="flex justify-between items-center text-[11px]">
+            <span className="text-zinc-500">DY Mensal Estimado:</span>
+            <span className={`font-bold ${estimatedDY > 0 ? "text-emerald-400" : "text-zinc-500"}`}>
+              {estimatedDY.toFixed(2)}%
+            </span>
+          </div>
         </div>
 
-        <div className="pt-3 flex items-center justify-end gap-2">
+        <div className="pt-4 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-lg text-zinc-400 hover:bg-zinc-900 transition-colors"
           >
             Cancelar
           </button>
