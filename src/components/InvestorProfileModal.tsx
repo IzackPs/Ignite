@@ -63,6 +63,24 @@ const NOMES_CLASSES: Record<string, { label: string; icon: React.ReactNode }> = 
   },
 };
 
+function renderDiffBadge(diferenca: number) {
+  if (diferenca > 0) {
+    return (
+      <span className="px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+        +{diferenca}%
+      </span>
+    );
+  }
+  if (diferenca < 0) {
+    return (
+      <span className="px-1 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30">
+        {diferenca}%
+      </span>
+    );
+  }
+  return <span className="text-zinc-500 font-bold">=</span>;
+}
+
 export function InvestorProfileModal({
   isOpen,
   onClose,
@@ -131,7 +149,7 @@ export function InvestorProfileModal({
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2.5">
           <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-amber-200/90 leading-tight">
-            <strong className="text-amber-400 font-bold">Orientação por Categoria (%): </strong>
+            <strong className="text-amber-400 font-bold">Orientação por Categoria (%):</strong>{" "}
             Avalia a distribuição ideal em porcentagem por classe de ativo ajustada pela idade. 
             <em> Não analisamos e nem sugerimos ativos ou tickers individuais.</em>
           </div>
@@ -321,17 +339,7 @@ export function InvestorProfileModal({
                   </div>
 
                   <div className="w-12 text-right font-mono text-[10px]">
-                    {diferenca > 0 ? (
-                      <span className="px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
-                        +{diferenca}%
-                      </span>
-                    ) : diferenca < 0 ? (
-                      <span className="px-1 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30">
-                        {diferenca}%
-                      </span>
-                    ) : (
-                      <span className="text-zinc-500 font-bold">=</span>
-                    )}
+                    {renderDiffBadge(diferenca)}
                   </div>
                 </div>
               </div>

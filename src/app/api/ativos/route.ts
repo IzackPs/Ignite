@@ -1,9 +1,33 @@
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { ativoSchema } from "@/lib/validations";
 import { createDeleteHandler, parseBody } from "@/lib/api-handler";
+
+async function saveQuestionAnswers(
+  ativoId: string,
+  respostas: Array<{ questionId: string; answer: boolean }>
+) {
+  for (const r of respostas) {
+    await prisma.assetQuestionAnswer.upsert({
+      where: {
+        ativoId_questionId: {
+          ativoId,
+          questionId: r.questionId,
+        },
+      },
+      create: {
+        ativoId,
+        questionId: r.questionId,
+        answer: r.answer,
+      },
+      update: {
+        answer: r.answer,
+      },
+    });
+  }
+}
 
 // POST: Criar ou Atualizar Ativo
 export async function POST(request: Request) {
@@ -13,16 +37,18 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const parsed = parseBody(ativoSchema, {
-      ...body,
-      percentualIdeal: Number(body.percentualIdeal ?? 0),
-      precoAtual: Number(body.precoAtual ?? 0),
-      ultimoProvento: Number(body.ultimoProvento ?? 0),
-      taxaRentabilidade: Number(body.taxaRentabilidade ?? 100),
-    }, "Dados do ativo inválidos");
+    const parsed = parseBody(
+      ativoSchema,
+      {
+        ...body,
+        percentualIdeal: Number(body.percentualIdeal ?? 0),
+        precoAtual: Number(body.precoAtual ?? 0),
+        ultimoProvento: Number(body.ultimoProvento ?? 0),
+        taxaRentabilidade: Number(body.taxaRentabilidade ?? 100),
+      },
+      "Dados do ativo inválidos"
+    );
     if (!parsed.success) return parsed.response;
-
-    const parseResult = parsed;
 
     const {
       simbolo,
@@ -36,14 +62,25 @@ export async function POST(request: Request) {
       taxaRentabilidade,
       nota,
       respostas,
-    } = parseResult.data;
+    } = parsed.data;
 
     const { id } = body;
+    let targetAtivoId: string;
 
-    let targetAtivoId = id;
+    const payload = {
+      simbolo: simbolo.trim().toUpperCase(),
+      nome,
+      classe,
+      setor: setor ?? null,
+      logoUrl: logoUrl && logoUrl !== "" ? logoUrl : null,
+      percentualIdeal,
+      precoAtual,
+      ultimoProvento,
+      taxaRentabilidade,
+      nota,
+    };
 
     if (id) {
-      // Verificar que o ativo pertence ao usuário antes de atualizar
       const ativoExistente = await prisma.ativo.findFirst({
         where: { id, userId },
       });
@@ -56,59 +93,21 @@ export async function POST(request: Request) {
 
       await prisma.ativo.update({
         where: { id },
-        data: {
-          simbolo: simbolo.trim().toUpperCase(),
-          nome,
-          classe,
-          setor: setor ?? null,
-          logoUrl: logoUrl && logoUrl !== "" ? logoUrl : null,
-          percentualIdeal,
-          precoAtual,
-          ultimoProvento,
-          taxaRentabilidade,
-          nota,
-        },
+        data: payload,
       });
       targetAtivoId = id;
     } else {
       const novoAtivo = await prisma.ativo.create({
         data: {
-          simbolo: simbolo.trim().toUpperCase(),
-          nome,
-          classe,
-          setor: setor ?? null,
-          logoUrl: logoUrl && logoUrl !== "" ? logoUrl : null,
-          percentualIdeal,
-          precoAtual,
-          ultimoProvento,
-          taxaRentabilidade,
-          nota,
+          ...payload,
           userId,
         },
       });
       targetAtivoId = novoAtivo.id;
     }
 
-    // Processar respostas do checklist se fornecidas
-    if (respostas && respostas.length > 0 && targetAtivoId) {
-      for (const r of respostas) {
-        await prisma.assetQuestionAnswer.upsert({
-          where: {
-            ativoId_questionId: {
-              ativoId: targetAtivoId,
-              questionId: r.questionId,
-            },
-          },
-          create: {
-            ativoId: targetAtivoId,
-            questionId: r.questionId,
-            answer: r.answer,
-          },
-          update: {
-            answer: r.answer,
-          },
-        });
-      }
+    if (respostas && respostas.length > 0) {
+      await saveQuestionAnswers(targetAtivoId, respostas);
     }
 
     const ativoFinal = await prisma.ativo.findUnique({

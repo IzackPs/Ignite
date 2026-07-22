@@ -185,7 +185,7 @@ export function QuestionManagementView() {
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-zinc-400 hover:text-white">✕</button>
+          <button type="button" onClick={() => setError(null)} className="text-zinc-400 hover:text-white">✕</button>
         </div>
       )}
 
@@ -195,22 +195,26 @@ export function QuestionManagementView() {
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg(null)} className="text-zinc-400 hover:text-white">✕</button>
+          <button type="button" onClick={() => setSuccessMsg(null)} className="text-zinc-400 hover:text-white">✕</button>
         </div>
       )}
 
       {/* Tabela de Perguntas */}
       <div className="bg-surface/90 border border-border-subtle rounded-2xl shadow-xl overflow-hidden backdrop-blur-md">
-        {loading ? (
+        {loading && (
           <div className="py-16 text-center space-y-3">
             <RefreshCw className="w-8 h-8 text-gold-main animate-spin mx-auto" />
             <p className="text-zinc-500 text-xs">Carregando critérios da metodologia...</p>
           </div>
-        ) : questions.length === 0 ? (
+        )}
+
+        {!loading && questions.length === 0 && (
           <div className="py-16 text-center text-zinc-500 text-sm">
             Nenhum critério cadastrado. Crie um novo ou recupere os padrões.
           </div>
-        ) : (
+        )}
+
+        {!loading && questions.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -284,15 +288,16 @@ export function QuestionManagementView() {
               <h3 className="text-base font-bold text-white">
                 {editingId ? "Editar Critério" : "Novo Critério de Análise"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-white text-sm">✕</button>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-white text-sm">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                <label htmlFor="criterioInput" className="block text-xs font-semibold text-zinc-300 mb-1">
                   Nome do Critério / Mnemônico *
                 </label>
                 <input
+                  id="criterioInput"
                   type="text"
                   required
                   placeholder="Ex: ROE, GOVERNANCA, MARGEM"
@@ -303,10 +308,11 @@ export function QuestionManagementView() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                <label htmlFor="perguntaInput" className="block text-xs font-semibold text-zinc-300 mb-1">
                   Pergunta Formulada *
                 </label>
                 <textarea
+                  id="perguntaInput"
                   required
                   rows={2}
                   placeholder="Ex: O ROE histórico da empresa é maior do que 5%?"
@@ -317,10 +323,11 @@ export function QuestionManagementView() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                <label htmlFor="pesoInput" className="block text-xs font-semibold text-zinc-300 mb-1">
                   Peso do Critério (Multiplicador de Pontuação)
                 </label>
                 <input
+                  id="pesoInput"
                   type="number"
                   step="0.1"
                   min="0.1"

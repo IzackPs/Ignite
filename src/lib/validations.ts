@@ -107,7 +107,7 @@ export const transacaoSchema = z.object({
   data: z.string().refine((val) => {
     if (!val) return false;
     const inputDate = val.includes("T") ? new Date(val) : new Date(val + "T00:00:00");
-    if (isNaN(inputDate.getTime())) return false;
+    if (Number.isNaN(inputDate.getTime())) return false;
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     return inputDate <= today;

@@ -13,7 +13,6 @@ interface WalletHeaderProps {
   readonly updatingPrices?: boolean;
   readonly onUpdatePrices?: () => void;
   readonly onLogout?: () => void;
-  readonly onOpenSettings?: () => void;
 }
 
 export function WalletHeader({

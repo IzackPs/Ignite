@@ -17,7 +17,7 @@ export interface FundamentalistData {
 }
 
 function parseNum(val: unknown): number | undefined {
-  if (typeof val === 'number' && !isNaN(val)) {
+  if (typeof val === 'number' && !Number.isNaN(val)) {
     return val;
   }
   return undefined;

@@ -81,6 +81,16 @@ async function autoSearchAsset(
   }
 }
 
+function getNotaBadgeStyle(score: number): string {
+  if (score >= 8) {
+    return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10";
+  }
+  if (score >= 5) {
+    return "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10";
+  }
+  return "bg-rose-500/15 text-rose-400 border-rose-500/30 shadow-rose-500/10 animate-pulse";
+}
+
 export function AssetModal({
   isOpen,
   onClose,
@@ -311,13 +321,7 @@ export function AssetModal({
               Nota Ignite
             </span>
             <div
-              className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-mono font-black text-xs border shadow-lg transition-all duration-300 ${
-                notaCalculada >= 8
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10"
-                  : notaCalculada >= 5
-                  ? "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10"
-                  : "bg-rose-500/15 text-rose-400 border-rose-500/30 shadow-rose-500/10 animate-pulse"
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full font-mono font-black text-xs border shadow-lg transition-all duration-300 ${getNotaBadgeStyle(notaCalculada)}`}
             >
               <Award className="w-3.5 h-3.5" />
               <span>{notaCalculada.toFixed(1)} / 10</span>

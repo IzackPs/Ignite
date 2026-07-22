@@ -576,8 +576,10 @@ export function SidebarNav({
       {/* Drawer Overlay Mobile */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+          <button
+            type="button"
+            aria-label="Fechar menu mobile"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm cursor-default border-none w-full h-full p-0"
             onClick={() => setIsMobileOpen(false)}
           />
           <div className="relative w-72 max-w-full bg-surface z-50 shadow-2xl h-full">

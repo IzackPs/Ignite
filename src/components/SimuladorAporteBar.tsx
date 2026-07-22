@@ -179,7 +179,7 @@ export function SimuladorAporteBar({
       {errorMessage && (
         <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-4 rounded-xl flex items-center justify-between font-semibold animate-in fade-in">
           <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage(null)} className="text-zinc-400 hover:text-white">✕</button>
+          <button type="button" onClick={() => setErrorMessage(null)} className="text-zinc-400 hover:text-white">✕</button>
         </div>
       )}
 
