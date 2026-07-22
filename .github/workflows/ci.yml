@@ -65,6 +65,37 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  e2e:
+    name: Testes End-to-End (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Obter o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar o Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      - name: Instalar navegadores do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Executar suíte de testes E2E
+        run: npm run test:e2e
+
+      - name: Fazer Upload do Relatório do Playwright em Falhas
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   build:
     name: Build (Sanity Check do Next.js)
     runs-on: ubuntu-latest
