@@ -50,6 +50,144 @@ interface SidebarNavProps {
   readonly onAddTransacao?: () => void;
 }
 
+interface SidebarUserSectionProps {
+  readonly expanded: boolean;
+  readonly userName: string;
+  readonly userImage?: string | null;
+  readonly initials: string;
+  readonly onOpenAvatarModal?: () => void;
+}
+
+function SidebarUserSection({
+  expanded,
+  userName,
+  userImage,
+  initials,
+  onOpenAvatarModal,
+}: SidebarUserSectionProps) {
+  return (
+    <div
+      className={`bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center mt-2.5 mb-2 ${
+        expanded ? "p-2 justify-between" : "p-1.5 justify-center"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenAvatarModal}
+          title="Alterar Foto de Perfil"
+          className="relative group shrink-0 focus:outline-none"
+        >
+          <div className="w-7 h-7 rounded-full bg-gold-main/20 border border-gold-main/40 flex items-center justify-center font-bold text-gold-main text-xs overflow-hidden shadow-sm transition-transform group-hover:scale-105">
+            {userImage && (userImage.startsWith("http") || userImage.startsWith("data:image")) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={userImage} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              <span>{initials}</span>
+            )}
+          </div>
+          <div className="absolute -bottom-0.5 -right-0.5 p-0.5 bg-gold-main text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera className="w-2 h-2" />
+          </div>
+        </button>
+
+        {expanded && (
+          <div className="truncate animate-in fade-in duration-200">
+            <div className="text-xs font-bold text-white truncate flex items-center gap-1">
+              {userName}
+            </div>
+            <div className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SidebarBalanceSectionProps {
+  readonly expanded: boolean;
+  readonly patrimonioTotal: number;
+  readonly isBalanceVisible: boolean;
+  readonly onToggleBalance?: () => void;
+  readonly lastPriceUpdate?: string;
+  readonly onUpdatePrices?: () => void;
+  readonly updatingPrices: boolean;
+}
+
+function SidebarBalanceSection({
+  expanded,
+  patrimonioTotal,
+  isBalanceVisible,
+  onToggleBalance,
+  lastPriceUpdate,
+  onUpdatePrices,
+  updatingPrices,
+}: SidebarBalanceSectionProps) {
+  return (
+    <div
+      className={`bg-zinc-900/40 border border-border-subtle rounded-xl mb-2 transition-all ${
+        expanded ? "p-2.5" : "p-1.5 text-center"
+      }`}
+    >
+      {expanded ? (
+        <div className="space-y-1 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+            <span>Patrimônio Consolidado</span>
+            {onToggleBalance && (
+              <button
+                type="button"
+                onClick={onToggleBalance}
+                className="text-zinc-400 hover:text-white transition-colors"
+                aria-label={isBalanceVisible ? "Ocultar saldo" : "Exibir saldo"}
+                title={isBalanceVisible ? "Ocultar saldo" : "Exibir saldo"}
+              >
+                {isBalanceVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-gold-main" />}
+              </button>
+            )}
+          </div>
+          <div className="text-lg font-black text-white font-mono leading-tight">
+            {isBalanceVisible ? (
+              formatCurrency(patrimonioTotal)
+            ) : (
+              <span className="text-zinc-500 tracking-widest text-base">R$ •••••</span>
+            )}
+          </div>
+          {lastPriceUpdate && (
+            <div className="flex items-center justify-between text-[9px] text-zinc-500 pt-1 border-t border-zinc-800/60">
+              <span className="flex items-center gap-1 truncate">
+                <Clock className="w-2.5 h-2.5 text-zinc-400" /> {lastPriceUpdate}
+              </span>
+              {onUpdatePrices && (
+                <button
+                  type="button"
+                  onClick={onUpdatePrices}
+                  disabled={updatingPrices}
+                  className="p-0.5 text-gold-main hover:text-white transition-colors"
+                  title="Sincronizar"
+                  aria-label="Sincronizar"
+                >
+                  <Zap className={`w-3 h-3 ${updatingPrices ? "animate-bounce text-amber-400" : ""}`} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onToggleBalance}
+          className="w-full flex flex-col items-center justify-center py-1.5 cursor-pointer text-zinc-400 hover:text-gold-main transition-colors"
+          title={`Patrimônio Consolidado: ${isBalanceVisible ? formatCurrency(patrimonioTotal) : "R$ •••••"}`}
+        >
+          <Wallet className="w-4 h-4 text-gold-main" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function SidebarNav({
   activeTab,
   onChangeTab,
@@ -165,107 +303,23 @@ export function SidebarNav({
         )}
       </div>
 
-      {/* User Info Card (Sem o botão de adicionar) */}
-      <div
-        className={`bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center mt-2.5 mb-2 ${
-          expanded ? "p-2 justify-between" : "p-1.5 justify-center"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onOpenAvatarModal}
-            title="Alterar Foto de Perfil"
-            className="relative group shrink-0 focus:outline-none"
-          >
-            <div className="w-7 h-7 rounded-full bg-gold-main/20 border border-gold-main/40 flex items-center justify-center font-bold text-gold-main text-xs overflow-hidden shadow-sm transition-transform group-hover:scale-105">
-              {userImage && (userImage.startsWith("http") || userImage.startsWith("data:image")) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={userImage} alt={userName} className="w-full h-full object-cover" />
-              ) : (
-                <span>{initials}</span>
-              )}
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 p-0.5 bg-gold-main text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-2 h-2" />
-            </div>
-          </button>
+      <SidebarUserSection
+        expanded={expanded}
+        userName={userName}
+        userImage={userImage}
+        initials={initials}
+        onOpenAvatarModal={onOpenAvatarModal}
+      />
 
-          {expanded && (
-            <div className="truncate animate-in fade-in duration-200">
-              <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                {userName}
-              </div>
-              <div className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Widget de Patrimônio Consolidado na Barra Lateral */}
-      <div
-        className={`bg-zinc-900/40 border border-border-subtle rounded-xl mb-2 transition-all ${
-          expanded ? "p-2.5" : "p-1.5 text-center"
-        }`}
-      >
-        {expanded ? (
-          <div className="space-y-1 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-              <span>Patrimônio Consolidado</span>
-              {onToggleBalance && (
-                <button
-                  type="button"
-                  onClick={onToggleBalance}
-                  className="text-zinc-400 hover:text-white transition-colors"
-                  aria-label={isBalanceVisible ? "Ocultar saldo" : "Exibir saldo"}
-                  title={isBalanceVisible ? "Ocultar saldo" : "Exibir saldo"}
-                >
-                  {isBalanceVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-gold-main" />}
-                </button>
-              )}
-            </div>
-            <div className="text-lg font-black text-white font-mono leading-tight">
-              {isBalanceVisible ? (
-                formatCurrency(patrimonioTotal)
-              ) : (
-                <span className="text-zinc-500 tracking-widest text-base">R$ •••••</span>
-              )}
-            </div>
-            {lastPriceUpdate && (
-              <div className="flex items-center justify-between text-[9px] text-zinc-500 pt-1 border-t border-zinc-800/60">
-                <span className="flex items-center gap-1 truncate">
-                  <Clock className="w-2.5 h-2.5 text-zinc-400" /> {lastPriceUpdate}
-                </span>
-                {onUpdatePrices && (
-                  <button
-                    type="button"
-                    onClick={onUpdatePrices}
-                    disabled={updatingPrices}
-                    className="p-0.5 text-gold-main hover:text-white transition-colors"
-                    title="Sincronizar"
-                    aria-label="Sincronizar"
-                  >
-                    <Zap className={`w-3 h-3 ${updatingPrices ? "animate-bounce text-amber-400" : ""}`} />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onToggleBalance}
-            className="w-full flex flex-col items-center justify-center py-1.5 cursor-pointer text-zinc-400 hover:text-gold-main transition-colors"
-            title={`Patrimônio Consolidado: ${isBalanceVisible ? formatCurrency(patrimonioTotal) : "R$ •••••"}`}
-          >
-            <Wallet className="w-4 h-4 text-gold-main" />
-          </button>
-        )}
-      </div>
-
-      {/* Botões de Ação Rápidas de Investimento */}
+      <SidebarBalanceSection
+        expanded={expanded}
+        patrimonioTotal={patrimonioTotal}
+        isBalanceVisible={isBalanceVisible}
+        onToggleBalance={onToggleBalance}
+        lastPriceUpdate={lastPriceUpdate}
+        onUpdatePrices={onUpdatePrices}
+        updatingPrices={updatingPrices}
+      />
       {(onNovoAtivo || onAddTransacao) && (
         <div className="space-y-1 mb-2 w-full">
           {onNovoAtivo && (

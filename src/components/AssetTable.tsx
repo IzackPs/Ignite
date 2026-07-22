@@ -313,45 +313,29 @@ function AssetTableRow({
   );
 }
 
-export function AssetTable({
-  ativos,
-  resumoClasse,
+interface AssetCategoryBannersProps {
+  readonly classeKey: string;
+  readonly nomeClasse: string;
+  readonly ativos: AtivoCalculado[];
+  readonly resumoClasse?: ResumoClasse;
+  readonly totalInvestido: number;
+  readonly rendaMensalTotalFIIs: number;
+  readonly totalRendimentoProRata: number;
+  readonly cdiAnualFormatada: string;
+}
+
+function AssetCategoryBanners({
   classeKey,
   nomeClasse,
-  onAddTransacao,
-  onEditAtivo,
-  onDeleteAtivo,
-  onNovoAtivo,
-  isBalanceVisible = true,
-  cdiAnualFormatada = "14,15% a.a.",
-}: AssetTableProps) {
-  const [deletingAtivo, setDeletingAtivo] = React.useState<{ id: string; simbolo: string } | null>(null);
-
+  ativos,
+  resumoClasse,
+  totalInvestido,
+  rendaMensalTotalFIIs,
+  totalRendimentoProRata,
+  cdiAnualFormatada,
+}: AssetCategoryBannersProps) {
   const isFIIsTab = classeKey === "FIIS";
   const isRendaFixaTab = classeKey === "RENDA_FIXA";
-
-  // Totais da tabela
-  const totalInvestido = ativos.reduce((acc, a) => acc + a.totalInvestido, 0);
-  const totalValorMercado = ativos.reduce((acc, a) => acc + a.valorMercado, 0);
-  const totalLucroPrejuizoR$ = totalValorMercado - totalInvestido;
-  const totalLucroPrejuizoPercent =
-    totalInvestido > 0 ? (totalLucroPrejuizoR$ / totalInvestido) * 100 : 0;
-  const totalPercentualAtual = ativos.reduce((acc, a) => acc + a.percentualAtual, 0);
-  const totalPercentualIdeal = ativos.reduce((acc, a) => acc + a.percentualIdeal, 0);
-  const totalFaltaR$ = ativos.reduce((acc, a) => acc + Math.max(0, a.faltaR$), 0);
-  const totalQtdAComprar = ativos.reduce((acc, a) => acc + a.qtdAComprar, 0);
-
-  // Totais de Renda Mensal (Efeito Bola de Neve FIIs)
-  const rendaMensalTotalFIIs = ativos.reduce(
-    (acc, a) => acc + a.rendaMensalEstimada,
-    0
-  );
-
-  // Totais de Rendimento Pro-Rata Renda Fixa
-  const totalRendimentoProRata = ativos.reduce(
-    (acc, a) => acc + a.rendimentoProRataR$,
-    0
-  );
 
   const headerThemes: Record<string, { tag: string; button: string }> = {
     ACOES: { tag: "bg-blue-500/10 text-blue-500 border-blue-500/20", button: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" },
@@ -363,7 +347,7 @@ export function AssetTable({
   const theme = headerThemes[classeKey] || { tag: "bg-gold-main/10 text-gold-main border-gold-main/20", button: "bg-gold-main hover:bg-gold-hover shadow-gold-main/20" };
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Banner Exclusivo do Número Mágico para FIIs */}
       {isFIIsTab && (
         <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 rounded-xl p-6 shadow-xl space-y-4">
@@ -713,31 +697,74 @@ export function AssetTable({
                 </>
               )}
             </div>
-
-            <div className="bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-border-subtle">
-              <div className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400">
-                Total Alocado
-              </div>
-              <div className="text-sm font-bold text-foreground">
-                {isBalanceVisible ? formatCurrency(resumoClasse.valorMercadoTotal) : "R$ ••••"}
-              </div>
-            </div>
-
-            <div className="bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-border-subtle">
-              <div className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400">
-                Falta (R$) na Classe
-              </div>
-              <div
-                className={`text-sm font-bold ${
-                  resumoClasse.faltaR$ > 0 ? "text-emerald-400" : "text-zinc-400"
-                }`}
-              >
-                {formatFalta(resumoClasse.faltaR$, isBalanceVisible)}
-              </div>
-            </div>
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export function AssetTable({
+  ativos,
+  resumoClasse,
+  classeKey,
+  nomeClasse,
+  onAddTransacao,
+  onEditAtivo,
+  onDeleteAtivo,
+  onNovoAtivo,
+  isBalanceVisible = true,
+  cdiAnualFormatada = "14,15% a.a.",
+}: AssetTableProps) {
+  const [deletingAtivo, setDeletingAtivo] = React.useState<{ id: string; simbolo: string } | null>(null);
+
+  const isFIIsTab = classeKey === "FIIS";
+  const isRendaFixaTab = classeKey === "RENDA_FIXA";
+
+  // Totais da tabela
+  const totalInvestido = ativos.reduce((acc, a) => acc + a.totalInvestido, 0);
+  const totalValorMercado = ativos.reduce((acc, a) => acc + a.valorMercado, 0);
+  const totalLucroPrejuizoR$ = totalValorMercado - totalInvestido;
+  const totalLucroPrejuizoPercent =
+    totalInvestido > 0 ? (totalLucroPrejuizoR$ / totalInvestido) * 100 : 0;
+  const totalPercentualAtual = ativos.reduce((acc, a) => acc + a.percentualAtual, 0);
+  const totalPercentualIdeal = ativos.reduce((acc, a) => acc + a.percentualIdeal, 0);
+  const totalFaltaR$ = ativos.reduce((acc, a) => acc + Math.max(0, a.faltaR$), 0);
+  const totalQtdAComprar = ativos.reduce((acc, a) => acc + a.qtdAComprar, 0);
+
+  // Totais de Renda Mensal (Efeito Bola de Neve FIIs)
+  const rendaMensalTotalFIIs = ativos.reduce(
+    (acc, a) => acc + a.rendaMensalEstimada,
+    0
+  );
+
+  // Totais de Rendimento Pro-Rata Renda Fixa
+  const totalRendimentoProRata = ativos.reduce(
+    (acc, a) => acc + a.rendimentoProRataR$,
+    0
+  );
+
+  const headerThemes: Record<string, { tag: string; button: string }> = {
+    ACOES: { tag: "bg-blue-500/10 text-blue-500 border-blue-500/20", button: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" },
+    FIIS: { tag: "bg-purple-500/10 text-purple-500 border-purple-500/20", button: "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" },
+    ETFS: { tag: "bg-amber-500/10 text-amber-500 border-amber-500/20", button: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
+    RENDA_FIXA: { tag: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", button: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
+  };
+
+  const theme = headerThemes[classeKey] || { tag: "bg-gold-main/10 text-gold-main border-gold-main/20", button: "bg-gold-main hover:bg-gold-hover shadow-gold-main/20" };
+
+  return (
+    <div className="space-y-6">
+      <AssetCategoryBanners
+        classeKey={classeKey}
+        nomeClasse={nomeClasse}
+        ativos={ativos}
+        resumoClasse={resumoClasse}
+        totalInvestido={totalInvestido}
+        rendaMensalTotalFIIs={rendaMensalTotalFIIs}
+        totalRendimentoProRata={totalRendimentoProRata}
+        cdiAnualFormatada={cdiAnualFormatada}
+      />
 
       {/* Tabela Interativa Estilo Planilha */}
       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-md">
