@@ -3,6 +3,8 @@ import { prisma } from "../src/lib/prisma";
 async function main() {
   console.info("Semeando banco de dados com carteira, proventos e histórico de dividendos...");
 
+  await prisma.assetQuestionAnswer.deleteMany();
+  await prisma.question.deleteMany();
   await prisma.provento.deleteMany();
   await prisma.transacao.deleteMany();
   await prisma.ativo.deleteMany();
@@ -20,24 +22,53 @@ async function main() {
   }
   const userId = user.id;
 
+  // 0. Semeia as 11 perguntas padrão do Diagrama AUVP
+  const defaultQuestionsData = [
+    { criterio: "ROE", pergunta: "ROE historicamente maior que 5%?", peso: 1.0 },
+    { criterio: "CAGR", pergunta: "Crescimento nos últimos 5 anos (CAGR Receita/Lucro) positivo?", peso: 1.0 },
+    { criterio: "DIVIDENDOS", pergunta: "Paga dividendos constantes ou possui bom histórico de proventos?", peso: 1.0 },
+    { criterio: "TECNOLOGIA", pergunta: "Investe em tecnologia, inovação contínua ou ganho de eficiência?", peso: 1.0 },
+    { criterio: "TEMPO_DE_MERCADO", pergunta: "Possui mais de 5 anos de histórico/listagem de mercado?", peso: 1.0 },
+    { criterio: "VANTAGENS_COMPETITIVAS", pergunta: "Possui vantagens competitivas claras (Moat, marca ou escala)?", peso: 1.0 },
+    { criterio: "PERENIDADE", pergunta: "Atua em um setor perene e resiliente a grandes crises?", peso: 1.0 },
+    { criterio: "TAMANHO_BLUE_CHIP", pergunta: "Empresa de grande porte ou consolidada em seu segmento?", peso: 1.0 },
+    { criterio: "GOVERNANCA", pergunta: "Pertence ao Novo Mercado ou tem bom histórico de governança?", peso: 1.0 },
+    { criterio: "INDEPENDENCIA_ESTATAL", pergunta: "Livre de interferências estatais ou governamentais nocivas?", peso: 1.0 },
+    { criterio: "ENDIVIDAMENTO", pergunta: "Nível de endividamento (Dívida Líquida / EBITDA) sob controle (< 3.5x)?", peso: 1.0 },
+  ];
+
+  await prisma.question.createMany({
+    data: defaultQuestionsData.map((q) => ({
+      userId,
+      criterio: q.criterio,
+      pergunta: q.pergunta,
+      peso: q.peso,
+      isDefault: true,
+    })),
+  });
+
   await prisma.metaClasse.createMany({
     data: [
-      { userId, classe: "ACOES", percentualIdeal: 40 },
-      { userId, classe: "FIIS", percentualIdeal: 10 },
-      { userId, classe: "ETFS", percentualIdeal: 10 },
-      { userId, classe: "RENDA_FIXA", percentualIdeal: 40 },
+      { userId, classe: "ACOES_NACIONAIS", percentualIdeal: 0 },
+      { userId, classe: "ACOES_INTERNACIONAIS", percentualIdeal: 0 },
+      { userId, classe: "FIIS", percentualIdeal: 0 },
+      { userId, classe: "REITS", percentualIdeal: 0 },
+      { userId, classe: "CRIPTO", percentualIdeal: 0 },
+      { userId, classe: "RENDA_FIXA", percentualIdeal: 0 },
+      { userId, classe: "RENDA_FIXA_INTERNACIONAL", percentualIdeal: 0 },
     ],
   });
 
-  // 1. AÇÕES
+  // 1. AÇÕES NACIONAIS
   const petr4 = await prisma.ativo.create({
     data: {
       userId,
       simbolo: "PETR4",
       nome: "Petrobras PN",
-      classe: "ACOES",
+      classe: "ACOES_NACIONAIS",
       setor: "Petróleo & Gás",
-      percentualIdeal: 20,
+      logoUrl: "https://assets.parqet.com/logos/symbol/PETR4",
+      percentualIdeal: 0,
       precoAtual: 38.50,
       ultimoProvento: 1.25,
       transacoes: {
@@ -54,9 +85,10 @@ async function main() {
       userId,
       simbolo: "VALE3",
       nome: "Vale ON",
-      classe: "ACOES",
+      classe: "ACOES_NACIONAIS",
       setor: "Mineração",
-      percentualIdeal: 20,
+      logoUrl: "https://assets.parqet.com/logos/symbol/VALE3",
+      percentualIdeal: 0,
       precoAtual: 62.10,
       ultimoProvento: 2.10,
       transacoes: {
@@ -67,7 +99,7 @@ async function main() {
     },
   });
 
-  // 2. FIIs
+  // 2. FIIs (Fundos Imobiliários)
   const hglg11 = await prisma.ativo.create({
     data: {
       userId,
@@ -75,7 +107,8 @@ async function main() {
       nome: "CSHG Logística FII",
       classe: "FIIS",
       setor: "Imobiliário - Logística",
-      percentualIdeal: 5,
+      logoUrl: "https://assets.parqet.com/logos/symbol/HGLG11",
+      percentualIdeal: 0,
       precoAtual: 162.00,
       ultimoProvento: 1.10,
       transacoes: {
@@ -93,7 +126,8 @@ async function main() {
       nome: "Maxi Renda FII",
       classe: "FIIS",
       setor: "Imobiliário - Papel",
-      percentualIdeal: 5,
+      logoUrl: "https://assets.parqet.com/logos/symbol/MXRF11",
+      percentualIdeal: 0,
       precoAtual: 10.45,
       ultimoProvento: 0.10,
       transacoes: {
@@ -104,20 +138,21 @@ async function main() {
     },
   });
 
-  // 3. ETFs
+  // 3. AÇÕES INTERNACIONAIS
   await prisma.ativo.create({
     data: {
       userId,
-      simbolo: "IVVB11",
-      nome: "iShares S&P 500 ETF",
-      classe: "ETFS",
-      setor: "Internacional - EUA",
-      percentualIdeal: 10,
-      precoAtual: 315.00,
+      simbolo: "AAPL",
+      nome: "Apple Inc.",
+      classe: "ACOES_INTERNACIONAIS",
+      setor: "Tecnologia",
+      logoUrl: "https://assets.parqet.com/logos/symbol/AAPL",
+      percentualIdeal: 0,
+      precoAtual: 220.00,
       ultimoProvento: 0,
       transacoes: {
         create: [
-          { data: new Date("2025-05-20"), tipo: "COMPRA", quantidade: 12, precoUnitario: 290.00 },
+          { data: new Date("2025-05-20"), tipo: "COMPRA", quantidade: 15, precoUnitario: 190.00 },
         ],
       },
     },

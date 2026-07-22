@@ -5,7 +5,6 @@ import { AssetTable } from '../src/components/AssetTable';
 describe('AssetTable', () => {
   beforeEach(() => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
-    global.confirm = vi.fn().mockReturnValue(true);
   });
 
   it('renders assets and handles interactions', async () => {
@@ -71,9 +70,13 @@ describe('AssetTable', () => {
     const editAssetBtn = screen.getByTitle('Editar Meta/Preço/CDI');
     fireEvent.click(editAssetBtn);
 
-    // Click on Delete Asset
+    // Click on Delete Asset -> opens ConfirmModal
     const delAssetBtn = screen.getByTitle('Excluir Ativo');
     fireEvent.click(delAssetBtn);
+
+    // Click confirm in ConfirmModal
+    const confirmBtn = screen.getByRole('button', { name: /^Excluir Ativo$/i });
+    fireEvent.click(confirmBtn);
 
     expect(onDeleteAtivo).toHaveBeenCalled();
 

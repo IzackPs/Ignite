@@ -75,7 +75,6 @@ describe('DashboardCharts', () => {
     ] as any;
     const onRefresh = vi.fn();
 
-    global.confirm = vi.fn().mockReturnValue(true);
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
 
     render(<DashboardCharts portfolio={portfolio} historico={historico} onOpenMetasModal={vi.fn()} onRefresh={onRefresh} />);
@@ -83,7 +82,9 @@ describe('DashboardCharts', () => {
     const deleteBtn = screen.getByTitle('Excluir este registro');
     fireEvent.click(deleteBtn);
 
-    expect(global.confirm).toHaveBeenCalled();
+    const confirmBtn = screen.getByRole('button', { name: /^Excluir Registro$/i });
+    fireEvent.click(confirmBtn);
+
     expect(global.fetch).toHaveBeenCalledWith('/api/historico?id=1', { method: 'DELETE' });
   });
 
@@ -105,7 +106,6 @@ describe('DashboardCharts', () => {
 
   it('exclui historico lida com erro', async () => {
     const historico = [{ id: '1', data: '2026-07-20', patrimonioTotal: 1000, totalInvestido: 1000, lucroPrejuizo: 0 }] as any;
-    global.confirm = vi.fn().mockReturnValue(true);
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
     const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
@@ -113,7 +113,10 @@ describe('DashboardCharts', () => {
 
     const deleteBtn = screen.getByTitle('Excluir este registro');
     fireEvent.click(deleteBtn);
-    
+
+    const confirmBtn = screen.getByRole('button', { name: /^Excluir Registro$/i });
+    fireEvent.click(confirmBtn);
+
     await Promise.resolve();
     expect(loggerSpy).toHaveBeenCalledWith('Erro ao excluir histórico:', expect.any(Error));
     loggerSpy.mockRestore();

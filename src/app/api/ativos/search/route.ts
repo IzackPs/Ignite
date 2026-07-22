@@ -11,12 +11,17 @@ async function fetchLogoUrl(symbolClean: string): Promise<string | null> {
       headers: { "User-Agent": "Antigravity/1.0" },
       signal: AbortSignal.timeout(2000) // 2s timeout
     });
-    if (!brapiRes.ok) return null;
-    const brapiData = await brapiRes.json();
-    return brapiData.results?.[0]?.logourl || null;
+    if (brapiRes.ok) {
+      const brapiData = await brapiRes.json();
+      const brapiLogo = brapiData.results?.[0]?.logourl;
+      if (brapiLogo) return brapiLogo;
+    }
   } catch {
-    return null;
+    // Fallthrough to Parqet fallback
   }
+
+  // Fallback padrão muito confiável
+  return `https://assets.parqet.com/logos/symbol/${symbolClean}`;
 }
 
 function determineAssetClass(symbolClean: string, nameUpper: string): string {

@@ -19,10 +19,13 @@ export function ClassGoalsModal({
   resumoClasses,
 }: ClassGoalsModalProps) {
   const [metas, setMetas] = useState<Record<string, number>>({
-    ACOES: 40,
-    FIIS: 10,
-    ETFS: 10,
-    RENDA_FIXA: 40,
+    ACOES_NACIONAIS: 0,
+    ACOES_INTERNACIONAIS: 0,
+    FIIS: 0,
+    REITS: 0,
+    CRIPTO: 0,
+    RENDA_FIXA: 0,
+    RENDA_FIXA_INTERNACIONAL: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +87,7 @@ export function ClassGoalsModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Configurar Metas de Alocação (%)"
-      description="Ajuste a distribuição ideal da sua carteira pelas 4 grandes classes."
+      description="Ajuste a distribuição ideal da sua carteira pelas 7 categorias de ativos."
     >
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3 rounded-lg flex items-center gap-2">
@@ -95,13 +98,16 @@ export function ClassGoalsModal({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Lista de Metas */}
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
           {(
             [
-              { key: "ACOES", label: "📈 Ações", color: "text-blue-500", defaultVal: 40 },
-              { key: "FIIS", label: "🏢 FIIs (Fundos Imobiliários)", color: "text-purple-500", defaultVal: 10 },
-              { key: "ETFS", label: "🌐 ETFs", color: "text-amber-500", defaultVal: 10 },
-              { key: "RENDA_FIXA", label: "💰 Renda Fixa", color: "text-emerald-500", defaultVal: 40 },
+              { key: "ACOES_NACIONAIS", label: "📈 Ações Nacionais", color: "text-blue-500", defaultVal: 0 },
+              { key: "ACOES_INTERNACIONAIS", label: "🌐 Ações Internacionais", color: "text-sky-400", defaultVal: 0 },
+              { key: "FIIS", label: "🏢 Fundos Imobiliários", color: "text-purple-500", defaultVal: 0 },
+              { key: "REITS", label: "🏛️ REITs", color: "text-indigo-400", defaultVal: 0 },
+              { key: "CRIPTO", label: "🪙 Criptomoedas", color: "text-amber-500", defaultVal: 0 },
+              { key: "RENDA_FIXA", label: "💰 Renda Fixa", color: "text-emerald-500", defaultVal: 0 },
+              { key: "RENDA_FIXA_INTERNACIONAL", label: "🛡️ Renda Fixa Internacional", color: "text-teal-400", defaultVal: 0 },
             ] as const
           ).map(({ key, label, color, defaultVal }) => (
             <div key={key} className="bg-zinc-900/80 p-3 rounded-xl border border-zinc-800/80 flex items-center justify-between">

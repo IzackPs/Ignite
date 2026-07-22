@@ -31,15 +31,7 @@ export function usePortfolio() {
    * Exclui um ativo após confirmação do usuário e recarrega o portfólio.
    */
   const handleDeleteAtivo = useCallback(
-    async (id: string, simbolo: string) => {
-      if (
-        !confirm(
-          `Tem certeza que deseja excluir o ativo ${simbolo} e todo o seu histórico?`
-        )
-      ) {
-        return;
-      }
-
+    async (id: string) => {
       try {
         const res = await fetch(`/api/ativos?id=${id}`, { method: "DELETE" });
         if (res.ok) {

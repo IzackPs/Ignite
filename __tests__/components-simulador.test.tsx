@@ -15,8 +15,7 @@ describe('SimuladorAporteBar', () => {
       ]
     } as any;
 
-    global.fetch = vi.fn().mockResolvedValue({ ok: true });
-    global.confirm = vi.fn().mockReturnValue(true);
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
 
     const onRefresh = vi.fn();
     render(<SimuladorAporteBar portfolio={mockPortfolio} onRefresh={onRefresh} />);
@@ -25,9 +24,13 @@ describe('SimuladorAporteBar', () => {
     const input = screen.getByLabelText(/Valor do Aporte/i);
     fireEvent.change(input, { target: { value: '1000' } });
 
-    // Execute
+    // Open modal
     const execBtn = screen.getByRole('button', { name: /Confirmar/i });
     fireEvent.click(execBtn);
+
+    // Confirm in modal
+    const confirmModalBtn = screen.getByRole('button', { name: /^Confirmar Compras$/i });
+    fireEvent.click(confirmModalBtn);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();

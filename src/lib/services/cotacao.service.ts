@@ -15,7 +15,7 @@ export const cotacaoService = {
     const ativosMercado = await prisma.ativo.findMany({
       where: {
         userId,
-        classe: { in: ["ACOES", "FIIS", "ETFS"] },
+        classe: { in: ["ACOES_NACIONAIS", "ACOES_INTERNACIONAIS", "FIIS", "REITS", "CRIPTO"] },
       },
     });
 
@@ -28,15 +28,20 @@ export const cotacaoService = {
     for (const ativo of ativosMercado) {
       try {
         const symbolClean = ativo.simbolo.trim().toUpperCase();
-        const searchTicker = symbolClean.includes('.') ? symbolClean : `${symbolClean}.SA`;
+        const isB3 = ["ACOES_NACIONAIS", "FIIS"].includes(ativo.classe);
+        const searchTicker = (symbolClean.includes('.') || !isB3) ? symbolClean : `${symbolClean}.SA`;
         
         const quote = await yahooFinance.quote(searchTicker);
         const novoPreco = quote?.regularMarketPrice;
 
         if (novoPreco !== undefined && novoPreco > 0) {
+          const autoLogoUrl = ativo.logoUrl || `https://assets.parqet.com/logos/symbol/${symbolClean.replace('.SA', '')}`;
           await prisma.ativo.update({
             where: { id: ativo.id },
-            data: { precoAtual: novoPreco },
+            data: {
+              precoAtual: novoPreco,
+              logoUrl: autoLogoUrl,
+            },
           });
           updatedAtivos.push({
             simbolo: ativo.simbolo,

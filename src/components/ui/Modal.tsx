@@ -14,8 +14,8 @@ export function Modal({ isOpen, onClose, title, description, children, maxWidth 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className={`bg-surface border border-border-subtle w-full ${maxWidth} rounded-2xl shadow-2xl p-6 relative space-y-4`}>
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden">
+      <div className={`bg-surface border border-border-subtle w-full ${maxWidth} max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl shadow-2xl p-5 relative space-y-4`}>
         <button
           type="button"
           onClick={onClose}
