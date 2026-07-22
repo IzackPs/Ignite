@@ -2,7 +2,15 @@ import Decimal from "decimal.js";
 
 Decimal.config({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
-export type TipoClasse = "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA";
+export type TipoClasse =
+  | "ACOES_NACIONAIS"
+  | "ACOES_INTERNACIONAIS"
+  | "FIIS"
+  | "REITS"
+  | "CRIPTO"
+  | "RENDA_FIXA"
+  | "RENDA_FIXA_INTERNACIONAL";
+
 export type TipoTransacao = "COMPRA" | "VENDA";
 
 export interface TransacaoDTO {
@@ -25,6 +33,8 @@ export interface AtivoDTO {
   precoAtual: number;
   ultimoProvento?: number; // Último provento pago por cota (R$)
   taxaRentabilidade?: number; // % do CDI (ex: 120 para 120% do CDI)
+  nota?: number; // Nota Ignite (0 a 10)
+  answers?: { questionId: string; answer: boolean }[];
   transacoes?: TransacaoDTO[];
 }
 
@@ -39,6 +49,8 @@ export interface AtivoCalculado {
   precoAtual: number;
   ultimoProvento: number;
   taxaRentabilidade: number;
+  nota: number;
+  answers?: { questionId: string; answer: boolean }[];
   rendimentoProRataR$: number; // Rendimento diário acumulado em centavos (CDI)
   diasUteisDecorridos: number;
   
@@ -119,13 +131,16 @@ export interface ResultadoSimulacaoAporte {
 }
 
 export const METAS_CLASSES_PADRAO: Record<
-  "ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA",
+  TipoClasse,
   { nome: string; meta: number }
 > = {
-  ACOES: { nome: "Ações", meta: 40 },
-  FIIS: { nome: "FIIs", meta: 10 },
-  ETFS: { nome: "ETFs", meta: 10 },
-  RENDA_FIXA: { nome: "Renda Fixa", meta: 40 },
+  ACOES_NACIONAIS: { nome: "Ações Nacionais", meta: 0 },
+  ACOES_INTERNACIONAIS: { nome: "Ações Internacionais", meta: 0 },
+  FIIS: { nome: "Fundos Imobiliários", meta: 0 },
+  REITS: { nome: "REITs", meta: 0 },
+  CRIPTO: { nome: "Criptomoedas", meta: 0 },
+  RENDA_FIXA: { nome: "Renda Fixa", meta: 0 },
+  RENDA_FIXA_INTERNACIONAL: { nome: "Renda Fixa Internacional", meta: 0 },
 };
 
 /**
@@ -243,7 +258,7 @@ export function calcularPortfolio(
     const { quantidadeAtual, precoMedio, totalInvestido, primeiraDataCompra } =
       calcularPosicaoAtivo(ativo.transacoes || []);
 
-    const isRendaFixa = ativo.classe.toUpperCase() === "RENDA_FIXA";
+    const isRendaFixa = ativo.classe.toUpperCase().startsWith("RENDA_FIXA");
     const taxaRentabilidade = ativo.taxaRentabilidade ?? 100; // default 100% do CDI
 
     let precoAtualEfetivo = ativo.precoAtual || precoMedio || 0;
@@ -366,6 +381,8 @@ export function calcularPortfolio(
       precoAtual: a.precoAtual || 0,
       ultimoProvento: Number(ultimoProventoDec.toFixed(2)),
       taxaRentabilidade: a.taxaRentabilidade,
+      nota: a.nota ?? 10,
+      answers: a.answers,
       rendimentoProRataR$: a.rendimentoProRataR$,
       diasUteisDecorridos: a.diasUteisDecorridos,
       quantidadeAtual: a.quantidadeAtual,
@@ -385,18 +402,24 @@ export function calcularPortfolio(
     };
   });
 
-  const metasClasses: Record<"ACOES" | "FIIS" | "ETFS" | "RENDA_FIXA", number> = {
-    ACOES: metasCustomizadasClasses?.ACOES ?? METAS_CLASSES_PADRAO.ACOES.meta,
-    FIIS: metasCustomizadasClasses?.FIIS ?? METAS_CLASSES_PADRAO.FIIS.meta,
-    ETFS: metasCustomizadasClasses?.ETFS ?? METAS_CLASSES_PADRAO.ETFS.meta,
-    RENDA_FIXA: metasCustomizadasClasses?.RENDA_FIXA ?? METAS_CLASSES_PADRAO.RENDA_FIXA.meta,
+  const metasClasses: Record<TipoClasse, number> = {
+    ACOES_NACIONAIS: metasCustomizadasClasses?.ACOES_NACIONAIS ?? metasCustomizadasClasses?.ACOES ?? 0,
+    ACOES_INTERNACIONAIS: metasCustomizadasClasses?.ACOES_INTERNACIONAIS ?? metasCustomizadasClasses?.ETFS ?? 0,
+    FIIS: metasCustomizadasClasses?.FIIS ?? 0,
+    REITS: metasCustomizadasClasses?.REITS ?? 0,
+    CRIPTO: metasCustomizadasClasses?.CRIPTO ?? 0,
+    RENDA_FIXA: metasCustomizadasClasses?.RENDA_FIXA ?? 0,
+    RENDA_FIXA_INTERNACIONAL: metasCustomizadasClasses?.RENDA_FIXA_INTERNACIONAL ?? 0,
   };
 
-  const classesChaves: (keyof typeof METAS_CLASSES_PADRAO)[] = [
-    "ACOES",
+  const classesChaves: TipoClasse[] = [
+    "ACOES_NACIONAIS",
+    "ACOES_INTERNACIONAIS",
     "FIIS",
-    "ETFS",
+    "REITS",
+    "CRIPTO",
     "RENDA_FIXA",
+    "RENDA_FIXA_INTERNACIONAL",
   ];
 
   const resumoClasses: ResumoClasse[] = classesChaves.map((key) => {
@@ -525,5 +548,68 @@ export function simularAporteGreedy(
     totalGasto: Number(totalGastoDec.toFixed(2)),
     sobraTroco: Number(orcamentoRestanteDec.toFixed(2)),
     itensCarrinho,
+  };
+}
+
+export interface InfoSaudeCarteira {
+  score: number;
+  label: "Excelente" | "Atenção" | "Desbalanceada";
+  textClass: string;
+  stroke: string;
+  desvioTotalPercentual: number;
+}
+
+export function calcularSaudeCarteira(portfolio: PortfolioCalculado): InfoSaudeCarteira {
+  if (!portfolio || portfolio.ativos.length === 0) {
+    return {
+      score: 100,
+      label: "Excelente",
+      textClass: "text-emerald-400",
+      stroke: "#34d399",
+      desvioTotalPercentual: 0,
+    };
+  }
+
+  // 1. Desvio acumulado de metas por classe
+  const desvioClasses = portfolio.resumoClasses.reduce((sum, r) => {
+    return sum + Math.abs(r.percentualAtual - r.metaPercentual);
+  }, 0);
+
+  // Score de Alocação (0 a 100)
+  const scoreAlocacao = Math.max(0, 100 - Math.round(desvioClasses * 0.65));
+
+  // 2. Média das Notas Ignite dos Ativos da Carteira (escalada para 0-100)
+  const notasAtivos = portfolio.ativos.map((a) => a.nota ?? 10);
+  const mediaNotas =
+    notasAtivos.length > 0
+      ? (notasAtivos.reduce((acc, n) => acc + n, 0) / notasAtivos.length) * 10
+      : 100;
+
+  // 3. Score Final Composto (70% Alocação + 30% Qualidade/Nota)
+  const scoreFinal = Math.min(
+    100,
+    Math.max(0, Math.round(0.7 * scoreAlocacao + 0.3 * mediaNotas))
+  );
+
+  let label: "Excelente" | "Atenção" | "Desbalanceada" = "Excelente";
+  let textClass = "text-emerald-400";
+  let stroke = "#34d399";
+
+  if (scoreFinal < 50) {
+    label = "Desbalanceada";
+    textClass = "text-rose-400";
+    stroke = "#fb7185";
+  } else if (scoreFinal < 80) {
+    label = "Atenção";
+    textClass = "text-amber-400";
+    stroke = "#fbbf24";
+  }
+
+  return {
+    score: scoreFinal,
+    label,
+    textClass,
+    stroke,
+    desvioTotalPercentual: Number(desvioClasses.toFixed(2)),
   };
 }

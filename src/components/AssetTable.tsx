@@ -15,7 +15,13 @@ import {
   Coins,
   ShieldCheck,
   Zap,
+  Award,
+  Globe,
+  Building,
 } from "lucide-react";
+import { AssetLogo } from "@/components/ui/AssetLogo";
+
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface AssetTableProps {
   readonly ativos: AtivoCalculado[];
@@ -75,24 +81,18 @@ function AssetTableRow({
       {/* Ativo / Ticker */}
       <td className="py-3 px-4">
         <div className="flex items-center gap-2.5">
-          {ativo.logoUrl ? (
-            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border-subtle">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ativo.logoUrl} alt={ativo.simbolo} className="w-full h-full object-contain" />
-            </div>
-          ) : (
-            <div className="font-mono font-bold text-base text-foreground bg-zinc-100 dark:bg-white/10 px-2.5 py-1 rounded border border-border-subtle group-hover:border-gold-main/50 transition-colors">
-              {ativo.simbolo}
-            </div>
-          )}
+          <AssetLogo
+            simbolo={ativo.simbolo}
+            nome={ativo.nome}
+            logoUrl={ativo.logoUrl}
+            sizeClass="w-8 h-8 text-[10px]"
+          />
           <div>
-            <div className="font-medium text-foreground text-xs truncate max-w-[140px] flex items-center gap-2">
-              {ativo.logoUrl && (
-                <span className="font-mono font-bold text-zinc-400 group-hover:text-gold-main transition-colors text-[10px]">
-                  {ativo.simbolo}
-                </span>
-              )}
-              {ativo.nome}
+            <div className="font-medium text-foreground text-xs truncate max-w-[140px] flex items-center gap-1.5">
+              <span className="font-mono font-bold text-zinc-400 group-hover:text-gold-main transition-colors text-[10px]">
+                {ativo.simbolo}
+              </span>
+              <span>{ativo.nome}</span>
             </div>
             {ativo.setor && (
               <div className="text-[10px] text-zinc-500">
@@ -299,9 +299,7 @@ function AssetTableRow({
           {onDeleteAtivo && (
             <button
               type="button"
-              onClick={() =>
-                onDeleteAtivo(ativo.id, ativo.simbolo)
-              }
+              onClick={() => onDeleteAtivo(ativo.id, ativo.simbolo)}
               title="Excluir Ativo"
               aria-label={`Excluir ativo ${ativo.simbolo}`}
               className="p-2 rounded text-zinc-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -315,43 +313,29 @@ function AssetTableRow({
   );
 }
 
-export function AssetTable({
-  ativos,
-  resumoClasse,
+interface AssetCategoryBannersProps {
+  readonly classeKey: string;
+  readonly nomeClasse: string;
+  readonly ativos: AtivoCalculado[];
+  readonly resumoClasse?: ResumoClasse;
+  readonly totalInvestido: number;
+  readonly rendaMensalTotalFIIs: number;
+  readonly totalRendimentoProRata: number;
+  readonly cdiAnualFormatada: string;
+}
+
+function AssetCategoryBanners({
   classeKey,
   nomeClasse,
-  onAddTransacao,
-  onEditAtivo,
-  onDeleteAtivo,
-  onNovoAtivo,
-  isBalanceVisible = true,
-  cdiAnualFormatada = "14,15% a.a.",
-}: AssetTableProps) {
+  ativos,
+  resumoClasse,
+  totalInvestido,
+  rendaMensalTotalFIIs,
+  totalRendimentoProRata,
+  cdiAnualFormatada,
+}: AssetCategoryBannersProps) {
   const isFIIsTab = classeKey === "FIIS";
   const isRendaFixaTab = classeKey === "RENDA_FIXA";
-
-  // Totais da tabela
-  const totalInvestido = ativos.reduce((acc, a) => acc + a.totalInvestido, 0);
-  const totalValorMercado = ativos.reduce((acc, a) => acc + a.valorMercado, 0);
-  const totalLucroPrejuizoR$ = totalValorMercado - totalInvestido;
-  const totalLucroPrejuizoPercent =
-    totalInvestido > 0 ? (totalLucroPrejuizoR$ / totalInvestido) * 100 : 0;
-  const totalPercentualAtual = ativos.reduce((acc, a) => acc + a.percentualAtual, 0);
-  const totalPercentualIdeal = ativos.reduce((acc, a) => acc + a.percentualIdeal, 0);
-  const totalFaltaR$ = ativos.reduce((acc, a) => acc + Math.max(0, a.faltaR$), 0);
-  const totalQtdAComprar = ativos.reduce((acc, a) => acc + a.qtdAComprar, 0);
-
-  // Totais de Renda Mensal (Efeito Bola de Neve FIIs)
-  const rendaMensalTotalFIIs = ativos.reduce(
-    (acc, a) => acc + a.rendaMensalEstimada,
-    0
-  );
-
-  // Totais de Rendimento Pro-Rata Renda Fixa
-  const totalRendimentoProRata = ativos.reduce(
-    (acc, a) => acc + a.rendimentoProRataR$,
-    0
-  );
 
   const headerThemes: Record<string, { tag: string; button: string }> = {
     ACOES: { tag: "bg-blue-500/10 text-blue-500 border-blue-500/20", button: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" },
@@ -363,7 +347,7 @@ export function AssetTable({
   const theme = headerThemes[classeKey] || { tag: "bg-gold-main/10 text-gold-main border-gold-main/20", button: "bg-gold-main hover:bg-gold-hover shadow-gold-main/20" };
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Banner Exclusivo do Número Mágico para FIIs */}
       {isFIIsTab && (
         <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 rounded-xl p-6 shadow-xl space-y-4">
@@ -514,6 +498,151 @@ export function AssetTable({
         </div>
       )}
 
+      {/* Banner Exclusivo para Ações Nacionais (Yield On Cost - Método Barsi) */}
+      {classeKey === "ACOES_NACIONAIS" && (
+        <div className="bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/80 border border-blue-800/40 rounded-xl p-5 shadow-xl space-y-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider font-semibold px-3 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                  <Award className="w-3.5 h-3.5 text-gold-main" />
+                  Método Barsi • Yield On Cost (YOC)
+                </span>
+                <h2 className="text-2xl font-bold text-white">Ações Nacionais (Dividendos & YOC)</h2>
+              </div>
+              <p className="text-xs text-zinc-300 max-w-2xl">
+                O <strong>Yield On Cost (YOC)</strong> mede o retorno anual em dividendos sobre o seu <strong>Preço Médio de Compra original</strong> (e não sobre a cotação atual). Investir em empresas geradoras de caixa com dividendos crescentes acelera a multiplicação patrimonial.
+              </p>
+            </div>
+
+            <div className="bg-surface/90 border border-blue-500/30 p-3.5 rounded-xl text-right shrink-0 shadow-lg">
+              <div className="text-[11px] uppercase font-semibold text-blue-300 flex items-center justify-end gap-1">
+                <Coins className="w-4 h-4 text-amber-400" /> Yield On Cost Médio
+              </div>
+              <div className="text-2xl font-black text-gold-main">
+                {((ativos.reduce((acc, a) => acc + (a.rendaMensalEstimada * 12), 0) / (totalInvestido || 1)) * 100).toFixed(2)}% a.a.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Exclusivo para Ações Internacionais (Dolarização & Global Growth) */}
+      {classeKey === "ACOES_INTERNACIONAIS" && (
+        <div className="bg-gradient-to-r from-sky-950/80 via-slate-900 to-blue-950/80 border border-sky-800/40 rounded-xl p-5 shadow-xl space-y-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider font-semibold px-3 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5 text-sky-400" />
+                  Proteção Cambial em Dólar (USD)
+                </span>
+                <h2 className="text-2xl font-bold text-white">Ações Internacionais (Global Equities)</h2>
+              </div>
+              <p className="text-xs text-zinc-300 max-w-2xl">
+                Alocar em grandes corporações globais garante <strong>proteção cambial em moeda forte (USD)</strong> contra a inflação e desvalorização do Real, com acesso à inovação tecnológica do mercado mundial.
+              </p>
+            </div>
+
+            <div className="bg-surface/90 border border-sky-500/30 p-3.5 rounded-xl text-right shrink-0 shadow-lg">
+              <div className="text-[11px] uppercase font-semibold text-sky-300 flex items-center justify-end gap-1">
+                <Globe className="w-4 h-4 text-sky-400" /> Dolarização da Classe
+              </div>
+              <div className="text-2xl font-black text-sky-400">
+                {resumoClasse ? formatPercent(resumoClasse.percentualAtual) : "0%"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Exclusivo para REITs (Real Estate US) */}
+      {classeKey === "REITS" && (
+        <div className="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-800/40 rounded-xl p-5 shadow-xl space-y-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider font-semibold px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1">
+                  <Building className="w-3.5 h-3.5 text-indigo-400" />
+                  Cupons Imobiliários em Dólar
+                </span>
+                <h2 className="text-2xl font-bold text-white">REITs (Real Estate US)</h2>
+              </div>
+              <p className="text-xs text-zinc-300 max-w-2xl">
+                Os <strong>REITs americanos</strong> são obrigados por lei a distribuir pelo menos 90% do seu lucro tributável em proventos. Proporcionam exposição direta ao mercado imobiliário dos EUA com rendimentos recorrentes em Dólar.
+              </p>
+            </div>
+
+            <div className="bg-surface/90 border border-indigo-500/30 p-3.5 rounded-xl text-right shrink-0 shadow-lg">
+              <div className="text-[11px] uppercase font-semibold text-indigo-300 flex items-center justify-end gap-1">
+                <Coins className="w-4 h-4 text-indigo-400" /> Proventos em Dólar
+              </div>
+              <div className="text-2xl font-black text-indigo-400">
+                {formatCurrency(ativos.reduce((acc, a) => acc + a.rendaMensalEstimada, 0))} /mês
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Exclusivo para Criptomoedas */}
+      {classeKey === "CRIPTO" && (
+        <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-orange-950/80 border border-amber-800/40 rounded-xl p-5 shadow-xl space-y-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider font-semibold px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  Assimetria & Escassez Programada
+                </span>
+                <h2 className="text-2xl font-bold text-white">Criptoativos & Moedas Digitais</h2>
+              </div>
+              <p className="text-xs text-zinc-300 max-w-2xl">
+                Criptoativos oferecem alta assimetria de risco e escassez programada. Mantenha a alocação dentro da sua meta ideal (<strong>{resumoClasse?.metaPercentual || 0}%</strong>) para capturar o ciclo de valorização controlando a volatilidade.
+              </p>
+            </div>
+
+            <div className="bg-surface/90 border border-amber-500/30 p-3.5 rounded-xl text-right shrink-0 shadow-lg">
+              <div className="text-[11px] uppercase font-semibold text-amber-300 flex items-center justify-end gap-1">
+                <Sparkles className="w-4 h-4 text-amber-400" /> Assimetria de Risco
+              </div>
+              <div className="text-2xl font-black text-amber-400">
+                {resumoClasse ? formatPercent(resumoClasse.percentualAtual) : "0%"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Exclusivo para Renda Fixa Internacional */}
+      {classeKey === "RENDA_FIXA_INTERNACIONAL" && (
+        <div className="bg-gradient-to-r from-teal-950/80 via-slate-900 to-emerald-950/80 border border-teal-800/40 rounded-xl p-5 shadow-xl space-y-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider font-semibold px-3 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+                  Segurança em US Treasuries & Bonds
+                </span>
+                <h2 className="text-2xl font-bold text-white">Renda Fixa Internacional (USD)</h2>
+              </div>
+              <p className="text-xs text-zinc-300 max-w-2xl">
+                Combina a estabilidade de cupons previsíveis em Dólar com a segurança soberana dos títulos do tesouro americano, sendo o pilar supremo de liquidez e preservação patrimonial global.
+              </p>
+            </div>
+
+            <div className="bg-surface/90 border border-teal-500/30 p-3.5 rounded-xl text-right shrink-0 shadow-lg">
+              <div className="text-[11px] uppercase font-semibold text-teal-300 flex items-center justify-end gap-1">
+                <ShieldCheck className="w-4 h-4 text-teal-400" /> Proteção Soberana USD
+              </div>
+              <div className="text-2xl font-black text-teal-400">
+                {resumoClasse ? formatPercent(resumoClasse.percentualAtual) : "0%"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Banner Resumo Padrão da Classe (caso não seja FII ou Renda Fixa) */}
       {!isFIIsTab && !isRendaFixaTab && resumoClasse && (
         <div className="bg-surface border border-border-subtle rounded-2xl p-5 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -568,31 +697,74 @@ export function AssetTable({
                 </>
               )}
             </div>
-
-            <div className="bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-border-subtle">
-              <div className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400">
-                Total Alocado
-              </div>
-              <div className="text-sm font-bold text-foreground">
-                {isBalanceVisible ? formatCurrency(resumoClasse.valorMercadoTotal) : "R$ ••••"}
-              </div>
-            </div>
-
-            <div className="bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-xl border border-border-subtle">
-              <div className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400">
-                Falta (R$) na Classe
-              </div>
-              <div
-                className={`text-sm font-bold ${
-                  resumoClasse.faltaR$ > 0 ? "text-emerald-400" : "text-zinc-400"
-                }`}
-              >
-                {formatFalta(resumoClasse.faltaR$, isBalanceVisible)}
-              </div>
-            </div>
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export function AssetTable({
+  ativos,
+  resumoClasse,
+  classeKey,
+  nomeClasse,
+  onAddTransacao,
+  onEditAtivo,
+  onDeleteAtivo,
+  onNovoAtivo,
+  isBalanceVisible = true,
+  cdiAnualFormatada = "14,15% a.a.",
+}: AssetTableProps) {
+  const [deletingAtivo, setDeletingAtivo] = React.useState<{ id: string; simbolo: string } | null>(null);
+
+  const isFIIsTab = classeKey === "FIIS";
+  const isRendaFixaTab = classeKey === "RENDA_FIXA";
+
+  // Totais da tabela
+  const totalInvestido = ativos.reduce((acc, a) => acc + a.totalInvestido, 0);
+  const totalValorMercado = ativos.reduce((acc, a) => acc + a.valorMercado, 0);
+  const totalLucroPrejuizoR$ = totalValorMercado - totalInvestido;
+  const totalLucroPrejuizoPercent =
+    totalInvestido > 0 ? (totalLucroPrejuizoR$ / totalInvestido) * 100 : 0;
+  const totalPercentualAtual = ativos.reduce((acc, a) => acc + a.percentualAtual, 0);
+  const totalPercentualIdeal = ativos.reduce((acc, a) => acc + a.percentualIdeal, 0);
+  const totalFaltaR$ = ativos.reduce((acc, a) => acc + Math.max(0, a.faltaR$), 0);
+  const totalQtdAComprar = ativos.reduce((acc, a) => acc + a.qtdAComprar, 0);
+
+  // Totais de Renda Mensal (Efeito Bola de Neve FIIs)
+  const rendaMensalTotalFIIs = ativos.reduce(
+    (acc, a) => acc + a.rendaMensalEstimada,
+    0
+  );
+
+  // Totais de Rendimento Pro-Rata Renda Fixa
+  const totalRendimentoProRata = ativos.reduce(
+    (acc, a) => acc + a.rendimentoProRataR$,
+    0
+  );
+
+  const headerThemes: Record<string, { tag: string; button: string }> = {
+    ACOES: { tag: "bg-blue-500/10 text-blue-500 border-blue-500/20", button: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" },
+    FIIS: { tag: "bg-purple-500/10 text-purple-500 border-purple-500/20", button: "bg-purple-500 hover:bg-purple-600 shadow-purple-500/20" },
+    ETFS: { tag: "bg-amber-500/10 text-amber-500 border-amber-500/20", button: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20" },
+    RENDA_FIXA: { tag: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", button: "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" },
+  };
+
+  const theme = headerThemes[classeKey] || { tag: "bg-gold-main/10 text-gold-main border-gold-main/20", button: "bg-gold-main hover:bg-gold-hover shadow-gold-main/20" };
+
+  return (
+    <div className="space-y-6">
+      <AssetCategoryBanners
+        classeKey={classeKey}
+        nomeClasse={nomeClasse}
+        ativos={ativos}
+        resumoClasse={resumoClasse}
+        totalInvestido={totalInvestido}
+        rendaMensalTotalFIIs={rendaMensalTotalFIIs}
+        totalRendimentoProRata={totalRendimentoProRata}
+        cdiAnualFormatada={cdiAnualFormatada}
+      />
 
       {/* Tabela Interativa Estilo Planilha */}
       <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-md">
@@ -683,7 +855,7 @@ export function AssetTable({
                     isBalanceVisible={isBalanceVisible}
                     onAddTransacao={onAddTransacao}
                     onEditAtivo={onEditAtivo}
-                    onDeleteAtivo={onDeleteAtivo}
+                    onDeleteAtivo={onDeleteAtivo ? (id, simbolo) => setDeletingAtivo({ id, simbolo }) : undefined}
                   />
                 ))
               )}
@@ -750,6 +922,22 @@ export function AssetTable({
           </table>
         </div>
       </div>
+
+      {/* Modal de Confirmação de Exclusão de Ativo */}
+      <ConfirmModal
+        isOpen={!!deletingAtivo}
+        onClose={() => setDeletingAtivo(null)}
+        onConfirm={() => {
+          if (deletingAtivo && onDeleteAtivo) {
+            onDeleteAtivo(deletingAtivo.id, deletingAtivo.simbolo);
+          }
+          setDeletingAtivo(null);
+        }}
+        title="Excluir Ativo"
+        description={`Tem certeza que deseja excluir o ativo ${deletingAtivo?.simbolo || ""} e todo o seu histórico de transações?`}
+        confirmText="Excluir Ativo"
+        variant="danger"
+      />
     </div>
   );
 }

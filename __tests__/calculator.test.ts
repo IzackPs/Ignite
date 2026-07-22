@@ -30,7 +30,7 @@ describe("Motor de Cálculo (calculator.ts)", () => {
           id: "A1",
           simbolo: "B3SA3",
           nome: "B3",
-          classe: "ACOES",
+          classe: "ACOES_NACIONAIS",
           percentualIdeal: 50, // Meta 50%
           precoAtual: 10.0,
           transacoes: [
@@ -41,7 +41,7 @@ describe("Motor de Cálculo (calculator.ts)", () => {
           id: "A2",
           simbolo: "WEGE3",
           nome: "WEG",
-          classe: "ACOES",
+          classe: "ACOES_NACIONAIS",
           percentualIdeal: 50, // Meta 50%
           precoAtual: 20.0,
           transacoes: [

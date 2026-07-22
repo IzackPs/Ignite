@@ -33,6 +33,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ocultar barras de rolagem em toda a aplicação mantendo funcionalidade de scroll */
+* {
+  -ms-overflow-style: none;  /* IE e Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari e Opera */
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Ocultar as setinhas (spinners) dos campos de input type="number" */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

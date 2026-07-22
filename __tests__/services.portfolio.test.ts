@@ -100,7 +100,7 @@ describe("portfolioService", () => {
 
     expect(prisma.ativo.findMany).toHaveBeenCalledWith({
       where: { userId },
-      include: { transacoes: true },
+      include: { transacoes: true, answers: true },
       orderBy: { simbolo: "asc" },
     });
 

@@ -3,7 +3,15 @@ import { z } from "zod";
 // ─────────────────────────────────────────────
 // Constantes de domínio
 // ─────────────────────────────────────────────
-export const CLASSES_ATIVO = ["ACOES", "FIIS", "ETFS", "RENDA_FIXA"] as const;
+export const CLASSES_ATIVO = [
+  "ACOES_NACIONAIS",
+  "ACOES_INTERNACIONAIS",
+  "FIIS",
+  "REITS",
+  "CRIPTO",
+  "RENDA_FIXA",
+  "RENDA_FIXA_INTERNACIONAL",
+] as const;
 export const TIPOS_TRANSACAO = ["COMPRA", "VENDA"] as const;
 export const TIPOS_PROVENTO = ["DIVIDENDO", "JCP", "RENDIMENTO"] as const;
 
@@ -20,7 +28,7 @@ export const ativoSchema = z.object({
     .min(1, "O nome é obrigatório.")
     .max(100, "O nome deve ter no máximo 100 caracteres."),
   classe: z.enum(CLASSES_ATIVO, {
-    message: "A classe deve ser ACOES, FIIS, ETFS ou RENDA_FIXA.",
+    message: "A classe de ativo informada é inválida.",
   }),
   setor: z.string().max(50, "O setor deve ter no máximo 50 caracteres.").optional(),
   logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
@@ -42,9 +50,45 @@ export const ativoSchema = z.object({
     .min(0, "A taxa não pode ser negativa.")
     .max(500, "A taxa de rentabilidade não pode ultrapassar 500%.")
     .default(100),
+  nota: z
+    .number({ message: "A nota deve ser um número." })
+    .min(0, "A nota mínima é 0.")
+    .max(10, "A nota máxima é 10.")
+    .default(10),
+  respostas: z
+    .array(
+      z.object({
+        questionId: z.string().min(1, "ID da pergunta é obrigatório."),
+        answer: z.boolean(),
+      })
+    )
+    .optional(),
 });
 
 export type AtivoInput = z.infer<typeof ativoSchema>;
+
+// ─────────────────────────────────────────────
+// Schema: Pergunta / Critério (POST /api/questions)
+// ─────────────────────────────────────────────
+export const questionSchema = z.object({
+  id: z.string().optional(),
+  criterio: z
+    .string()
+    .min(1, "O critério é obrigatório.")
+    .max(100, "O critério deve ter no máximo 100 caracteres."),
+  pergunta: z
+    .string()
+    .min(1, "A pergunta é obrigatória.")
+    .max(255, "A pergunta deve ter no máximo 255 caracteres."),
+  peso: z
+    .number({ message: "O peso deve ser um número." })
+    .min(0.1, "O peso mínimo é 0.1.")
+    .max(10, "O peso máximo é 10.0.")
+    .default(1.0),
+  isDefault: z.boolean().optional(),
+});
+
+export type QuestionInput = z.infer<typeof questionSchema>;
 
 // ─────────────────────────────────────────────
 // Schema: Transação (POST /api/transacoes)
@@ -62,7 +106,8 @@ export const transacaoSchema = z.object({
     .gt(0, "O preço unitário deve ser um valor positivo maior que zero."),
   data: z.string().refine((val) => {
     if (!val) return false;
-    const inputDate = new Date(val + "T00:00:00");
+    const inputDate = val.includes("T") ? new Date(val) : new Date(val + "T00:00:00");
+    if (Number.isNaN(inputDate.getTime())) return false;
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     return inputDate <= today;

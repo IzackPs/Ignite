@@ -27,9 +27,14 @@ describe("AssetModal & TransactionModal Extended Coverage", () => {
     it("deve exibir banner de erro se o salvamento falhar", async () => {
       vi.stubGlobal(
         "fetch",
-        vi.fn().mockResolvedValueOnce({
-          ok: false,
-          json: async () => ({ error: "Erro ao salvar ativo no banco" }),
+        vi.fn().mockImplementation(async (url: string) => {
+          if (url.includes("/api/questions")) return { ok: true, json: async () => [] };
+          if (url.includes("/api/ativos/fundamentalist")) return { ok: true, json: async () => ({}) };
+          if (url.includes("/api/ativos/search")) return { ok: true, json: async () => ({}) };
+          return {
+            ok: false,
+            json: async () => ({ error: "Erro ao salvar ativo no banco" }),
+          };
         })
       );
 

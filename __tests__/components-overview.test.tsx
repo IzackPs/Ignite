@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
+import { SidebarNav } from "@/components/SidebarNav";
 
 const mockPortfolio: any = {
   patrimonioTotal: 50000,
@@ -88,29 +89,25 @@ describe("PortfolioOverview", () => {
     expect(screen.getAllByText("R$ •••••").length).toBeGreaterThan(0);
   });
 
-  it("deve disparar os callbacks das ações rápidas ao clicar nos botões", () => {
+  it("deve disparar os callbacks das ações rápidas ao clicar nos botões da barra lateral", () => {
     const onNovoAtivo = vi.fn();
     const onAddTransacao = vi.fn();
-    const onOpenMetasModal = vi.fn();
 
     render(
-      <PortfolioOverview
+      <SidebarNav
+        activeTab="GERAL"
+        onChangeTab={vi.fn()}
         portfolio={mockPortfolio}
-        onSelectTab={vi.fn()}
         onNovoAtivo={onNovoAtivo}
         onAddTransacao={onAddTransacao}
-        onOpenMetasModal={onOpenMetasModal}
       />
     );
 
-    fireEvent.click(screen.getByText("Aportar"));
+    fireEvent.click(screen.getByTitle("Adicionar Novo Ativo"));
     expect(onNovoAtivo).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByText("Registrar Operação"));
+    fireEvent.click(screen.getByTitle("Registrar Operação (Compra/Venda)"));
     expect(onAddTransacao).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(screen.getByText("Reequilibrar Carteira"));
-    expect(onOpenMetasModal).toHaveBeenCalledTimes(1);
   });
 
   it("deve alternar a aba ao clicar no card de classe de ativo", () => {

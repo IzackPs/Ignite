@@ -31,7 +31,7 @@ describe('Modals and Forms Coverage', () => {
 
   it('AssetModal - Preencher e salvar', async () => {
     const onSave = vi.fn();
-    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={onSave} initialClasse="ACOES" />);
+    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={onSave} initialClasse="ACOES_NACIONAIS" />);
     
     fireEvent.change(screen.getByLabelText(/Ticker/i), { target: { value: 'B3SA3' } });
     fireEvent.change(screen.getByLabelText(/Nome/i), { target: { value: 'B3' } });
@@ -46,9 +46,9 @@ describe('Modals and Forms Coverage', () => {
 
   it('AssetModal - Editar', async () => {
     const editingAtivo = {
-      id: '1', simbolo: 'ITUB4', nome: 'Itaú Unibanco', classe: 'ACOES'
+      id: '1', simbolo: 'ITUB4', nome: 'Itaú Unibanco', classe: 'ACOES_NACIONAIS'
     } as any;
-    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={vi.fn()} initialClasse="ACOES" editingAtivo={editingAtivo} />);
+    render(<AssetModal isOpen={true} onClose={vi.fn()} onSave={vi.fn()} initialClasse="ACOES_NACIONAIS" editingAtivo={editingAtivo} />);
     
     expect(screen.getByDisplayValue('ITUB4')).toBeInTheDocument();
 
@@ -181,7 +181,6 @@ describe('Modals and Forms Coverage', () => {
   });
 
   it('SimuladorAporteBar - Executar com confirmação', async () => {
-    global.confirm = vi.fn().mockReturnValue(true);
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ success: true }) });
 
     const portfolio = {
@@ -197,8 +196,11 @@ describe('Modals and Forms Coverage', () => {
     
     fireEvent.click(screen.getByRole('button', { name: /^Simular$/i }));
 
-    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
+    const execBtn = screen.getByRole('button', { name: /Confirmar Compras/i });
     fireEvent.click(execBtn);
+
+    const confirmModalBtn = screen.getByRole('button', { name: /^Confirmar Compras$/i });
+    fireEvent.click(confirmModalBtn);
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/transacoes', expect.any(Object));
@@ -207,8 +209,6 @@ describe('Modals and Forms Coverage', () => {
   });
 
   it('SimuladorAporteBar - Cancelar confirmação', async () => {
-    global.confirm = vi.fn().mockReturnValue(false);
-
     const portfolio = {
       patrimonioTotal: 10000,
       ativos: [
@@ -218,13 +218,17 @@ describe('Modals and Forms Coverage', () => {
     } as any;
     
     global.fetch = vi.fn();
-    render(<SimuladorAporteBar portfolio={portfolio} onRefresh={vi.fn()} />);
-    
+    const onRefresh = vi.fn();
+    render(<SimuladorAporteBar portfolio={portfolio} onRefresh={onRefresh} />);
+
     fireEvent.click(screen.getByRole('button', { name: /^Simular$/i }));
 
-    const execBtn = screen.getByRole('button', { name: /Confirmar/i });
+    const execBtn = screen.getByRole('button', { name: /Confirmar Compras/i });
     fireEvent.click(execBtn);
-    
-    expect(global.fetch).not.toHaveBeenCalledWith('/api/transacoes', expect.any(Object));
+
+    const cancelBtn = screen.getByRole('button', { name: /^Cancelar$/i });
+    fireEvent.click(cancelBtn);
+
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

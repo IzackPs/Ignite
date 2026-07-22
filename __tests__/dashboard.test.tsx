@@ -135,8 +135,8 @@ describe('Dashboard Page', () => {
     fireEvent.click(acoesTab);
 
     // Click "Adicionar" button
-    const novoAtivoBtn = await screen.findByRole('button', { name: /Adicionar/i });
-    fireEvent.click(novoAtivoBtn);
+    const novoAtivoBtns = await screen.findAllByRole('button', { name: /Adicionar/i });
+    fireEvent.click(novoAtivoBtns[0]);
 
     // Click "Sair" button
     const sairBtn = screen.getAllByTitle('Sair')[0];
@@ -234,6 +234,8 @@ describe('Dashboard Page', () => {
       const deleteBtns = screen.queryAllByTitle('Excluir Ativo');
       if (deleteBtns.length > 0) {
         fireEvent.click(deleteBtns[0]);
+        const confirmBtn = screen.getByRole('button', { name: /^Excluir Ativo$/i });
+        fireEvent.click(confirmBtn);
       }
     });
   });

@@ -61,6 +61,8 @@ describe('ProventosView', () => {
     const deleteBtns = screen.queryAllByTitle('Excluir lançamento');
     if (deleteBtns.length > 0) {
       fireEvent.click(deleteBtns[0]);
+      const confirmBtn = screen.getByRole('button', { name: /^Excluir Provento$/i });
+      fireEvent.click(confirmBtn);
     }
     await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/proventos?id=1', { method: 'DELETE' });
@@ -134,6 +136,9 @@ describe('ProventosView', () => {
 
     const deleteBtn = screen.getByTitle('Excluir lançamento');
     fireEvent.click(deleteBtn);
+
+    const confirmBtn = screen.getByRole('button', { name: /^Excluir Provento$/i });
+    fireEvent.click(confirmBtn);
 
     await waitFor(() => {
       expect(loggerSpy).toHaveBeenCalledWith('Erro ao excluir provento:', expect.any(Error));

@@ -19,7 +19,7 @@ export const portfolioService = {
     const [ativos, metasSalvas, historico, cdiInfo] = await Promise.all([
       prisma.ativo.findMany({
         where: { userId },
-        include: { transacoes: true },
+        include: { transacoes: true, answers: true },
         orderBy: { simbolo: "asc" },
       }),
       prisma.metaClasse.findMany({ where: { userId } }),
