@@ -14,10 +14,13 @@ datasource db {
 
 /// Classe de ativo financeiro
 enum TipoClasse {
-  ACOES
+  ACOES_NACIONAIS
+  ACOES_INTERNACIONAIS
   FIIS
-  ETFS
+  REITS
+  CRIPTO
   RENDA_FIXA
+  RENDA_FIXA_INTERNACIONAL
 }
 
 /// Tipo de movimentação em carteira
@@ -51,6 +54,7 @@ model User {
   ativos        Ativo[]
   historicos    HistoricoPatrimonio[]
   metasClasses  MetaClasse[]
+  questions     Question[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -96,25 +100,53 @@ model VerificationToken {
 // ─────────────────────────────────────────────────────────
 
 model Ativo {
-  id                String       @id @default(uuid())
+  id                String                @id @default(uuid())
   simbolo           String
   nome              String
   classe            TipoClasse
   setor             String?
   logoUrl           String?
-  percentualIdeal   Float        @default(0)
-  precoAtual        Float        @default(0)
-  ultimoProvento    Float        @default(0)
-  taxaRentabilidade Float        @default(100)
+  percentualIdeal   Float                 @default(0)
+  precoAtual        Float                 @default(0)
+  ultimoProvento    Float                 @default(0)
+  taxaRentabilidade Float                 @default(100)
+  nota              Float                 @default(10) // Nota de 0 a 10 (Diagrama AUVP)
   transacoes        Transacao[]
   proventos         Provento[]
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  answers           AssetQuestionAnswer[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, simbolo])
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  criterio  String   // ex: ROE, CAGR, Governança
+  pergunta  String   // ex: ROE historicamente maior que 5%?
+  isDefault Boolean  @default(false)
+  peso      Float    @default(1.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  answers AssetQuestionAnswer[]
+}
+
+model AssetQuestionAnswer {
+  id         String   @id @default(uuid())
+  ativoId    String
+  ativo      Ativo    @relation(fields: [ativoId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer     Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([ativoId, questionId])
 }
 
 model Transacao {

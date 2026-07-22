@@ -31,7 +31,7 @@ function runSanityCheck() {
       id: "A1",
       simbolo: "B3SA3",
       nome: "B3",
-      classe: "ACOES",
+      classe: "ACOES_NACIONAIS",
       percentualIdeal: 50,
       precoAtual: 10.0,
       transacoes: [

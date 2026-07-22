@@ -34,9 +34,13 @@ export async function POST(request: Request) {
       precoAtual,
       ultimoProvento,
       taxaRentabilidade,
+      nota,
+      respostas,
     } = parseResult.data;
 
     const { id } = body;
+
+    let targetAtivoId = id;
 
     if (id) {
       // Verificar que o ativo pertence ao usuário antes de atualizar
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
         );
       }
 
-      const ativoAtualizado = await prisma.ativo.update({
+      await prisma.ativo.update({
         where: { id },
         data: {
           simbolo: simbolo.trim().toUpperCase(),
@@ -62,9 +66,10 @@ export async function POST(request: Request) {
           precoAtual,
           ultimoProvento,
           taxaRentabilidade,
+          nota,
         },
       });
-      return NextResponse.json(ativoAtualizado);
+      targetAtivoId = id;
     } else {
       const novoAtivo = await prisma.ativo.create({
         data: {
@@ -77,11 +82,43 @@ export async function POST(request: Request) {
           precoAtual,
           ultimoProvento,
           taxaRentabilidade,
+          nota,
           userId,
         },
       });
-      return NextResponse.json(novoAtivo, { status: 201 });
+      targetAtivoId = novoAtivo.id;
     }
+
+    // Processar respostas do checklist se fornecidas
+    if (respostas && respostas.length > 0 && targetAtivoId) {
+      for (const r of respostas) {
+        await prisma.assetQuestionAnswer.upsert({
+          where: {
+            ativoId_questionId: {
+              ativoId: targetAtivoId,
+              questionId: r.questionId,
+            },
+          },
+          create: {
+            ativoId: targetAtivoId,
+            questionId: r.questionId,
+            answer: r.answer,
+          },
+          update: {
+            answer: r.answer,
+          },
+        });
+      }
+    }
+
+    const ativoFinal = await prisma.ativo.findUnique({
+      where: { id: targetAtivoId },
+      include: {
+        answers: true,
+      },
+    });
+
+    return NextResponse.json(ativoFinal, { status: id ? 200 : 201 });
   } catch (error: any) {
     logger.error("Erro ao salvar ativo:", error);
     if (error?.code === "P2002") {

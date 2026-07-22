@@ -15,7 +15,7 @@ describe("Simulador Inteligente de Aporte (Algoritmo Greedy)", () => {
         percentualIdeal: 50, precoAtual: 50.0,
         valorMercado: 1000, // Defasagem inicial depende do Patrimonio
         // Demais props irrelevantes para o simulador
-        ultimoProvento: 0, taxaRentabilidade: 100, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
+        ultimoProvento: 0, taxaRentabilidade: 100, nota: 10, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
         quantidadeAtual: 20, precoMedio: 45, totalInvestido: 900, lucroPrejuizoR$: 100, lucroPrejuizoPercentual: 11,
         percentualAtual: 33.33, faltaR$: 1500, status: "COMPRAR", qtdAComprar: 30,
         numeroMagico: 0, cotasFaltantesMagico: 0, progressoMagicoPercentual: 0, rendaMensalEstimada: 0
@@ -24,7 +24,7 @@ describe("Simulador Inteligente de Aporte (Algoritmo Greedy)", () => {
         id: "F1", simbolo: "HGLG11", nome: "CSHG Logística", classe: "FIIS",
         percentualIdeal: 25, precoAtual: 100.0,
         valorMercado: 1000,
-        ultimoProvento: 0, taxaRentabilidade: 100, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
+        ultimoProvento: 0, taxaRentabilidade: 100, nota: 10, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
         quantidadeAtual: 10, precoMedio: 100, totalInvestido: 1000, lucroPrejuizoR$: 0, lucroPrejuizoPercentual: 0,
         percentualAtual: 33.33, faltaR$: 400, status: "COMPRAR", qtdAComprar: 4,
         numeroMagico: 0, cotasFaltantesMagico: 0, progressoMagicoPercentual: 0, rendaMensalEstimada: 0
@@ -33,7 +33,7 @@ describe("Simulador Inteligente de Aporte (Algoritmo Greedy)", () => {
         id: "E1", simbolo: "IVVB11", nome: "iShares S&P 500", classe: "ETFS",
         percentualIdeal: 25, precoAtual: 200.0,
         valorMercado: 1000, // Acima da meta
-        ultimoProvento: 0, taxaRentabilidade: 100, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
+        ultimoProvento: 0, taxaRentabilidade: 100, nota: 10, rendimentoProRataR$: 0, diasUteisDecorridos: 0,
         quantidadeAtual: 5, precoMedio: 150, totalInvestido: 750, lucroPrejuizoR$: 250, lucroPrejuizoPercentual: 33,
         percentualAtual: 33.33, faltaR$: -100, status: "AGUARDAR", qtdAComprar: 0,
         numeroMagico: 0, cotasFaltantesMagico: 0, progressoMagicoPercentual: 0, rendaMensalEstimada: 0

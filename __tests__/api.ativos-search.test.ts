@@ -138,7 +138,7 @@ describe("GET /api/ativos/search", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.logoUrl).toBeNull();
+    expect(data.logoUrl).toBe("https://assets.parqet.com/logos/symbol/PETR4");
   });
 
   it("deve retornar 404 em caso de erro/exceção na busca", async () => {

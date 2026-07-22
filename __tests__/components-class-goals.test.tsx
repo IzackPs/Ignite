@@ -13,19 +13,23 @@ describe('ClassGoalsModal', () => {
 
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
 
+    const initialResumo: any[] = [
+      { classe: "ACOES_NACIONAIS", metaPercentual: 50 },
+      { classe: "RENDA_FIXA", metaPercentual: 50 },
+    ];
+
     render(
       <ClassGoalsModal
         isOpen={true}
         onClose={onClose}
         onSave={onSave}
-        resumoClasses={[]}
+        resumoClasses={initialResumo}
       />
     );
 
-    // Initial sum is 100% (40+10+10+40)
     // Change to make sum invalid
-    const inputAcoes = screen.getByLabelText(/Ações/i);
-    fireEvent.change(inputAcoes, { target: { value: '50' } });
+    const inputAcoes = screen.getByLabelText(/Ações Nacionais/i);
+    fireEvent.change(inputAcoes, { target: { value: '60' } });
 
     const saveBtn = screen.getByRole('button', { name: /Salvar Metas/i });
     fireEvent.click(saveBtn);
@@ -34,8 +38,8 @@ describe('ClassGoalsModal', () => {
     expect(global.fetch).not.toHaveBeenCalled();
 
     // Fix sum
-    const inputRendaFixa = screen.getByLabelText(/Renda Fixa/i);
-    fireEvent.change(inputRendaFixa, { target: { value: '30' } });
+    const inputRendaFixa = screen.getByLabelText(/^💰 Renda Fixa/i);
+    fireEvent.change(inputRendaFixa, { target: { value: '40' } });
 
     fireEvent.click(saveBtn);
 

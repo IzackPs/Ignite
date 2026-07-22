@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
-import { PortfolioCalculado } from "@/lib/calculator";
+import {
+  PortfolioCalculado,
+  calcularSaudeCarteira,
+} from "@/lib/calculator";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import {
   ArrowRight,
@@ -14,9 +17,6 @@ import {
   Wallet,
   ArrowUpRight,
   Activity,
-  PlusCircle,
-  RefreshCw,
-  FileText,
   Coins,
   Sparkles,
   HeartPulse,
@@ -34,16 +34,6 @@ interface PortfolioOverviewProps {
   readonly cdiAnualPercentual?: number;
 }
 
-function getSaudeMetrics(score: number) {
-  if (score >= 80) {
-    return { stroke: "#34d399", textClass: "text-emerald-400", label: "Excelente" };
-  }
-  if (score >= 50) {
-    return { stroke: "#fbbf24", textClass: "text-amber-400", label: "Atenção" };
-  }
-  return { stroke: "#fb7185", textClass: "text-rose-400", label: "Desbalanceada" };
-}
-
 function getAlocacaoStyle(diffPercent: number) {
   if (diffPercent < -2) {
     return { textClass: "text-amber-400", barClass: "bg-amber-400" };
@@ -58,27 +48,19 @@ export function PortfolioOverview({
   portfolio,
   onSelectTab,
   isBalanceVisible = true,
-  onNovoAtivo,
-  onAddTransacao,
-  onOpenMetasModal,
+  onNovoAtivo: _onNovoAtivo,
+  onAddTransacao: _onAddTransacao,
+  onOpenMetasModal: _onOpenMetasModal,
   cdiAnualPercentual = 0,
 }: PortfolioOverviewProps) {
   const isLucroGeral = portfolio.lucroPrejuizoTotalR$ >= 0;
 
   // ─── Cálculo de Saúde da Carteira ───
-  const ativosComMeta = portfolio.ativos.filter((a) => a.percentualIdeal > 0);
-  const ativosNaMeta = ativosComMeta.filter((a) => {
-    const diff = Math.abs(a.percentualAtual - a.percentualIdeal);
-    return diff <= 2; // Tolerância de ±2%
-  });
-  const saudeScore =
-    ativosComMeta.length > 0
-      ? Math.round((ativosNaMeta.length / ativosComMeta.length) * 100)
-      : 100;
-  const saudeInfo = getSaudeMetrics(saudeScore);
+  const saudeInfo = calcularSaudeCarteira(portfolio);
+  const saudeScore = saudeInfo.score;
 
-  const ativosDefasados = ativosComMeta.filter(
-    (a) => a.status === "COMPRAR"
+  const ativosDefasados = portfolio.ativos.filter(
+    (a) => a.percentualIdeal > 0 && a.status === "COMPRAR"
   ).length;
 
   // ─── FIIs com Número Mágico para preview ───
@@ -94,9 +76,14 @@ export function PortfolioOverview({
 
   const classIcons: Record<string, React.ReactNode> = {
     ACOES: <TrendingUp className="w-5 h-5 text-blue-500" />,
+    ACOES_NACIONAIS: <TrendingUp className="w-5 h-5 text-blue-500" />,
+    ACOES_INTERNACIONAIS: <Globe className="w-5 h-5 text-sky-400" />,
     FIIS: <Building className="w-5 h-5 text-purple-500" />,
+    REITS: <Building className="w-5 h-5 text-indigo-400" />,
+    CRIPTO: <Coins className="w-5 h-5 text-amber-500" />,
     ETFS: <Globe className="w-5 h-5 text-amber-500" />,
     RENDA_FIXA: <ShieldCheck className="w-5 h-5 text-emerald-500" />,
+    RENDA_FIXA_INTERNACIONAL: <ShieldCheck className="w-5 h-5 text-teal-400" />,
   };
 
   // SVG Progress Ring para Saúde da Carteira
@@ -109,18 +96,7 @@ export function PortfolioOverview({
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* ─── Ações Rápidas de Investimento ─── */}
-      <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        <button type="button" onClick={onNovoAtivo} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-emerald-500/20 whitespace-nowrap">
-          <PlusCircle className="w-4 h-4" /> Aportar
-        </button>
-        <button type="button" onClick={onAddTransacao} className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors border border-zinc-700 whitespace-nowrap">
-          <FileText className="w-4 h-4 text-gold-main" /> Registrar Operação
-        </button>
-        <button type="button" onClick={onOpenMetasModal} className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors border border-zinc-700 whitespace-nowrap">
-          <RefreshCw className="w-4 h-4 text-blue-400" /> Reequilibrar Carteira
-        </button>
-      </div>
+
 
       {/* ─── Topo / Destaque Principal (3 Cards) ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -244,7 +220,7 @@ export function PortfolioOverview({
                 {saudeInfo.label}
               </div>
               <div className="text-[11px] text-zinc-400">
-                {ativosNaMeta.length}/{ativosComMeta.length} ativos dentro da meta (±2%)
+                Desvio de Metas: <strong className="text-white">{saudeInfo.desvioTotalPercentual}%</strong>
               </div>
 
               {ativosDefasados > 0 && (

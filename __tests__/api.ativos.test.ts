@@ -9,6 +9,10 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       delete: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    assetQuestionAnswer: {
+      upsert: vi.fn(),
     },
   },
 }));
@@ -41,11 +45,12 @@ describe('API Ativos', () => {
         body: JSON.stringify({
           simbolo: 'ITUB4',
           nome: 'Itaú',
-          classe: 'ACOES',
+          classe: 'ACOES_NACIONAIS',
         }),
       });
       const mockedAtivo = { id: '1', simbolo: 'ITUB4' };
       vi.mocked(prisma.ativo.create).mockResolvedValueOnce(mockedAtivo as any);
+      vi.mocked(prisma.ativo.findUnique).mockResolvedValueOnce(mockedAtivo as any);
       
       const response = await POST(request) as any;
       
@@ -60,13 +65,14 @@ describe('API Ativos', () => {
           id: '1',
           simbolo: 'ITUB4',
           nome: 'Itaú',
-          classe: 'ACOES',
+          classe: 'ACOES_NACIONAIS',
         }),
       });
       
       const mockedAtivo = { id: '1', simbolo: 'ITUB4', userId: 'mock-user-id' };
       vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce(mockedAtivo as any);
       vi.mocked(prisma.ativo.update).mockResolvedValueOnce(mockedAtivo as any);
+      vi.mocked(prisma.ativo.findUnique).mockResolvedValueOnce(mockedAtivo as any);
       
       const response = await POST(request) as any;
       
@@ -80,7 +86,7 @@ describe('API Ativos', () => {
           id: '999',
           simbolo: 'ITUB4',
           nome: 'Itaú',
-          classe: 'ACOES',
+          classe: 'ACOES_NACIONAIS',
         }),
       });
       vi.mocked(prisma.ativo.findFirst).mockResolvedValueOnce(null);
@@ -95,7 +101,7 @@ describe('API Ativos', () => {
         body: JSON.stringify({
           simbolo: 'ITUB4',
           nome: 'Itaú',
-          classe: 'ACOES',
+          classe: 'ACOES_NACIONAIS',
         }),
       });
       const p2002Error = new Error('Unique constraint failed') as any;
@@ -113,7 +119,7 @@ describe('API Ativos', () => {
         body: JSON.stringify({
           simbolo: 'ITUB4',
           nome: 'Itaú',
-          classe: 'ACOES',
+          classe: 'ACOES_NACIONAIS',
         }),
       });
       vi.mocked(prisma.ativo.create).mockRejectedValueOnce(new Error('Fatal DB Error'));

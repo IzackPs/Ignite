@@ -26,6 +26,8 @@ import {
   CartesianGrid,
 } from "recharts";
 
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+
 export interface ProventoItem {
   id: string;
   ativoId: string;
@@ -46,6 +48,14 @@ export interface HistoricoMensalProvento {
   dividendo: number;
   jcp: number;
   rendimento: number;
+}
+
+export interface ProventosResponse {
+  totalGeralRecebido: number;
+  mediaMensal: number;
+  proventosCount: number;
+  historicoMensal: HistoricoMensalProvento[];
+  proventos: ProventoItem[];
 }
 
 const CustomProventoTooltip = (props: any) => {
@@ -92,21 +102,15 @@ interface ProventosViewProps {
 }
 
 export function ProventosView({ ativos }: ProventosViewProps) {
-  const [proventosData, setProventosData] = useState<{
-    totalGeralRecebido: number;
-    mediaMensal: number;
-    proventosCount: number;
-    historicoMensal: HistoricoMensalProvento[];
-    proventos: ProventoItem[];
-  } | null>(null);
-
+  const [proventosData, setProventosData] = useState<ProventosResponse | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deletingProventoId, setDeletingProventoId] = useState<string | null>(null);
 
   const fetchProventos = useCallback(async () => {
     try {
       const res = await fetch("/api/proventos");
-      const data = await res.json();
       if (res.ok) {
+        const data = await res.json();
         setProventosData(data);
       }
     } catch (err: any) {
@@ -118,8 +122,10 @@ export function ProventosView({ ativos }: ProventosViewProps) {
     fetchProventos();
   }, [fetchProventos]);
 
-  const handleDeleteProvento = async (id: string) => {
-    if (!confirm("Deseja excluir este registro de provento?")) return;
+  const handleDeleteProvento = async () => {
+    if (!deletingProventoId) return;
+    const id = deletingProventoId;
+    setDeletingProventoId(null);
     try {
       const res = await fetch(`/api/proventos?id=${id}`, {
         method: "DELETE",
@@ -137,7 +143,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
   ).padStart(2, "0")}`;
 
   const rendaMesAtual =
-    proventosData?.historicoMensal?.find((m) => m.chaveMes === mesAtualChave)
+    proventosData?.historicoMensal?.find((m: HistoricoMensalProvento) => m.chaveMes === mesAtualChave)
       ?.total || 0;
 
   return (
@@ -314,7 +320,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                   </td>
                 </tr>
               ) : (
-                proventosData.proventos.map((p) => {
+                proventosData.proventos.map((p: ProventoItem) => {
                   return (
                     <tr
                       key={p.id}
@@ -366,7 +372,7 @@ export function ProventosView({ ativos }: ProventosViewProps) {
                       <td className="py-3 px-4 text-center">
                         <button
                           type="button"
-                          onClick={() => handleDeleteProvento(p.id)}
+                          onClick={() => setDeletingProventoId(p.id)}
                           className="text-zinc-500 hover:text-rose-400 p-1 rounded transition-colors"
                           title="Excluir lançamento"
                         >
@@ -388,6 +394,17 @@ export function ProventosView({ ativos }: ProventosViewProps) {
         onClose={() => setModalOpen(false)}
         onSave={fetchProventos}
         ativos={ativos}
+      />
+
+      {/* Modal de Confirmação de Exclusão de Provento */}
+      <ConfirmModal
+        isOpen={!!deletingProventoId}
+        onClose={() => setDeletingProventoId(null)}
+        onConfirm={handleDeleteProvento}
+        title="Excluir Lançamento de Provento"
+        description="Tem certeza que deseja excluir este lançamento de provento da sua carteira?"
+        confirmText="Excluir Provento"
+        variant="danger"
       />
     </div>
   );

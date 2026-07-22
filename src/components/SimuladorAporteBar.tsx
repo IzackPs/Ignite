@@ -13,6 +13,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+
 interface SimuladorAporteBarProps {
   readonly portfolio: PortfolioCalculado;
   readonly onRefresh: () => void;
@@ -25,7 +27,9 @@ export function SimuladorAporteBar({
   const [valorAporte, setValorAporte] = useState<number>(2000);
   const [executingOrders, setExecutingOrders] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const resultadoSimulacao = simularAporteGreedy(
     portfolio.ativos,
@@ -35,24 +39,16 @@ export function SimuladorAporteBar({
 
   const handleExecutarCompras = async () => {
     if (resultadoSimulacao.itensCarrinho.length === 0) return;
-
-    if (
-      !confirm(
-        `Confirma o registro de COMPRA de ${resultadoSimulacao.itensCarrinho.length} ativo(s) totalizando ${formatCurrency(
-          resultadoSimulacao.totalGasto
-        )}?`
-      )
-    ) {
-      return;
-    }
+    setConfirmOpen(false);
 
     setExecutingOrders(true);
     setSuccessMessage(null);
+    setErrorMessage(null);
 
     try {
       // Registrar cada transação de compra no backend
       for (const item of resultadoSimulacao.itensCarrinho) {
-        await fetch("/api/transacoes", {
+        const res = await fetch("/api/transacoes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -60,9 +56,14 @@ export function SimuladorAporteBar({
             tipo: "COMPRA",
             quantidade: item.qtdSimuladaComprar,
             precoUnitario: item.precoAtual,
-            data: new Date().toISOString(),
+            data: new Date().toISOString().split("T")[0],
           }),
         });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Erro ao registrar compra de ${item.simbolo}`);
+        }
       }
 
       setSuccessMessage(
@@ -73,6 +74,7 @@ export function SimuladorAporteBar({
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err: any) {
       logger.error("Erro ao executar ordens de aporte:", err);
+      setErrorMessage(err.message || "Erro ao registrar compras.");
     } finally {
       setExecutingOrders(false);
     }
@@ -173,6 +175,13 @@ export function SimuladorAporteBar({
           </div>
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-4 rounded-xl flex items-center justify-between font-semibold animate-in fade-in">
+          <span>{errorMessage}</span>
+          <button onClick={() => setErrorMessage(null)} className="text-zinc-400 hover:text-white">✕</button>
+        </div>
+      )}
 
       {successMessage && (
         <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-4 rounded-xl flex items-center justify-between font-semibold animate-in fade-in">
@@ -308,7 +317,7 @@ export function SimuladorAporteBar({
             <div className="flex items-center justify-end pt-2">
               <button
                 type="button"
-                onClick={handleExecutarCompras}
+                onClick={() => setConfirmOpen(true)}
                 disabled={executingOrders}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2"
               >
@@ -323,6 +332,18 @@ export function SimuladorAporteBar({
           )}
         </div>
       )}
+
+      {/* Modal de Confirmação das Compras do Simulador */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleExecutarCompras}
+        title="Confirmar Ordens de Compra"
+        description={`Deseja realmente registrar a compra de ${resultadoSimulacao.itensCarrinho.length} ativo(s) totalizando ${formatCurrency(resultadoSimulacao.totalGasto)} na sua carteira?`}
+        confirmText="Confirmar Compras"
+        variant="emerald"
+        loading={executingOrders}
+      />
     </div>
   );
 }

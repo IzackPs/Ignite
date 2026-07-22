@@ -27,6 +27,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export interface HistoricoItem {
   id: string;
@@ -45,10 +46,13 @@ interface DashboardChartsProps {
 }
 
 const CLASS_COLORS: Record<string, string> = {
-  ACOES: "#3b82f6", // blue-500
+  ACOES_NACIONAIS: "#3b82f6", // blue-500
+  ACOES_INTERNACIONAIS: "#38bdf8", // sky-400
   FIIS: "#a855f7", // purple-500
-  ETFS: "#f59e0b", // amber-500
+  REITS: "#818cf8", // indigo-400
+  CRIPTO: "#f59e0b", // amber-500
   RENDA_FIXA: "#10b981", // emerald-500
+  RENDA_FIXA_INTERNACIONAL: "#2dd4bf", // teal-400
 };
 
 const CustomDonutTooltip = (props: any) => {
@@ -108,6 +112,7 @@ export function DashboardCharts({
 }: DashboardChartsProps) {
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
+  const [deletingHistId, setDeletingHistId] = useState<string | null>(null);
 
   // Dados para o Gráfico de Rosca (Alocação Atual vs Ideal por Classe)
   const donutData = portfolio.resumoClasses.map((r) => ({
@@ -172,8 +177,10 @@ export function DashboardCharts({
     }
   };
 
-  const handleExcluirHistorico = async (id: string) => {
-    if (!confirm("Deseja remover este registro do histórico mensal?")) return;
+  const handleExcluirHistorico = async () => {
+    if (!deletingHistId) return;
+    const id = deletingHistId;
+    setDeletingHistId(null);
     try {
       const res = await fetch(`/api/historico?id=${id}`, {
         method: "DELETE",
@@ -188,6 +195,15 @@ export function DashboardCharts({
 
   return (
     <div className="space-y-8">
+      <ConfirmModal
+        isOpen={!!deletingHistId}
+        onClose={() => setDeletingHistId(null)}
+        onConfirm={handleExcluirHistorico}
+        title="Excluir Registro"
+        description="Tem certeza que deseja remover este registro do histórico mensal? Esta ação não pode ser desfeita."
+        confirmText="Excluir Registro"
+        variant="danger"
+      />
       {/* Top Bar de Ações do Dashboard */}
       <div className="bg-surface border border-border-subtle rounded-2xl p-5 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -475,7 +491,7 @@ export function DashboardCharts({
                     <td className="py-2.5 px-4 text-center font-sans">
                       <button
                         type="button"
-                        onClick={() => handleExcluirHistorico(item.id)}
+                        onClick={() => setDeletingHistId(item.id)}
                         className="text-zinc-400 hover:text-rose-400 p-1 rounded transition-colors"
                         title="Excluir este registro"
                       >

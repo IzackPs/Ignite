@@ -4,6 +4,18 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
 
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn().mockImplementation(async ({ where }: any) => {
+        if (where?.id === "user-123") return { id: "user-123", email: "user@test.com" };
+        return null;
+      }),
+      findFirst: vi.fn(),
+    },
+  },
+}));
+
 import { auth } from "@/auth";
 
 describe("auth-guard", () => {

@@ -69,7 +69,7 @@ describe("Cotacao Service", () => {
     expect(prisma.ativo.update).toHaveBeenCalledTimes(2);
     expect(prisma.ativo.update).toHaveBeenNthCalledWith(1, {
       where: { id: "1" },
-      data: { precoAtual: 38.5 },
+      data: { precoAtual: 38.5, logoUrl: "https://assets.parqet.com/logos/symbol/PETR4" },
     });
   });
 

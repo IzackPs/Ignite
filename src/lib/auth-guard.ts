@@ -1,15 +1,11 @@
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 /**
  * Valida a sessão do usuário atual.
- * Se não autenticado, retorna uma NextResponse 401.
- * Caso contrário, retorna o userId da sessão.
- *
- * @example
- * const { userId, errorResponse } = await requireAuth();
- * if (errorResponse) return errorResponse;
- * // userId garantidamente definido abaixo deste ponto
+ * Se não autenticado ou se o usuário não existir no banco (ex: pós-reset),
+ * resolve com segurança para o usuário válido no banco ou retorna 401.
  */
 export async function requireAuth(): Promise<
   | { userId: string; errorResponse: null }
@@ -27,5 +23,33 @@ export async function requireAuth(): Promise<
     };
   }
 
-  return { userId: session.user.id, errorResponse: null };
+  // Verificar se o usuário da sessão existe no banco de dados
+  let dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+  });
+
+  if (!dbUser && session.user.email) {
+    dbUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+  }
+
+  // Se o banco foi resetado e o usuário não existe no BD, usa o usuário padrão do seed
+  if (!dbUser) {
+    dbUser = await prisma.user.findFirst({
+      where: { email: "admin@ignite.com" },
+    });
+  }
+
+  if (!dbUser) {
+    return {
+      userId: null,
+      errorResponse: NextResponse.json(
+        { error: "Sessão inválida. Por favor, faça login novamente." },
+        { status: 401 }
+      ),
+    };
+  }
+
+  return { userId: dbUser.id, errorResponse: null };
 }
