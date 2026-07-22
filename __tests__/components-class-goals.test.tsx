@@ -14,8 +14,8 @@ describe('ClassGoalsModal', () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
 
     const initialResumo: any[] = [
-      { classe: "ACOES_NACIONAIS", metaPercentual: 50 },
-      { classe: "RENDA_FIXA", metaPercentual: 50 },
+      { classe: "ACOES_NACIONAIS", nomeClasse: "Ações BR", metaPercentual: 50, valorMercadoTotal: 500, percentualAtual: 50, faltaR$: 0, status: "AGUARDAR" },
+      { classe: "RENDA_FIXA", nomeClasse: "Renda Fixa", metaPercentual: 50, valorMercadoTotal: 500, percentualAtual: 50, faltaR$: 0, status: "AGUARDAR" },
     ];
 
     render(
@@ -32,8 +32,6 @@ describe('ClassGoalsModal', () => {
     fireEvent.change(inputAcoes, { target: { value: '60' } });
 
     const saveBtn = screen.getByRole('button', { name: /Salvar Metas/i });
-    fireEvent.click(saveBtn);
-
     expect(saveBtn).toBeDisabled();
     expect(global.fetch).not.toHaveBeenCalled();
 
@@ -47,6 +45,31 @@ describe('ClassGoalsModal', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/metas-classes', expect.any(Object));
       expect(onSave).toHaveBeenCalled();
       expect(onClose).toHaveBeenCalled();
+    });
+  });
+
+  it('deve exibir mensagem de erro se a requisição falhar', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+    });
+
+    render(
+      <ClassGoalsModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+        resumoClasses={[
+          { classe: "ACOES_NACIONAIS", nomeClasse: "Ações BR", metaPercentual: 50, valorMercadoTotal: 500, percentualAtual: 50, faltaR$: 0, status: "AGUARDAR" },
+          { classe: "RENDA_FIXA", nomeClasse: "Renda Fixa", metaPercentual: 50, valorMercadoTotal: 500, percentualAtual: 50, faltaR$: 0, status: "AGUARDAR" },
+        ]}
+      />
+    );
+
+    const saveBtn = screen.getByRole('button', { name: /Salvar Metas/i });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Erro ao salvar metas")).toBeInTheDocument();
     });
   });
 });

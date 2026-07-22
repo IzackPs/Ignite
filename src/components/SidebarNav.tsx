@@ -187,6 +187,152 @@ function SidebarBalanceSection({
     </div>
   );
 }
+interface SidebarQuickActionsSectionProps {
+  readonly expanded: boolean;
+  readonly onNovoAtivo?: () => void;
+  readonly onAddTransacao?: () => void;
+}
+
+function SidebarQuickActionsSection({
+  expanded,
+  onNovoAtivo,
+  onAddTransacao,
+}: SidebarQuickActionsSectionProps) {
+  if (!onNovoAtivo && !onAddTransacao) return null;
+
+  return (
+    <div className="space-y-1 mb-2 w-full">
+      {onNovoAtivo && (
+        <button
+          type="button"
+          onClick={onNovoAtivo}
+          title="Adicionar Novo Ativo"
+          className={`w-full flex items-center justify-center gap-2 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            expanded ? "px-3" : "px-0"
+          } bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20`}
+        >
+          <PlusCircle className="w-4 h-4 shrink-0" />
+          {expanded && <span>Novo Ativo</span>}
+        </button>
+      )}
+
+      {onAddTransacao && (
+        <button
+          type="button"
+          onClick={onAddTransacao}
+          title="Registrar Operação (Compra/Venda)"
+          className={`w-full flex items-center justify-center gap-2 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            expanded ? "px-3" : "px-0"
+          } bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700/80`}
+        >
+          <FileText className="w-4 h-4 text-gold-main shrink-0" />
+          {expanded && <span>Registrar Operação</span>}
+        </button>
+      )}
+    </div>
+  );
+}
+
+interface SidebarFooterSectionProps {
+  readonly expanded: boolean;
+  readonly activeTab: string;
+  readonly handleSelectTab: (key: string) => void;
+  readonly onUpdatePrices?: () => void;
+  readonly updatingPrices?: boolean;
+  readonly onOpenSettings?: () => void;
+  readonly onOpenProfileModal?: () => void;
+  readonly onLogout?: () => void;
+}
+
+function SidebarFooterSection({
+  expanded,
+  activeTab,
+  handleSelectTab,
+  onUpdatePrices,
+  updatingPrices,
+  onOpenSettings,
+  onOpenProfileModal,
+  onLogout,
+}: SidebarFooterSectionProps) {
+  return (
+    <div className="pt-3 border-t border-border-subtle space-y-1 w-full">
+      {onUpdatePrices && (
+        <button
+          type="button"
+          onClick={onUpdatePrices}
+          disabled={updatingPrices}
+          title="Sincronizar"
+          aria-label="Sincronizar"
+          className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
+            expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
+          }`}
+        >
+          <Zap
+            className={`w-3.5 h-3.5 text-gold-main shrink-0 ${
+              updatingPrices ? "animate-bounce text-amber-400" : ""
+            }`}
+          />
+          {expanded && <span>{updatingPrices ? "Sincronizando..." : "Sincronizar"}</span>}
+        </button>
+      )}
+
+      {onOpenSettings && (
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title="Configurar Metas"
+          className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
+            expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
+          }`}
+        >
+          <Settings className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+          {expanded && <span>Configurar Metas</span>}
+        </button>
+      )}
+
+      {onOpenProfileModal && (
+        <button
+          type="button"
+          onClick={onOpenProfileModal}
+          title="Perfil de Investimento (Suitability)"
+          className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
+            expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          {expanded && <span>Perfil de Investimento</span>}
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => handleSelectTab("FAQ")}
+        title="Ajuda & Matemática do Sistema"
+        className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
+          expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
+        } ${activeTab === "FAQ" ? "bg-gold-main/20 text-gold-main font-bold border border-gold-main/30" : ""}`}
+      >
+        <HelpCircle className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+        {expanded && <span>Ajuda & Matemática</span>}
+      </button>
+
+      {onLogout && (
+        <button
+          type="button"
+          onClick={onLogout}
+          title="Sair"
+          aria-label="Sair"
+          className={`w-full flex items-center py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors ${
+            expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
+          }`}
+        >
+          <LogOut className="w-3.5 h-3.5 shrink-0" />
+          {expanded && <span>Sair do Ignite</span>}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function SidebarNav({
   activeTab,
@@ -317,40 +463,14 @@ export function SidebarNav({
         isBalanceVisible={isBalanceVisible}
         onToggleBalance={onToggleBalance}
         lastPriceUpdate={lastPriceUpdate}
-        onUpdatePrices={onUpdatePrices}
         updatingPrices={updatingPrices}
       />
-      {(onNovoAtivo || onAddTransacao) && (
-        <div className="space-y-1 mb-2 w-full">
-          {onNovoAtivo && (
-            <button
-              type="button"
-              onClick={onNovoAtivo}
-              title="Adicionar Novo Ativo"
-              className={`w-full flex items-center justify-center gap-2 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                expanded ? "px-3" : "px-0"
-              } bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20`}
-            >
-              <PlusCircle className="w-4 h-4 shrink-0" />
-              {expanded && <span>Novo Ativo</span>}
-            </button>
-          )}
 
-          {onAddTransacao && (
-            <button
-              type="button"
-              onClick={onAddTransacao}
-              title="Registrar Operação (Compra/Venda)"
-              className={`w-full flex items-center justify-center gap-2 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                expanded ? "px-3" : "px-0"
-              } bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700/80`}
-            >
-              <FileText className="w-4 h-4 text-gold-main shrink-0" />
-              {expanded && <span>Registrar Operação</span>}
-            </button>
-          )}
-        </div>
-      )}
+      <SidebarQuickActionsSection
+        expanded={expanded}
+        onNovoAtivo={onNovoAtivo}
+        onAddTransacao={onAddTransacao}
+      />
 
       {/* Navegação Principal */}
       <div className="space-y-0.5 w-full">
@@ -534,83 +654,16 @@ export function SidebarNav({
       {/* Spacer para empurrar o rodapé */}
       <div className="flex-1 min-h-[20px]" />
 
-      {/* Rodapé / Ações Rápidas da Barra Lateral */}
-      <div className="pt-3 border-t border-border-subtle space-y-1 w-full">
-        {onUpdatePrices && (
-          <button
-            type="button"
-            onClick={onUpdatePrices}
-            disabled={updatingPrices}
-            title="Sincronizar"
-            aria-label="Sincronizar"
-            className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
-              expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
-            }`}
-          >
-            <Zap
-              className={`w-3.5 h-3.5 text-gold-main shrink-0 ${
-                updatingPrices ? "animate-bounce text-amber-400" : ""
-              }`}
-            />
-            {expanded && <span>{updatingPrices ? "Sincronizando..." : "Sincronizar"}</span>}
-          </button>
-        )}
-
-        {onOpenSettings && (
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            title="Configurar Metas"
-            className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
-              expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
-            }`}
-          >
-            <Settings className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-            {expanded && <span>Configurar Metas</span>}
-          </button>
-        )}
-
-        {onOpenProfileModal && (
-          <button
-            type="button"
-            onClick={onOpenProfileModal}
-            title="Perfil de Investimento (Suitability)"
-            className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
-              expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-            {expanded && <span>Perfil de Investimento</span>}
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={() => handleSelectTab("FAQ")}
-          title="Ajuda & Matemática do Sistema"
-          className={`w-full flex items-center py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors ${
-            expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
-          } ${activeTab === "FAQ" ? "bg-gold-main/20 text-gold-main font-bold border border-gold-main/30" : ""}`}
-        >
-          <HelpCircle className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          {expanded && <span>Ajuda & Matemática</span>}
-        </button>
-
-        {onLogout && (
-          <button
-            type="button"
-            onClick={onLogout}
-            title="Sair"
-            aria-label="Sair"
-            className={`w-full flex items-center py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors ${
-              expanded ? "justify-start px-3 gap-2" : "justify-center px-0"
-            }`}
-          >
-            <LogOut className="w-3.5 h-3.5 shrink-0" />
-            {expanded && <span>Sair do Ignite</span>}
-          </button>
-        )}
-      </div>
+      <SidebarFooterSection
+        expanded={expanded}
+        activeTab={activeTab}
+        handleSelectTab={handleSelectTab}
+        onUpdatePrices={onUpdatePrices}
+        updatingPrices={updatingPrices}
+        onOpenSettings={onOpenSettings}
+        onOpenProfileModal={onOpenProfileModal}
+        onLogout={onLogout}
+      />
     </div>
   );
 
