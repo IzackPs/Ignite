@@ -437,6 +437,68 @@ const CLASSES_ATIVOS: readonly ClassAtivoItem[] = [
   },
 ];
 
+interface SidebarClassNavItemProps {
+  readonly cls: ClassAtivoItem;
+  readonly activeTab: string;
+  readonly expanded: boolean;
+  readonly portfolio?: PortfolioCalculado | null;
+  readonly handleSelectTab: (key: string) => void;
+}
+
+function SidebarClassNavItem({
+  cls,
+  activeTab,
+  expanded,
+  portfolio,
+  handleSelectTab,
+}: SidebarClassNavItemProps) {
+  const isActive = activeTab === cls.key;
+  const resumo = portfolio?.resumoClasses?.find((r) => r.classe === cls.key);
+  const qtdAtivos =
+    portfolio?.ativos?.filter((a) => a.classe.toUpperCase() === cls.key).length ?? 0;
+
+  const isBuySuggested = resumo?.status === "COMPRAR" && !isActive;
+
+  const buttonStyle = isActive
+    ? "bg-gold-main/20 border border-gold-main/40 text-gold-main font-bold"
+    : "text-zinc-400 hover:text-white hover:bg-zinc-900/60";
+
+  const layoutStyle = expanded ? "justify-between px-3" : "justify-center px-0";
+
+  const badgeStyle = isActive
+    ? "bg-gold-main/30 text-gold-main font-bold"
+    : "bg-zinc-900 text-zinc-500";
+
+  return (
+    <button
+      type="button"
+      key={cls.key}
+      onClick={() => handleSelectTab(cls.key)}
+      title={cls.label}
+      className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${layoutStyle} ${buttonStyle}`}
+    >
+      <div className="flex items-center gap-2 truncate">
+        {cls.icon}
+        {expanded && <span className="truncate">{cls.label}</span>}
+      </div>
+
+      {expanded && (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isBuySuggested && (
+            <span
+              className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+              title="Bolinha Verde: Sugestão de COMPRA (esta classe de ativos está abaixo da meta cadastrada)"
+            />
+          )}
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${badgeStyle}`}>
+            {qtdAtivos}
+          </span>
+        </div>
+      )}
+    </button>
+  );
+}
+
 interface SidebarClassesSectionProps {
   readonly expanded: boolean;
   readonly activeTab: string;
@@ -458,6 +520,8 @@ function SidebarClassesSection({
   onToggleClassesOpen,
   handleSelectTab,
 }: SidebarClassesSectionProps) {
+  const showList = isClassesOpen || !expanded;
+
   return (
     <div className="space-y-1 pt-3 border-t border-border-subtle/80 w-full mt-2">
       {expanded ? (
@@ -484,55 +548,18 @@ function SidebarClassesSection({
         </div>
       )}
 
-      {(isClassesOpen || !expanded) && (
+      {showList && (
         <div className={`space-y-1 ${expanded ? "pl-2" : "w-full"}`}>
-          {classesAtivos.map((cls) => {
-            const isActive = activeTab === cls.key;
-            const resumo = portfolio?.resumoClasses.find((r) => r.classe === cls.key);
-            const qtdAtivos =
-              portfolio?.ativos.filter((a) => a.classe.toUpperCase() === cls.key).length || 0;
-
-            return (
-              <button
-                type="button"
-                key={cls.key}
-                onClick={() => handleSelectTab(cls.key)}
-                title={cls.label}
-                className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-                  expanded ? "justify-between px-3" : "justify-center px-0"
-                } ${
-                  isActive
-                    ? "bg-gold-main/20 border border-gold-main/40 text-gold-main font-bold"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  {cls.icon}
-                  {expanded && <span className="truncate">{cls.label}</span>}
-                </div>
-
-                {expanded && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {resumo?.status === "COMPRAR" && !isActive && (
-                      <span
-                        className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-                        title="Bolinha Verde: Sugestão de COMPRA (esta classe de ativos está abaixo da meta cadastrada)"
-                      />
-                    )}
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                        isActive
-                          ? "bg-gold-main/30 text-gold-main font-bold"
-                          : "bg-zinc-900 text-zinc-500"
-                      }`}
-                    >
-                      {qtdAtivos}
-                    </span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+          {classesAtivos.map((cls) => (
+            <SidebarClassNavItem
+              key={cls.key}
+              cls={cls}
+              activeTab={activeTab}
+              expanded={expanded}
+              portfolio={portfolio}
+              handleSelectTab={handleSelectTab}
+            />
+          ))}
         </div>
       )}
     </div>
