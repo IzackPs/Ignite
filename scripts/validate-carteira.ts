@@ -12,8 +12,8 @@ function runSanityCheck() {
 
   // Precisamos mockar as datas para garantir os 5 dias úteis do CDI
   const OriginalDate = global.Date;
-  const _mockNow = new Date("2025-01-08T12:00:00Z"); // Hoje (Quarta)
-  const transacaoData = new Date("2025-01-01T12:00:00Z"); // 7 dias antes (Quarta-feira) -> 5 dias úteis
+  const _mockNow = new Date("2025-01-09T12:00:00Z"); // Hoje (Quinta-feira)
+  const transacaoData = new Date("2025-01-02T12:00:00Z"); // 7 dias depois (Quinta-feira) -> 5 dias úteis
 
   // @ts-expect-error mock global date
   global.Date = class extends OriginalDate {
@@ -21,7 +21,7 @@ function runSanityCheck() {
       if (arg) {
         super(arg);
       } else {
-        super("2025-01-08T12:00:00Z");
+        super("2025-01-09T12:00:00Z");
       }
     }
   };
@@ -53,7 +53,7 @@ function runSanityCheck() {
   ];
 
   console.info("-> Processando motor de cálculo...");
-  const portfolio = calcularPortfolio(ativos);
+  const portfolio = calcularPortfolio(ativos, undefined, 0.11);
 
   global.Date = OriginalDate;
 
