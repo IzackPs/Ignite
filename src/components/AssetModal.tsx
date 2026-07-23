@@ -132,15 +132,15 @@ export function AssetModal({
 
   useEffect(() => {
     if (editingAtivo) {
-      setSimbolo(editingAtivo.simbolo);
-      setNome(editingAtivo.nome);
-      setClasse(editingAtivo.classe);
-      setSetor(editingAtivo.setor || "");
-      setLogoUrl(editingAtivo.logoUrl || "");
-      setPercentualIdeal(editingAtivo.percentualIdeal);
-      setPrecoAtual(editingAtivo.precoAtual);
-      setUltimoProvento(editingAtivo.ultimoProvento || 0);
-      setTaxaRentabilidade(editingAtivo.taxaRentabilidade || 100);
+      setSimbolo(editingAtivo.simbolo ?? "");
+      setNome(editingAtivo.nome ?? "");
+      setClasse(editingAtivo.classe ?? "ACOES_NACIONAIS");
+      setSetor(editingAtivo.setor ?? "");
+      setLogoUrl(editingAtivo.logoUrl ?? "");
+      setPercentualIdeal(editingAtivo.percentualIdeal ?? 0);
+      setPrecoAtual(editingAtivo.precoAtual ?? 0);
+      setUltimoProvento(editingAtivo.ultimoProvento ?? "");
+      setTaxaRentabilidade(editingAtivo.taxaRentabilidade ?? 100);
 
       // Preencher respostas salvas se existirem
       if (editingAtivo.answers && Array.isArray(editingAtivo.answers)) {

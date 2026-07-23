@@ -5,22 +5,22 @@ import { DashboardCharts } from '../src/components/DashboardCharts';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  PieChart: ({ children }: any) => <div>{children}</div>,
-  Pie: ({ children }: any) => <div>{children}</div>,
-  Cell: () => <div />,
+  PieChart: ({ children }: any) => <svg>{children}</svg>,
+  Pie: ({ children }: any) => <g>{children}</g>,
+  Cell: () => <g />,
   Tooltip: ({ content }: any) => {
     // Render the tooltip content directly if it's a valid React element
     if (content && typeof content !== 'function' && typeof content.type === 'function') {
       const TooltipContent = content.type;
       return <TooltipContent active={true} payload={[{ payload: { name: 'Acoes', atual: 1000, percentualAtual: 50, metaPercentual: 50, mesAno: '2026-07', patrimonioTotal: 1000, totalInvestido: 1000, lucroPrejuizo: 0 } }]} />;
     }
-    return <div />;
+    return <g />;
   },
-  AreaChart: ({ children }: any) => <div>{children}</div>,
-  Area: () => <div />,
-  XAxis: () => <div />,
-  YAxis: () => <div />,
-  CartesianGrid: () => <div />,
+  AreaChart: ({ children }: any) => <svg>{children}</svg>,
+  Area: () => <g />,
+  XAxis: () => <g />,
+  YAxis: () => <g />,
+  CartesianGrid: () => <g />,
 }));
 
 describe('DashboardCharts', () => {

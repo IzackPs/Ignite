@@ -23,5 +23,8 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      AUTH_SECRET: process.env.AUTH_SECRET || "e2e-secret-key-test-ignite-123456789",
+    },
   },
 });

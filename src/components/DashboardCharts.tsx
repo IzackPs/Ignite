@@ -295,9 +295,9 @@ export function DashboardCharts({
 
           {/* Legenda Customizada com Comparativo Percentual */}
           <div className="flex flex-col gap-3 pt-4 border-t border-border-subtle">
-            {portfolio.resumoClasses.map((r) => (
+            {portfolio.resumoClasses.map((r, index) => (
               <div
-                key={r.classe}
+                key={r.classe || `resumo-${index}`}
                 className="bg-zinc-100 dark:bg-white/5 p-3 rounded-lg border border-border-subtle flex flex-col gap-2"
               >
                 <div className="flex items-center justify-between text-xs">
@@ -463,9 +463,9 @@ export function DashboardCharts({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
-                {lineData.map((item) => (
+                {lineData.map((item, index) => (
                   <tr
-                    key={item.id}
+                    key={item.id || `hist-${index}`}
                     className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors font-mono"
                   >
                     <td className="py-2.5 px-4 text-zinc-700 dark:text-zinc-300 font-sans font-medium">

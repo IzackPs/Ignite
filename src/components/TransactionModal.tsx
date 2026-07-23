@@ -41,9 +41,11 @@ export function TransactionModal({
   const { maxDataHoje, dataOntem } = useMemo(() => {
     const today = new Date();
     const yesterday = new Date(today.getTime() - 86400000);
+    const formatLocalDate = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     return {
-      maxDataHoje: today.toISOString().split("T")[0],
-      dataOntem: yesterday.toISOString().split("T")[0],
+      maxDataHoje: formatLocalDate(today),
+      dataOntem: formatLocalDate(yesterday),
     };
   }, []);
 

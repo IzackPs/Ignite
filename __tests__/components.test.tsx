@@ -5,16 +5,16 @@ import { DashboardCharts } from '../src/components/DashboardCharts';
 import { PortfolioOverview } from '../src/components/PortfolioOverview';
 
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="recharts">{children}</div>,
-  PieChart: ({ children }: any) => <div>{children}</div>,
-  Pie: ({ children }: any) => <div>{children}</div>,
-  Cell: () => <div />,
-  Tooltip: () => <div />,
-  AreaChart: ({ children }: any) => <div>{children}</div>,
-  CartesianGrid: () => <div />,
-  XAxis: () => <div />,
-  YAxis: () => <div />,
-  Area: () => <div />,
+  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+  PieChart: ({ children }: any) => <svg>{children}</svg>,
+  Pie: ({ children }: any) => <g>{children}</g>,
+  Cell: () => <g />,
+  Tooltip: () => <g />,
+  AreaChart: ({ children }: any) => <svg>{children}</svg>,
+  CartesianGrid: () => <g />,
+  XAxis: () => <g />,
+  YAxis: () => <g />,
+  Area: () => <g />,
 }));
 
 describe('AssetModal', () => {

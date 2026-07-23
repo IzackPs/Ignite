@@ -5,18 +5,18 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 // Mock recharts to avoid errors
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  PieChart: ({ children }: any) => <div>{children}</div>,
-  Pie: ({ children }: any) => <div>{children}</div>,
-  Cell: () => <div />,
-  Tooltip: () => <div />,
-  BarChart: ({ children }: any) => <div>{children}</div>,
-  Bar: () => <div />,
-  XAxis: () => <div />,
-  YAxis: () => <div />,
-  CartesianGrid: () => <div />,
-  Legend: () => <div />,
-  AreaChart: ({ children }: any) => <div>{children}</div>,
-  Area: () => <div />,
+  PieChart: ({ children }: any) => <svg>{children}</svg>,
+  Pie: ({ children }: any) => <g>{children}</g>,
+  Cell: () => <g />,
+  Tooltip: () => <g />,
+  BarChart: ({ children }: any) => <svg>{children}</svg>,
+  Bar: () => <g />,
+  XAxis: () => <g />,
+  YAxis: () => <g />,
+  CartesianGrid: () => <g />,
+  Legend: () => <g />,
+  AreaChart: ({ children }: any) => <svg>{children}</svg>,
+  Area: () => <g />,
 }));
 
 vi.mock('@/actions/auth', () => ({
