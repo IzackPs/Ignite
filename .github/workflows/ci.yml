@@ -12,51 +12,42 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Variáveis globais
+env:
+  NODE_VERSION: 22
+
+# Permissão global restrita apenas para leitura
 permissions:
   contents: read
-  pull-requests: write 
 
 jobs:
   lint:
-    name: Setup e Lint (Qualidade de Código)
+    name: Setup, Lint e Segurança
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Obter o código do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar o Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
-      - name: Instalar as dependências
-        run: npm ci
-
-      - name: Rodar a validação de formatação (ESLint)
-        run: npm run lint
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run lint
 
   test:
     name: Testes Unitários e Integração (Vitest)
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Obter o código do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar o Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
-      - name: Instalar as dependências
-        run: npm ci
-
-      - name: Executar a suíte de testes com Cobertura
-        run: npx vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=text
-
+      - run: npm ci
+      - run: npx vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=text
       - name: Fazer Upload do Relatório de Cobertura
         uses: actions/upload-artifact@v4
         with:
@@ -65,51 +56,17 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  e2e:
-    name: Testes End-to-End (Playwright)
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    steps:
-      - name: Obter o código do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar o Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Instalar as dependências
-        run: npm ci
-
-      - name: Instalar navegadores do Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Executar suíte de testes E2E
-        run: npm run test:e2e
-
-      - name: Fazer Upload do Relatório do Playwright em Falhas
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
   build:
     name: Build (Sanity Check do Next.js)
+    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
-      - name: Obter o código do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar o Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
       - name: Restaurar Cache de Build do Next.js
         uses: actions/cache@v4
         with:
@@ -118,31 +75,74 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ github.ref }}-${{ hashFiles('**/package-lock.json') }}-
             ${{ runner.os }}-nextjs-
+      - run: npm ci
+      - run: npm run build
+      
+      # Salva o build pronto para ser reaproveitado no job e2e
+      - name: Salvar Artefato de Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
+          retention-days: 1
 
-      - name: Instalar as dependências
-        run: npm ci
+  e2e:
+    name: Testes End-to-End (Playwright)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
 
-      - name: Garantir que a aplicação builda com sucesso
-        run: npm run build
+      # Baixa a pasta .next gerada no job de build
+      - name: Baixar Build Gerado
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next
+
+      # Evita baixar o Chromium em toda execução
+      - name: Cache do Playwright
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Instalar Navegadores do Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+      - name: Fazer Upload do Relatório do Playwright em Falhas
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
   sonar:
-    name: SonarQube / SonarCloud (Análise de qualidade)
-    runs-on: ubuntu-latest
+    name: SonarQube / SonarCloud (Análise)
     needs: test
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+    permissions:
+      pull-requests: write 
     steps:
-      - name: Obter o código do repositório
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Baixar Relatório de Cobertura (Artifact)
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: coverage-report
           path: coverage/
-
       - name: Analisar a qualidade e aguardar Quality Gate
         uses: SonarSource/sonarqube-scan-action@v6
         env:

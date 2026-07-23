@@ -187,6 +187,7 @@ function SidebarBalanceSection({
     </div>
   );
 }
+
 interface SidebarQuickActionsSectionProps {
   readonly expanded: boolean;
   readonly onNovoAtivo?: () => void;
@@ -228,6 +229,311 @@ function SidebarQuickActionsSection({
           <FileText className="w-4 h-4 text-gold-main shrink-0" />
           {expanded && <span>Registrar Operação</span>}
         </button>
+      )}
+    </div>
+  );
+}
+
+interface SidebarHeaderSectionProps {
+  readonly expanded: boolean;
+  readonly isMobileOpen: boolean;
+  readonly onCloseMobile: () => void;
+}
+
+function SidebarHeaderSection({
+  expanded,
+  isMobileOpen,
+  onCloseMobile,
+}: SidebarHeaderSectionProps) {
+  return (
+    <div
+      className={`flex items-center pt-1 pb-3 border-b border-border-subtle/80 ${
+        expanded ? "justify-between px-2" : "justify-center"
+      }`}
+    >
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-gold-main to-yellow-400 flex items-center justify-center text-white shadow-lg shadow-gold-main/20 shrink-0">
+          <Zap className="w-5 h-5 fill-white" />
+        </div>
+        {expanded && (
+          <div className="animate-in fade-in duration-200">
+            <div className="font-bold text-base text-white tracking-tight leading-none flex items-center gap-1">
+              Ignite <span className="text-gold-main font-black">Finanças</span>
+            </div>
+            <div className="text-[10px] font-semibold text-zinc-400 tracking-wider uppercase mt-1">
+              Gestão de Carteira
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isMobileOpen && (
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="lg:hidden text-zinc-400 hover:text-white p-1"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+interface SidebarMainMenuSectionProps {
+  readonly expanded: boolean;
+  readonly activeTab: string;
+  readonly portfolio?: PortfolioCalculado | null;
+  readonly handleSelectTab: (key: string) => void;
+  readonly onOpenSimuladorModal?: () => void;
+}
+
+function SidebarMainMenuSection({
+  expanded,
+  activeTab,
+  portfolio,
+  handleSelectTab,
+  onOpenSimuladorModal,
+}: SidebarMainMenuSectionProps) {
+  return (
+    <div className="space-y-0.5 w-full">
+      {expanded && (
+        <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 mb-1 animate-in fade-in">
+          Menu Principal
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => handleSelectTab("GERAL")}
+        title="Visão Geral (Consolidado)"
+        className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
+          expanded ? "justify-between px-3" : "justify-center px-0"
+        } ${
+          activeTab === "GERAL"
+            ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
+            : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <PieChart className="w-4 h-4 shrink-0" />
+          {expanded && <span>Visão Geral</span>}
+        </div>
+        {expanded && portfolio?.ativos && (
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+              activeTab === "GERAL"
+                ? "bg-gold-hover text-white"
+                : "bg-zinc-900 text-zinc-400 border border-zinc-800"
+            }`}
+          >
+            {portfolio.ativos.length}
+          </span>
+        )}
+      </button>
+
+      {onOpenSimuladorModal && (
+        <button
+          type="button"
+          onClick={onOpenSimuladorModal}
+          title="Simulador Inteligente de Aporte"
+          className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
+            expanded ? "justify-between px-3" : "justify-center px-0"
+          } text-zinc-400 hover:text-white hover:bg-zinc-900/80`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Zap className="w-4 h-4 text-gold-main shrink-0" />
+            {expanded && <span>Simulador de Aporte</span>}
+          </div>
+          {expanded && (
+            <span className="text-[9px] bg-gold-main/20 text-gold-main border border-gold-main/30 px-1.5 py-0.5 rounded-md font-bold">
+              IA
+            </span>
+          )}
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => handleSelectTab("PROVENTOS")}
+        title="Proventos & Dividendos"
+        className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
+          expanded ? "justify-between px-3" : "justify-center px-0"
+        } ${
+          activeTab === "PROVENTOS"
+            ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
+            : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <Coins className="w-4 h-4 text-emerald-400 shrink-0" />
+          {expanded && <span>Proventos & Dividendos</span>}
+        </div>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleSelectTab("CRITERIOS")}
+        title="Nota Ignite (Critérios)"
+        className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
+          expanded ? "justify-between px-3" : "justify-center px-0"
+        } ${
+          activeTab === "CRITERIOS"
+            ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
+            : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <Award className="w-4 h-4 text-purple-400 shrink-0" />
+          {expanded && <span>Nota Ignite (Critérios)</span>}
+        </div>
+        {expanded && <Sparkles className="w-3.5 h-3.5 text-gold-main shrink-0" />}
+      </button>
+    </div>
+  );
+}
+
+interface ClassAtivoItem {
+  readonly key: string;
+  readonly label: string;
+  readonly icon: React.ReactNode;
+}
+
+const CLASSES_ATIVOS: readonly ClassAtivoItem[] = [
+  {
+    key: "ACOES_NACIONAIS",
+    label: "Ações Nacionais",
+    icon: <TrendingUp className="w-4 h-4 text-blue-400 shrink-0" />,
+  },
+  {
+    key: "ACOES_INTERNACIONAIS",
+    label: "Ações Internacionais",
+    icon: <Globe className="w-4 h-4 text-sky-400 shrink-0" />,
+  },
+  {
+    key: "FIIS",
+    label: "Fundos Imobiliários",
+    icon: <Building className="w-4 h-4 text-purple-400 shrink-0" />,
+  },
+  {
+    key: "REITS",
+    label: "REITs",
+    icon: <Building className="w-4 h-4 text-indigo-400 shrink-0" />,
+  },
+  {
+    key: "CRIPTO",
+    label: "Criptomoedas",
+    icon: <Coins className="w-4 h-4 text-amber-400 shrink-0" />,
+  },
+  {
+    key: "RENDA_FIXA",
+    label: "Renda Fixa",
+    icon: <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />,
+  },
+  {
+    key: "RENDA_FIXA_INTERNACIONAL",
+    label: "Renda Fixa Int.",
+    icon: <ShieldCheck className="w-4 h-4 text-teal-400 shrink-0" />,
+  },
+];
+
+interface SidebarClassesSectionProps {
+  readonly expanded: boolean;
+  readonly activeTab: string;
+  readonly isClassesOpen: boolean;
+  readonly isClassActive: boolean;
+  readonly classesAtivos: readonly ClassAtivoItem[];
+  readonly portfolio?: PortfolioCalculado | null;
+  readonly onToggleClassesOpen: () => void;
+  readonly handleSelectTab: (key: string) => void;
+}
+
+function SidebarClassesSection({
+  expanded,
+  activeTab,
+  isClassesOpen,
+  isClassActive,
+  classesAtivos,
+  portfolio,
+  onToggleClassesOpen,
+  handleSelectTab,
+}: SidebarClassesSectionProps) {
+  return (
+    <div className="space-y-1 pt-3 border-t border-border-subtle/80 w-full mt-2">
+      {expanded ? (
+        <button
+          type="button"
+          onClick={onToggleClassesOpen}
+          className={`w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+            isClassActive ? "text-gold-main" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <Building className="w-3.5 h-3.5" />
+            Ativos por Classe
+          </span>
+          {isClassesOpen ? (
+            <ChevronDown className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5" />
+          )}
+        </button>
+      ) : (
+        <div className="flex justify-center py-1 text-zinc-500 text-[10px] font-bold">
+          <Building className="w-4 h-4 text-zinc-500" />
+        </div>
+      )}
+
+      {(isClassesOpen || !expanded) && (
+        <div className={`space-y-1 ${expanded ? "pl-2" : "w-full"}`}>
+          {classesAtivos.map((cls) => {
+            const isActive = activeTab === cls.key;
+            const resumo = portfolio?.resumoClasses.find((r) => r.classe === cls.key);
+            const qtdAtivos =
+              portfolio?.ativos.filter((a) => a.classe.toUpperCase() === cls.key).length || 0;
+
+            return (
+              <button
+                type="button"
+                key={cls.key}
+                onClick={() => handleSelectTab(cls.key)}
+                title={cls.label}
+                className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
+                  expanded ? "justify-between px-3" : "justify-center px-0"
+                } ${
+                  isActive
+                    ? "bg-gold-main/20 border border-gold-main/40 text-gold-main font-bold"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  {cls.icon}
+                  {expanded && <span className="truncate">{cls.label}</span>}
+                </div>
+
+                {expanded && (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {resumo?.status === "COMPRAR" && !isActive && (
+                      <span
+                        className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+                        title="Bolinha Verde: Sugestão de COMPRA (esta classe de ativos está abaixo da meta cadastrada)"
+                      />
+                    )}
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                        isActive
+                          ? "bg-gold-main/30 text-gold-main font-bold"
+                          : "bg-zinc-900 text-zinc-500"
+                      }`}
+                    >
+                      {qtdAtivos}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -357,51 +663,12 @@ export function SidebarNav({
   const [isHovered, setIsHovered] = useState(false);
   const [isClassesOpen, setIsClassesOpen] = useState(true);
 
-  // Lista de Categorias / Classes de Ativos para o Submenu
-  const classesAtivos = [
-    {
-      key: "ACOES_NACIONAIS",
-      label: "Ações Nacionais",
-      icon: <TrendingUp className="w-4 h-4 text-blue-400 shrink-0" />,
-    },
-    {
-      key: "ACOES_INTERNACIONAIS",
-      label: "Ações Internacionais",
-      icon: <Globe className="w-4 h-4 text-sky-400 shrink-0" />,
-    },
-    {
-      key: "FIIS",
-      label: "Fundos Imobiliários",
-      icon: <Building className="w-4 h-4 text-purple-400 shrink-0" />,
-    },
-    {
-      key: "REITS",
-      label: "REITs",
-      icon: <Building className="w-4 h-4 text-indigo-400 shrink-0" />,
-    },
-    {
-      key: "CRIPTO",
-      label: "Criptomoedas",
-      icon: <Coins className="w-4 h-4 text-amber-400 shrink-0" />,
-    },
-    {
-      key: "RENDA_FIXA",
-      label: "Renda Fixa",
-      icon: <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />,
-    },
-    {
-      key: "RENDA_FIXA_INTERNACIONAL",
-      label: "Renda Fixa Int.",
-      icon: <ShieldCheck className="w-4 h-4 text-teal-400 shrink-0" />,
-    },
-  ];
-
   const handleSelectTab = (key: string) => {
     onChangeTab(key);
     setIsMobileOpen(false);
   };
 
-  const isClassActive = classesAtivos.some((c) => c.key === activeTab);
+  const isClassActive = CLASSES_ATIVOS.some((c) => c.key === activeTab);
   const expanded = isHovered || isMobileOpen;
   const initials = userName.charAt(0).toUpperCase();
 
@@ -415,39 +682,11 @@ export function SidebarNav({
         expanded ? "w-64 px-3" : "w-16 px-2 items-center"
       }`}
     >
-      {/* Brand Header */}
-      <div
-        className={`flex items-center pt-1 pb-3 border-b border-border-subtle/80 ${
-          expanded ? "justify-between px-2" : "justify-center"
-        }`}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-gold-main to-yellow-400 flex items-center justify-center text-white shadow-lg shadow-gold-main/20 shrink-0">
-            <Zap className="w-5 h-5 fill-white" />
-          </div>
-          {expanded && (
-            <div className="animate-in fade-in duration-200">
-              <div className="font-bold text-base text-white tracking-tight leading-none flex items-center gap-1">
-                Ignite <span className="text-gold-main font-black">Finanças</span>
-              </div>
-              <div className="text-[10px] font-semibold text-zinc-400 tracking-wider uppercase mt-1">
-                Gestão de Carteira
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Close Button */}
-        {isMobileOpen && (
-          <button
-            type="button"
-            onClick={() => setIsMobileOpen(false)}
-            className="lg:hidden text-zinc-400 hover:text-white p-1"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        )}
-      </div>
+      <SidebarHeaderSection
+        expanded={expanded}
+        isMobileOpen={isMobileOpen}
+        onCloseMobile={() => setIsMobileOpen(false)}
+      />
 
       <SidebarUserSection
         expanded={expanded}
@@ -463,6 +702,7 @@ export function SidebarNav({
         isBalanceVisible={isBalanceVisible}
         onToggleBalance={onToggleBalance}
         lastPriceUpdate={lastPriceUpdate}
+        onUpdatePrices={onUpdatePrices}
         updatingPrices={updatingPrices}
       />
 
@@ -472,184 +712,24 @@ export function SidebarNav({
         onAddTransacao={onAddTransacao}
       />
 
-      {/* Navegação Principal */}
-      <div className="space-y-0.5 w-full">
-        {expanded && (
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 mb-1 animate-in fade-in">
-            Menu Principal
-          </div>
-        )}
+      <SidebarMainMenuSection
+        expanded={expanded}
+        activeTab={activeTab}
+        portfolio={portfolio}
+        handleSelectTab={handleSelectTab}
+        onOpenSimuladorModal={onOpenSimuladorModal}
+      />
 
-        {/* Visão Geral (Consolidado) */}
-        <button
-          type="button"
-          onClick={() => handleSelectTab("GERAL")}
-          title="Visão Geral (Consolidado)"
-          className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-            expanded ? "justify-between px-3" : "justify-center px-0"
-          } ${
-            activeTab === "GERAL"
-              ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <PieChart className="w-4 h-4 shrink-0" />
-            {expanded && <span>Visão Geral</span>}
-          </div>
-          {expanded && portfolio?.ativos && (
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
-                activeTab === "GERAL"
-                  ? "bg-gold-hover text-white"
-                  : "bg-zinc-900 text-zinc-400 border border-zinc-800"
-              }`}
-            >
-              {portfolio.ativos.length}
-            </span>
-          )}
-        </button>
-
-        {/* Simulador de Aporte (Modal de Sobreposição) */}
-        {onOpenSimuladorModal && (
-          <button
-            type="button"
-            onClick={onOpenSimuladorModal}
-            title="Simulador Inteligente de Aporte"
-            className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-              expanded ? "justify-between px-3" : "justify-center px-0"
-            } text-zinc-400 hover:text-white hover:bg-zinc-900/80`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Zap className="w-4 h-4 text-gold-main shrink-0" />
-              {expanded && <span>Simulador de Aporte</span>}
-            </div>
-            {expanded && (
-              <span className="text-[9px] bg-gold-main/20 text-gold-main border border-gold-main/30 px-1.5 py-0.5 rounded-md font-bold">
-                IA
-              </span>
-            )}
-          </button>
-        )}
-
-        {/* Proventos */}
-        <button
-          type="button"
-          onClick={() => handleSelectTab("PROVENTOS")}
-          title="Proventos & Dividendos"
-          className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-            expanded ? "justify-between px-3" : "justify-center px-0"
-          } ${
-            activeTab === "PROVENTOS"
-              ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <Coins className="w-4 h-4 text-emerald-400 shrink-0" />
-            {expanded && <span>Proventos & Dividendos</span>}
-          </div>
-        </button>
-
-        {/* Nota Ignite */}
-        <button
-          type="button"
-          onClick={() => handleSelectTab("CRITERIOS")}
-          title="Nota Ignite (Critérios)"
-          className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-            expanded ? "justify-between px-3" : "justify-center px-0"
-          } ${
-            activeTab === "CRITERIOS"
-              ? "bg-gold-main text-white shadow-md shadow-gold-main/20 font-bold"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-900/80"
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <Award className="w-4 h-4 text-purple-400 shrink-0" />
-            {expanded && <span>Nota Ignite (Critérios)</span>}
-          </div>
-          {expanded && <Sparkles className="w-3.5 h-3.5 text-gold-main shrink-0" />}
-        </button>
-      </div>
-
-      {/* Submenu: Ativos por Classe */}
-      <div className="space-y-1 pt-3 border-t border-border-subtle/80 w-full mt-2">
-        {expanded ? (
-          <button
-            type="button"
-            onClick={() => setIsClassesOpen(!isClassesOpen)}
-            className={`w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-              isClassActive ? "text-gold-main" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <span className="flex items-center gap-1.5">
-              <Building className="w-3.5 h-3.5" />
-              Ativos por Classe
-            </span>
-            {isClassesOpen ? (
-              <ChevronDown className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
-            )}
-          </button>
-        ) : (
-          <div className="flex justify-center py-1 text-zinc-500 text-[10px] font-bold">
-            <Building className="w-4 h-4 text-zinc-500" />
-          </div>
-        )}
-
-        {(isClassesOpen || !expanded) && (
-          <div className={`space-y-1 ${expanded ? "pl-2" : "w-full"}`}>
-            {classesAtivos.map((cls) => {
-              const isActive = activeTab === cls.key;
-              const resumo = portfolio?.resumoClasses.find((r) => r.classe === cls.key);
-              const qtdAtivos =
-                portfolio?.ativos.filter((a) => a.classe.toUpperCase() === cls.key).length || 0;
-
-              return (
-                <button
-                  type="button"
-                  key={cls.key}
-                  onClick={() => handleSelectTab(cls.key)}
-                  title={cls.label}
-                  className={`w-full flex items-center py-2 rounded-xl text-xs font-semibold transition-all ${
-                    expanded ? "justify-between px-3" : "justify-center px-0"
-                  } ${
-                    isActive
-                      ? "bg-gold-main/20 border border-gold-main/40 text-gold-main font-bold"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    {cls.icon}
-                    {expanded && <span className="truncate">{cls.label}</span>}
-                  </div>
-
-                  {expanded && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {resumo?.status === "COMPRAR" && !isActive && (
-                        <span
-                          className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-                          title="Bolinha Verde: Sugestão de COMPRA (esta classe de ativos está abaixo da meta cadastrada)"
-                        />
-                      )}
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                          isActive
-                            ? "bg-gold-main/30 text-gold-main font-bold"
-                            : "bg-zinc-900 text-zinc-500"
-                        }`}
-                      >
-                        {qtdAtivos}
-                      </span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <SidebarClassesSection
+        expanded={expanded}
+        activeTab={activeTab}
+        isClassesOpen={isClassesOpen}
+        isClassActive={isClassActive}
+        classesAtivos={CLASSES_ATIVOS}
+        portfolio={portfolio}
+        onToggleClassesOpen={() => setIsClassesOpen(!isClassesOpen)}
+        handleSelectTab={handleSelectTab}
+      />
 
       {/* Spacer para empurrar o rodapé */}
       <div className="flex-1 min-h-[20px]" />
