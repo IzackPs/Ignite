@@ -102,11 +102,11 @@ describe("GET /api/ativos/search", () => {
       precoAtual: 38.5,
       setor: "Oil & Gas",
       logoUrl: "https://brapi.dev/favicon.svg",
-      classe: "ACOES",
+      classe: "ACOES_NACIONAIS",
     });
   });
 
-  it("deve classificar ativos .11 como FIIS ou ETFS corretamente", async () => {
+  it("deve classificar ativos .11 como FIIS ou ACOES_NACIONAIS corretamente", async () => {
     // FII KNCR11
     const reqFii = new Request("http://localhost/api/ativos/search?ticker=KNCR11");
     const resFii = await GET(reqFii);
@@ -117,14 +117,14 @@ describe("GET /api/ativos/search", () => {
     const reqEtf = new Request("http://localhost/api/ativos/search?ticker=IVVB11");
     const resEtf = await GET(reqEtf);
     const dataEtf = await resEtf.json();
-    expect(dataEtf.classe).toBe("ETFS");
+    expect(dataEtf.classe).toBe("ACOES_NACIONAIS");
   });
 
-  it("deve classificar BDR / ETF terminados em 39 como ETFS ou ACOES", async () => {
+  it("deve classificar BDR terminados em 39 como ACOES_INTERNACIONAIS", async () => {
     const reqBito = new Request("http://localhost/api/ativos/search?ticker=BITO39");
     const resBito = await GET(reqBito);
     const dataBito = await resBito.json();
-    expect(dataBito.classe).toBe("ETFS");
+    expect(dataBito.classe).toBe("ACOES_INTERNACIONAIS");
   });
 
   it("deve ignorar falhas na API de logo (Brapi) e retornar logoUrl como null", async () => {
@@ -138,7 +138,7 @@ describe("GET /api/ativos/search", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.logoUrl).toBe("https://assets.parqet.com/logos/symbol/PETR4");
+    expect(data.logoUrl).toBe("https://assets.parqet.com/logos/symbol/PETR4.SA");
   });
 
   it("deve retornar 404 em caso de erro/exceção na busca", async () => {

@@ -20,19 +20,29 @@ async function fetchLogoUrl(symbolClean: string): Promise<string | null> {
     // Fallthrough to Parqet fallback
   }
 
-  // Fallback padrão muito confiável
-  return `https://assets.parqet.com/logos/symbol/${symbolClean}`;
+  // Fallback padrão muito confiável (adiciona .SA para B3)
+  const isB3 = !symbolClean.includes('-USD') && !symbolClean.includes('USDT');
+  return `https://assets.parqet.com/logos/symbol/${symbolClean}${isB3 ? '.SA' : ''}`;
 }
 
 function determineAssetClass(symbolClean: string, nameUpper: string): string {
   if (symbolClean.endsWith('11')) {
     const isEtf = nameUpper.includes('ETF') || nameUpper.includes('FUNDO DE INDICE') || nameUpper.includes('ISHARES');
-    return isEtf ? "ETFS" : "FIIS";
+    return isEtf ? "ACOES_NACIONAIS" : "FIIS";
   }
-  if (symbolClean.endsWith('39')) {
-    return nameUpper.includes('ETF') ? "ETFS" : "ACOES";
+  if (symbolClean.endsWith('39') || symbolClean.endsWith('34') || symbolClean.endsWith('35') || symbolClean.endsWith('32') || symbolClean.endsWith('33')) {
+    return "ACOES_INTERNACIONAIS";
   }
-  return "ACOES";
+  if (symbolClean.includes('-USD') || symbolClean.includes('USDT') || symbolClean.includes('BTC') || symbolClean.includes('ETH')) {
+    return "CRIPTO";
+  }
+  if (!symbolClean.match(/\d/) && !symbolClean.endsWith('.SA')) {
+    if (nameUpper.includes('REALTY') || nameUpper.includes('REIT') || nameUpper.includes('TRUST')) {
+      return "REITS";
+    }
+    return "ACOES_INTERNACIONAIS";
+  }
+  return "ACOES_NACIONAIS";
 }
 
 export async function GET(request: Request) {

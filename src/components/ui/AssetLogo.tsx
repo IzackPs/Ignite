@@ -30,8 +30,8 @@ export function AssetLogo({
 
   // Identificar se é ativo B3 (Ações / FIIs no Brasil)
   const isBrazilianB3 =
-    /^[A-Z]{4}(3|4|5|6|11|33)$/.test(cleanSymbol) ||
-    simbolo.toUpperCase().endsWith(".SA");
+    simbolo.toUpperCase().endsWith(".SA") ||
+    /^[A-Z0-9]{4,6}\d{1,2}$/.test(cleanSymbol);
 
   // Identificar se é Criptomoeda conhecida
   const isCrypto =
@@ -47,7 +47,11 @@ export function AssetLogo({
 
     // 1. URL explícita cadastrada no banco de dados
     if (logoUrl && (logoUrl.trim().startsWith("http") || logoUrl.trim().startsWith("data:image"))) {
-      list.push(logoUrl.trim());
+      const trimmedLogo = logoUrl.trim();
+      list.push(trimmedLogo);
+      if (isBrazilianB3 && !trimmedLogo.endsWith(".SA") && trimmedLogo.includes("parqet.com")) {
+        list.push(`${trimmedLogo}.SA`);
+      }
     }
 
     if (isBrazilianB3) {
@@ -55,9 +59,8 @@ export function AssetLogo({
       const b3Sources = [
         `https://assets.parqet.com/logos/symbol/${cleanSymbol}.SA`,
         `https://assets.parqet.com/logos/symbol/${cleanSymbol}`,
-        `https://statusinvest.com.br/img/company/logo/${cleanSymbol.toLowerCase()}.png`,
-        `https://investidor10.com.br/assets/mycapital/company/logo/${cleanSymbol.toLowerCase()}.png`,
         `https://raw.githubusercontent.com/thewebartisan7/financial-assets-logos/main/logos/${cleanSymbol}.png`,
+        `https://financialmodelingprep.com/image-stock/${cleanSymbol}.SA.png`,
       ];
       b3Sources.forEach((url) => {
         if (!list.includes(url)) list.push(url);

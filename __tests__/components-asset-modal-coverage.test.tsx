@@ -47,6 +47,7 @@ describe("AssetModal Coverage Expansion", () => {
 
     const inputTicker = screen.getByPlaceholderText("Ex: PETR4");
     fireEvent.change(inputTicker, { target: { value: "WEGE3" } });
+    fireEvent.blur(inputTicker);
 
     await waitFor(
       () => {

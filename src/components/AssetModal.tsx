@@ -11,6 +11,7 @@ import {
   Check,
   Info,
   PieChart,
+  Search,
 } from "lucide-react";
 import { AssetLogo } from "@/components/ui/AssetLogo";
 
@@ -43,11 +44,21 @@ interface AssetModalProps {
   readonly editingAtivo?: AtivoCalculado | null;
 }
 
-interface AutoSearchState {
-  readonly nome: string;
-  readonly precoAtual: number;
-  readonly setor: string;
-  readonly logoUrl: string;
+const VALID_CLASSES = [
+  "ACOES_NACIONAIS",
+  "ACOES_INTERNACIONAIS",
+  "FIIS",
+  "REITS",
+  "CRIPTO",
+  "RENDA_FIXA",
+  "RENDA_FIXA_INTERNACIONAL",
+] as const;
+
+export function sanitizeClasse(c?: string): string {
+  if (!c) return "ACOES_NACIONAIS";
+  if ((VALID_CLASSES as readonly string[]).includes(c as any)) return c;
+  if (c === "ACOES" || c === "ETFS" || c === "ACAO") return "ACOES_NACIONAIS";
+  return "ACOES_NACIONAIS";
 }
 
 interface AutoSearchSetters {
@@ -61,7 +72,6 @@ interface AutoSearchSetters {
 
 async function autoSearchAsset(
   ticker: string,
-  current: AutoSearchState,
   setters: AutoSearchSetters
 ) {
   setters.setIsSearching(true);
@@ -69,11 +79,11 @@ async function autoSearchAsset(
     const res = await fetch(`/api/ativos/search?ticker=${encodeURIComponent(ticker)}`);
     if (!res.ok) return;
     const data = await res.json();
-    if (data.nome && !current.nome) setters.setNome(data.nome);
-    if (data.precoAtual && !current.precoAtual) setters.setPrecoAtual(data.precoAtual);
-    if (data.classe) setters.setClasse(data.classe);
-    if (data.setor && !current.setor) setters.setSetor(data.setor);
-    if (data.logoUrl && !current.logoUrl) setters.setLogoUrl(data.logoUrl);
+    if (data.nome) setters.setNome(data.nome);
+    if (typeof data.precoAtual === "number" && data.precoAtual > 0) setters.setPrecoAtual(data.precoAtual);
+    if (data.classe) setters.setClasse(sanitizeClasse(data.classe));
+    if (data.setor !== undefined) setters.setSetor(data.setor ?? "");
+    if (data.logoUrl !== undefined) setters.setLogoUrl(data.logoUrl ?? "");
   } catch {
     // Ignore silent errors
   } finally {
@@ -130,11 +140,57 @@ export function AssetModal({
       .catch(() => {});
   }, [isOpen]);
 
+  const lastSearchedTicker = React.useRef<string>("");
+
+  // Busca de informações do ativo & fundamentos (onBlur, Enter, clique ou debounce ao parar de digitar)
+  const handleSearchAsset = React.useCallback(
+    async (tickerToSearch?: string, force = false) => {
+      const searchTicker = (tickerToSearch ?? simbolo).trim().toUpperCase();
+      if (!searchTicker || searchTicker.length < 3) return;
+      if (!force && lastSearchedTicker.current === searchTicker) return;
+
+      lastSearchedTicker.current = searchTicker;
+
+      if (!editingAtivo || editingAtivo.simbolo !== searchTicker) {
+        await autoSearchAsset(
+          searchTicker,
+          { setIsSearching, setNome, setPrecoAtual, setClasse, setSetor, setLogoUrl }
+        );
+      }
+
+      setFetchingFund(true);
+      try {
+        const res = await fetch(`/api/ativos/fundamentalist?ticker=${encodeURIComponent(searchTicker)}`);
+        if (res && typeof res.json === "function") {
+          const data = await res.json();
+          if (data && !data.error) {
+            setFundData(data);
+          }
+        }
+      } catch {
+        // Ignore silent fetch errors
+      } finally {
+        setFetchingFund(false);
+      }
+    },
+    [simbolo, editingAtivo]
+  );
+
+  useEffect(() => {
+    if (!simbolo || simbolo.length < 3) return;
+
+    const timer = setTimeout(() => {
+      handleSearchAsset();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [simbolo, handleSearchAsset]);
+
   useEffect(() => {
     if (editingAtivo) {
       setSimbolo(editingAtivo.simbolo ?? "");
       setNome(editingAtivo.nome ?? "");
-      setClasse(editingAtivo.classe ?? "ACOES_NACIONAIS");
+      setClasse(sanitizeClasse(editingAtivo.classe));
       setSetor(editingAtivo.setor ?? "");
       setLogoUrl(editingAtivo.logoUrl ?? "");
       setPercentualIdeal(editingAtivo.percentualIdeal ?? 0);
@@ -150,10 +206,15 @@ export function AssetModal({
         });
         setAnswers(initialAnswers);
       }
+
+      if (editingAtivo.simbolo) {
+        lastSearchedTicker.current = editingAtivo.simbolo.toUpperCase();
+        handleSearchAsset(editingAtivo.simbolo, true);
+      }
     } else {
       setSimbolo("");
       setNome("");
-      setClasse(initialClasse);
+      setClasse(sanitizeClasse(initialClasse));
       setSetor("");
       setLogoUrl("");
       setPercentualIdeal(0);
@@ -162,44 +223,10 @@ export function AssetModal({
       setTaxaRentabilidade(100);
       setAnswers({});
       setFundData(null);
+      lastSearchedTicker.current = "";
     }
     setError(null);
   }, [editingAtivo, initialClasse, isOpen]);
-
-  // Busca de informações do ativo & fundamentos em tempo real
-  useEffect(() => {
-    if (!simbolo || simbolo.length < 3) return;
-
-    const timer = setTimeout(() => {
-      if (!editingAtivo || editingAtivo.simbolo !== simbolo) {
-        autoSearchAsset(
-          simbolo,
-          { nome, precoAtual, setor, logoUrl },
-          { setIsSearching, setNome, setPrecoAtual, setClasse, setSetor, setLogoUrl }
-        );
-      }
-
-      // Buscar dados fundamentalistas
-      setFetchingFund(true);
-      (async () => {
-        try {
-          const res = await fetch(`/api/ativos/fundamentalist?ticker=${encodeURIComponent(simbolo)}`);
-          if (res && typeof res.json === "function") {
-            const data = await res.json();
-            if (data && !data.error) {
-              setFundData(data);
-            }
-          }
-        } catch {
-          // Ignore silent fetch errors
-        } finally {
-          setFetchingFund(false);
-        }
-      })();
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [simbolo, editingAtivo, nome, precoAtual, logoUrl, setor]);
 
   // Cálculo Dinâmico da Nota (0 a 10) baseado na soma ponderada das perguntas SIM
   const totalPeso = questions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
@@ -249,7 +276,7 @@ export function AssetModal({
           id: editingAtivo?.id,
           simbolo,
           nome,
-          classe,
+          classe: sanitizeClasse(classe),
           setor,
           logoUrl,
           percentualIdeal: Number(percentualIdeal),
@@ -348,20 +375,39 @@ export function AssetModal({
                   <label htmlFor="simbolo" className="block font-semibold text-zinc-300 mb-1">
                     Ticker / Símbolo *
                   </label>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       id="simbolo"
                       type="text"
                       required
                       placeholder="Ex: PETR4"
                       value={simbolo}
-                      onChange={(e) => setSimbolo(e.target.value.toUpperCase())}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:border-gold-main transition-colors text-xs font-bold"
+                      onChange={(e) => {
+                        setSimbolo(e.target.value.toUpperCase());
+                        setError(null);
+                      }}
+                      onBlur={() => handleSearchAsset()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSearchAsset();
+                        }
+                      }}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 pr-8 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:border-gold-main transition-colors text-xs font-bold"
                     />
-                    {isSearching && (
-                      <div className="absolute right-2.5 top-2.5 text-gold-main text-[9px] font-semibold animate-pulse flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3 animate-spin" />
+                    {isSearching ? (
+                      <div className="absolute right-2.5 text-gold-main text-[9px] font-semibold animate-pulse flex items-center gap-1">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleSearchAsset()}
+                        title="Buscar dados do ativo"
+                        className="absolute right-2 text-zinc-400 hover:text-gold-main p-1 transition-colors"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                      </button>
                     )}
                   </div>
                 </div>

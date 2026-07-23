@@ -35,7 +35,7 @@ export const cotacaoService = {
         const novoPreco = quote?.regularMarketPrice;
 
         if (novoPreco !== undefined && novoPreco > 0) {
-          const autoLogoUrl = ativo.logoUrl || `https://assets.parqet.com/logos/symbol/${symbolClean.replace('.SA', '')}`;
+          const autoLogoUrl = ativo.logoUrl || `https://assets.parqet.com/logos/symbol/${symbolClean.replace('.SA', '')}${isB3 ? '.SA' : ''}`;
           await prisma.ativo.update({
             where: { id: ativo.id },
             data: {
