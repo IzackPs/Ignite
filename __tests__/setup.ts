@@ -24,6 +24,8 @@ vi.mock('@/lib/auth-guard', () => ({
   requireAuth: vi.fn().mockResolvedValue({ userId: 'mock-user-id', errorResponse: null }),
 }));
 
+import React from 'react';
+
 // Mock ResizeObserver for Recharts
 class ResizeObserver {
   observe() {}
@@ -31,3 +33,15 @@ class ResizeObserver {
   disconnect() {}
 }
 global.ResizeObserver = ResizeObserver;
+
+// Mock ResponsiveContainer do recharts para evitar warnings de tamanho 0x0 no JSDOM
+vi.mock('recharts', async (importOriginal) => {
+  const original = await importOriginal<typeof import('recharts')>();
+  return {
+    ...original,
+    ResponsiveContainer: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement('div', { className: 'recharts-responsive-container', style: { width: 800, height: 400 } }, children),
+  };
+});
+
+
