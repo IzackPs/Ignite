@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Ignite Finanças API
-  description: API interna para o sistema de gestão inteligente de carteira e asset allocation do Ignite Finanças.
-  version: 1.0.0
+  description: API interna para o sistema de gestão inteligente de carteira, asset allocation, análise fundamentalista e simulador de aportes do Ignite Finanças.
+  version: 1.1.0
 servers:
   - url: /api
     description: Servidor Local / Produção (Relativo)
@@ -11,7 +11,7 @@ paths:
   /portfolio:
     get:
       summary: Retorna o portfólio completo do usuário autenticado.
-      description: Calcula a posição de cada ativo baseada nas transações, lucro/prejuízo, balanceamento ideal e histórico de cotações recentes.
+      description: Calcula a posição de cada ativo baseada nas transações, lucro/prejuízo, balanceamento ideal, histórico de cotações e resumo por classe.
       responses:
         '200':
           description: Portfólio calculado com sucesso.
@@ -46,7 +46,7 @@ paths:
   /cotacoes:
     post:
       summary: Atualiza as cotações de mercado para os ativos do portfólio.
-      description: Possui Rate Limit de 30 segundos por usuário para evitar abusos. Busca os preços mais recentes das APIs Brapi ou Yahoo Finance (via Fallback).
+      description: Possui Rate Limit de 30 segundos por usuário para resguardo de quota. Busca os preços mais recentes das APIs Brapi com fallback para Yahoo Finance.
       responses:
         '200':
           description: Cotações atualizadas com sucesso.
@@ -63,6 +63,27 @@ paths:
           description: Too Many Requests (Rate limit atingido).
         '500':
           description: Erro ao buscar cotações em provedores externos.
+
+  /cdi:
+    get:
+      summary: Retorna a taxa CDI anualizada e diária atualizada via Banco Central do Brasil.
+      description: Consome a API do Sistema Gerenciador de Séries Temporais (SGS) do Banco Central (série 4389) com cache server-side.
+      responses:
+        '200':
+          description: Taxa CDI retornada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cdiAnual:
+                    type: number
+                  cdiDiaria:
+                    type: number
+                  fonte:
+                    type: string
+        '500':
+          description: Erro ao consultar taxa CDI.
 
   /ativos:
     post:
@@ -84,12 +105,20 @@ paths:
                   type: string
                 classe:
                   type: string
-                  enum: [ACOES, FIIS, ETFS, RENDA_FIXA]
+                  enum: [ACOES_NACIONAIS, ACOES_INTERNACIONAIS, FIIS, REITS, CRIPTO, RENDA_FIXA, RENDA_FIXA_INTERNACIONAL]
+                setor:
+                  type: string
+                logoUrl:
+                  type: string
                 percentualIdeal:
                   type: number
                 precoAtual:
                   type: number
                 ultimoProvento:
+                  type: number
+                taxaRentabilidade:
+                  type: number
+                nota:
                   type: number
       responses:
         '200':
@@ -113,7 +142,7 @@ paths:
 
   /historico:
     post:
-      summary: Salva uma "fotografia" do patrimônio atual (Snapshots Mensais).
+      summary: Salva um snapshot mensal do patrimônio atual.
       requestBody:
         required: true
         content:
@@ -159,7 +188,7 @@ paths:
                   type: object
                   additionalProperties:
                     type: number
-                  description: Dicionário contendo a Classe como chave e a Meta (%) como valor.
+                  description: Dicionário contendo a Classe como chave (ex ACOES_NACIONAIS, FIIS) e a Meta (%) como valor.
       responses:
         '200':
           description: Metas atualizadas (upsert).
@@ -242,3 +271,65 @@ paths:
       responses:
         '200':
           description: Transação removida com sucesso.
+
+  /questions:
+    get:
+      summary: Lista todas as perguntas/critérios fundamentalistas cadastradas para o usuário.
+      responses:
+        '200':
+          description: Lista de perguntas cadastradas.
+    post:
+      summary: Cadastra uma nova pergunta/critério fundamentalista customizado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [criterio, pergunta]
+              properties:
+                criterio:
+                  type: string
+                pergunta:
+                  type: string
+                peso:
+                  type: number
+      responses:
+        '201':
+          description: Pergunta criada.
+    delete:
+      summary: Remove um critério/pergunta.
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Pergunta removida.
+
+  /questions/reset:
+    post:
+      summary: Restaura o conjunto de perguntas/critérios padrão (Nota Ignite / AUVP).
+      responses:
+        '200':
+          description: Perguntas restauradas para o padrão de fábrica.
+
+  /user/avatar:
+    post:
+      summary: Atualiza a foto de perfil/avatar do usuário autenticado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  description: URL da imagem ou Base64 Data URL.
+      responses:
+        '200':
+          description: Avatar do usuário atualizado com sucesso.
