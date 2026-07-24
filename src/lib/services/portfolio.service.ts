@@ -32,14 +32,20 @@ export const portfolioService = {
 
     const metasMap: Record<string, number> = {};
     metasSalvas.forEach((m) => {
-      metasMap[m.classe] = m.percentualIdeal;
+      metasMap[m.classe] = Number(m.percentualIdeal);
     });
 
     const ativosDTOS: AtivoDTO[] = ativos.map((a) => ({
       ...a,
+      percentualIdeal: Number(a.percentualIdeal),
+      precoAtual: Number(a.precoAtual),
+      ultimoProvento: Number(a.ultimoProvento),
+      taxaRentabilidade: Number(a.taxaRentabilidade),
       classe: a.classe as AtivoDTO["classe"],
       transacoes: a.transacoes.map((t) => ({
         ...t,
+        quantidade: Number(t.quantidade),
+        precoUnitario: Number(t.precoUnitario),
         tipo: t.tipo as "COMPRA" | "VENDA",
       })),
     }));

@@ -1,6 +1,7 @@
 "use client";
+import React from "react";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { ResumoClasse } from "@/lib/calculator";
 import { Save, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";

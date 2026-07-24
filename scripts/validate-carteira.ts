@@ -12,7 +12,6 @@ function runSanityCheck() {
 
   // Precisamos mockar as datas para garantir os 5 dias úteis do CDI
   const OriginalDate = global.Date;
-  const _mockNow = new Date("2025-01-09T12:00:00Z"); // Hoje (Quinta-feira)
   const transacaoData = new Date("2025-01-02T12:00:00Z"); // 7 dias depois (Quinta-feira) -> 5 dias úteis
 
   // @ts-expect-error mock global date

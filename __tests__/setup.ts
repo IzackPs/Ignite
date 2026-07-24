@@ -1,3 +1,4 @@
+import React from "react";
 import '@testing-library/jest-dom/vitest';
 import { vi, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
@@ -24,7 +25,7 @@ vi.mock('@/lib/auth-guard', () => ({
   requireAuth: vi.fn().mockResolvedValue({ userId: 'mock-user-id', errorResponse: null }),
 }));
 
-import React from 'react';
+
 
 // Mock ResizeObserver for Recharts
 class ResizeObserver {

@@ -1,14 +1,5 @@
 import type { NextAuthConfig } from "next-auth"
-import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
-import bcryptjs from "bcryptjs"
-import { z } from "zod"
-import { userRepository } from "@/lib/repositories/user.repository"
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-})
 
 export default {
   providers: [
@@ -16,33 +7,6 @@ export default {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
-    Credentials({
-      name: "Credentials",
-      credentials: {
-        email: { label: "E-mail", type: "email", placeholder: "seu@email.com" },
-        password: { label: "Senha", type: "password" }
-      },
-      async authorize(credentials) {
-        const parsedCredentials = loginSchema.safeParse(credentials)
-
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data
-
-          const user = await userRepository.findByEmail(email)
-
-          if (!user?.password) {
-            return null
-          }
-
-          const passwordsMatch = await bcryptjs.compare(password, user.password)
-
-          if (passwordsMatch) {
-            return user
-          }
-        }
-        return null
-      }
-    })
   ],
   pages: {
     signIn: "/login",

@@ -77,6 +77,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -85,6 +86,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -106,10 +109,10 @@ model Ativo {
   classe            TipoClasse
   setor             String?
   logoUrl           String?
-  percentualIdeal   Float                 @default(0)
-  precoAtual        Float                 @default(0)
-  ultimoProvento    Float                 @default(0)
-  taxaRentabilidade Float                 @default(100)
+  percentualIdeal   Decimal               @default(0) @db.Decimal(10, 4)
+  precoAtual        Decimal               @default(0) @db.Decimal(12, 4)
+  ultimoProvento    Decimal               @default(0) @db.Decimal(12, 4)
+  taxaRentabilidade Decimal               @default(100) @db.Decimal(10, 4)
   nota              Float                 @default(10) // Nota de 0 a 10 (Diagrama AUVP)
   transacoes        Transacao[]
   proventos         Provento[]
@@ -121,6 +124,7 @@ model Ativo {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, simbolo])
+  @@index([userId])
 }
 
 model Question {
@@ -135,6 +139,8 @@ model Question {
   updatedAt DateTime @updatedAt
 
   answers AssetQuestionAnswer[]
+
+  @@index([userId])
 }
 
 model AssetQuestionAnswer {
@@ -147,6 +153,8 @@ model AssetQuestionAnswer {
   updatedAt  DateTime @updatedAt
 
   @@unique([ativoId, questionId])
+  @@index([ativoId])
+  @@index([questionId])
 }
 
 model Transacao {
@@ -155,9 +163,11 @@ model Transacao {
   ativo         Ativo         @relation(fields: [ativoId], references: [id], onDelete: Cascade)
   data          DateTime      @default(now())
   tipo          TipoTransacao
-  quantidade    Float
-  precoUnitario Float
+  quantidade    Decimal       @db.Decimal(15, 6)
+  precoUnitario Decimal       @db.Decimal(15, 6)
   createdAt     DateTime      @default(now())
+
+  @@index([ativoId])
 }
 
 model Provento {
@@ -166,8 +176,10 @@ model Provento {
   ativo      Ativo       @relation(fields: [ativoId], references: [id], onDelete: Cascade)
   data       DateTime    @default(now())
   tipo       TipoProvento
-  valorTotal Float
+  valorTotal Decimal     @db.Decimal(15, 6)
   createdAt  DateTime    @default(now())
+
+  @@index([ativoId])
 }
 
 /// Metas de alocação por classe — isoladas por usuário
@@ -176,20 +188,23 @@ model MetaClasse {
   userId          String
   user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   classe          TipoClasse
-  percentualIdeal Float
+  percentualIdeal Decimal    @db.Decimal(10, 4)
   updatedAt       DateTime   @updatedAt
 
-  @@unique([userId, classe]) // Cada usuário tem sua própria meta por classe
+  @@unique([userId, classe])
+  @@index([userId])
 }
 
 model HistoricoPatrimonio {
   id              String   @id @default(uuid())
   data            DateTime @default(now())
-  patrimonioTotal Float
-  totalInvestido  Float
-  lucroPrejuizo   Float
+  patrimonioTotal Decimal  @db.Decimal(15, 2)
+  totalInvestido  Decimal  @db.Decimal(15, 2)
+  lucroPrejuizo   Decimal  @db.Decimal(15, 2)
   createdAt       DateTime @default(now())
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

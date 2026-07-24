@@ -1,7 +1,7 @@
 "use client";
 import { logger } from '@/lib/logger';
 
-import React, { useState } from "react";
+import { useState } from 'react';
 import { PortfolioCalculado, simularAporteGreedy } from "@/lib/calculator";
 import { formatCurrency } from "@/lib/utils";
 import {

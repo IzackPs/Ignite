@@ -6,34 +6,33 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: app_db
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-adminpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-app_db}
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-app_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: nextjs_app
+    restart: always
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://admin:adminpassword@db:5432/app_db?schema=public
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-      - ./prisma:/app/prisma
-      - ./next.config.ts:/app/next.config.ts
-      - ./package.json:/app/package.json
-      - ./tsconfig.json:/app/tsconfig.json
-      - ./.env:/app/.env
-      - ./postcss.config.mjs:/app/postcss.config.mjs
-      - ./eslint.config.mjs:/app/eslint.config.mjs
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-adminpassword}@db:5432/${POSTGRES_DB:-app_db}?schema=public
+      - AUTH_SECRET=${AUTH_SECRET:-e2e-secret-key-test-ignite-123456789}
     depends_on:
-      - db
-    command: npm run dev
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

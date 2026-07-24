@@ -1,6 +1,7 @@
 "use client";
+import React from "react";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react';
 import { Modal } from "@/components/ui/Modal";
 import { Camera, Upload, Trash2, User as UserIcon, Link as LinkIcon } from "lucide-react";
 

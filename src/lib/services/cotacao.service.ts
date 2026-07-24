@@ -45,7 +45,7 @@ export const cotacaoService = {
           });
           updatedAtivos.push({
             simbolo: ativo.simbolo,
-            precoAntigo: ativo.precoAtual,
+            precoAntigo: Number(ativo.precoAtual),
             precoNovo: novoPreco,
           });
         }

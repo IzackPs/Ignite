@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+
 import { Modal } from "@/components/ui/Modal";
 import { SimuladorAporteBar } from "@/components/SimuladorAporteBar";
 import { PortfolioCalculado } from "@/lib/calculator";

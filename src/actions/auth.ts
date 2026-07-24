@@ -13,11 +13,12 @@ const registerSchema = z.object({
 })
 
 export async function authenticate(
-  prevState: string | undefined,
+  _prevState: string | undefined,
   formData: FormData,
 ) {
   try {
     await signIn("credentials", formData)
+    return undefined
   } catch (error: any) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
@@ -29,7 +30,7 @@ export async function authenticate(
   }
 }
 
-export async function register(prevState: string | undefined, formData: FormData) {
+export async function register(_prevState: string | undefined, formData: FormData) {
   try {
     const data = Object.fromEntries(formData.entries())
     const validatedFields = registerSchema.safeParse(data)
@@ -60,6 +61,7 @@ export async function register(prevState: string | undefined, formData: FormData
 
     // Depois de registrar, faz o login automaticamente
     await signIn("credentials", formData)
+    return undefined
   } catch (error: any) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
@@ -73,5 +75,6 @@ export async function register(prevState: string | undefined, formData: FormData
 
 export async function logout() {
   await signOut({ redirectTo: "/login" })
+  return undefined
 }
 

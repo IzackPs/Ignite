@@ -1,6 +1,7 @@
 "use client";
+import React from "react";
 
-import React, { useState } from "react";
+import { useState } from 'react';
 import { PortfolioCalculado } from "@/lib/calculator";
 import { formatCurrency } from "@/lib/utils";
 import {

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+
 import { PortfolioCalculado } from "@/lib/calculator";
 
 

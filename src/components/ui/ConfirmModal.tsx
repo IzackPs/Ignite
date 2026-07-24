@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+
 import { AlertTriangle, Trash2, RotateCcw, ShoppingCart } from "lucide-react";
 
 interface ConfirmModalProps {

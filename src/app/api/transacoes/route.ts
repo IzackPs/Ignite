@@ -12,13 +12,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const parsed = parseBody(transacaoSchema, {
-      ativoId: body.ativoId,
-      tipo: body.tipo,
-      quantidade: Number(body.quantidade),
-      precoUnitario: Number(body.precoUnitario),
-      data: body.data,
-    }, "Dados de transação inválidos");
+    const parsed = parseBody(transacaoSchema, body, "Dados de transação inválidos");
     if (!parsed.success) return parsed.response;
 
     const parseResult = parsed;

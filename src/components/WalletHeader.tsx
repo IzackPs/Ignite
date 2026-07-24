@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+
 import { Eye, EyeOff, Clock, Zap } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 

@@ -1,6 +1,7 @@
 "use client";
-
 import React from "react";
+
+
 import { AtivoCalculado, ResumoClasse } from "@/lib/calculator";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/utils";
 import {

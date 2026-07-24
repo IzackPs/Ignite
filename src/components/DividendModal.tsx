@@ -1,6 +1,7 @@
 "use client";
+import React from "react";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from 'react';
 import { AtivoCalculado } from "@/lib/calculator";
 import { Modal } from "@/components/ui/Modal";
 

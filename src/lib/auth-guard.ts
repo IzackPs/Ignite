@@ -34,18 +34,11 @@ export async function requireAuth(): Promise<
     });
   }
 
-  // Se o banco foi resetado e o usuário não existe no BD, usa o usuário padrão do seed
-  if (!dbUser) {
-    dbUser = await prisma.user.findFirst({
-      where: { email: "admin@ignite.com" },
-    });
-  }
-
   if (!dbUser) {
     return {
       userId: null,
       errorResponse: NextResponse.json(
-        { error: "Sessão inválida. Por favor, faça login novamente." },
+        { error: "Sessão inválida ou conta excluída. Por favor, faça login novamente." },
         { status: 401 }
       ),
     };

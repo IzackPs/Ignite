@@ -42,6 +42,7 @@ export function useCotacoes(onSuccess: () => Promise<void>): UseCotacoesReturn {
       const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [cooldown]);
 
   const handleAtualizarCotacoes = useCallback(

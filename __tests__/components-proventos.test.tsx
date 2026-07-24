@@ -32,7 +32,7 @@ describe('ProventosView', () => {
       proventosCount: 1,
     };
 
-    global.fetch = vi.fn().mockImplementation((url, options) => {
+    global.fetch = vi.fn().mockImplementation((_url, options) => {
       if (options?.method === 'DELETE') {
         return Promise.resolve({ ok: true });
       }
@@ -115,7 +115,7 @@ describe('ProventosView', () => {
       proventosCount: 1,
     };
     
-    global.fetch = vi.fn().mockImplementation((url, options) => {
+    global.fetch = vi.fn().mockImplementation((_url, options) => {
       if (options?.method === 'DELETE') {
         return Promise.reject(new Error('API Delete Error'));
       }

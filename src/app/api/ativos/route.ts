@@ -9,8 +9,8 @@ async function saveQuestionAnswers(
   ativoId: string,
   respostas: Array<{ questionId: string; answer: boolean }>
 ) {
-  for (const r of respostas) {
-    await prisma.assetQuestionAnswer.upsert({
+  const ops = respostas.map((r) =>
+    prisma.assetQuestionAnswer.upsert({
       where: {
         ativoId_questionId: {
           ativoId,
@@ -25,8 +25,10 @@ async function saveQuestionAnswers(
       update: {
         answer: r.answer,
       },
-    });
-  }
+    })
+  );
+
+  await prisma.$transaction(ops);
 }
 
 // POST: Criar ou Atualizar Ativo
@@ -37,17 +39,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const parsed = parseBody(
-      ativoSchema,
-      {
-        ...body,
-        percentualIdeal: Number(body.percentualIdeal ?? 0),
-        precoAtual: Number(body.precoAtual ?? 0),
-        ultimoProvento: Number(body.ultimoProvento ?? 0),
-        taxaRentabilidade: Number(body.taxaRentabilidade ?? 100),
-      },
-      "Dados do ativo inválidos"
-    );
+    const parsed = parseBody(ativoSchema, body, "Dados do ativo inválidos");
     if (!parsed.success) return parsed.response;
 
     const {
@@ -67,6 +59,31 @@ export async function POST(request: Request) {
     const { id } = body;
     let targetAtivoId: string;
 
+    let notaCalculada = nota; // fallback
+
+    // Recalcular nota no backend para garantir segurança
+    if (respostas) {
+      const allQuestions = await prisma.question.findMany({
+        where: { userId }
+      });
+      
+      const totalPeso = allQuestions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
+      
+      let sumSim = 0;
+      allQuestions.forEach(q => {
+        // Encontrar a resposta enviada para esta pergunta, ou assumir false se não enviada
+        const resp = respostas.find(r => r.questionId === q.id);
+        if (resp && resp.answer) {
+          sumSim += (q.peso || 1.0);
+        } else {
+          // Se não enviou na array 'respostas' nova, tenta ver se já existe no banco (para updates parciais)
+          // Mas como o front-end envia TODAS as respostas no AssetModal, podemos confiar na array.
+        }
+      });
+      
+      notaCalculada = totalPeso > 0 ? Number(((sumSim / totalPeso) * 10).toFixed(1)) : 10;
+    }
+
     const payload = {
       simbolo: simbolo.trim().toUpperCase(),
       nome,
@@ -77,14 +94,14 @@ export async function POST(request: Request) {
       precoAtual,
       ultimoProvento,
       taxaRentabilidade,
-      nota,
+      nota: notaCalculada,
     };
 
     if (id) {
-      const ativoExistente = await prisma.ativo.findFirst({
-        where: { id, userId },
+      const ativoExistente = await prisma.ativo.findUnique({
+        where: { id },
       });
-      if (!ativoExistente) {
+      if (!ativoExistente || ativoExistente.userId !== userId) {
         return NextResponse.json(
           { error: "Ativo não encontrado ou sem permissão." },
           { status: 404 }

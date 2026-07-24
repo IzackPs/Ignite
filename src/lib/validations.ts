@@ -33,25 +33,25 @@ export const ativoSchema = z.object({
   setor: z.string().max(50, "O setor deve ter no máximo 50 caracteres.").optional(),
   logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
   percentualIdeal: z
-    .number({ message: "O percentual ideal deve ser um número." })
+    .coerce.number({ message: "O percentual ideal deve ser um número." })
     .min(0, "O percentual ideal não pode ser negativo.")
     .max(100, "O percentual ideal não pode ultrapassar 100%.")
     .default(0),
   precoAtual: z
-    .number({ message: "O preço atual deve ser um número." })
+    .coerce.number({ message: "O preço atual deve ser um número." })
     .min(0, "O preço atual não pode ser negativo.")
     .default(0),
   ultimoProvento: z
-    .number({ message: "O último provento deve ser um número." })
+    .coerce.number({ message: "O último provento deve ser um número." })
     .min(0, "O provento não pode ser negativo.")
     .default(0),
   taxaRentabilidade: z
-    .number({ message: "A taxa de rentabilidade deve ser um número." })
+    .coerce.number({ message: "A taxa de rentabilidade deve ser um número." })
     .min(0, "A taxa não pode ser negativa.")
     .max(500, "A taxa de rentabilidade não pode ultrapassar 500%.")
     .default(100),
   nota: z
-    .number({ message: "A nota deve ser um número." })
+    .coerce.number({ message: "A nota deve ser um número." })
     .min(0, "A nota mínima é 0.")
     .max(10, "A nota máxima é 10.")
     .default(10),
@@ -81,7 +81,7 @@ export const questionSchema = z.object({
     .min(1, "A pergunta é obrigatória.")
     .max(255, "A pergunta deve ter no máximo 255 caracteres."),
   peso: z
-    .number({ message: "O peso deve ser um número." })
+    .coerce.number({ message: "O peso deve ser um número." })
     .min(0.1, "O peso mínimo é 0.1.")
     .max(10, "O peso máximo é 10.0.")
     .default(1.0),
@@ -99,10 +99,10 @@ export const transacaoSchema = z.object({
     message: "O tipo deve ser COMPRA ou VENDA.",
   }),
   quantidade: z
-    .number({ message: "A quantidade deve ser um número válido." })
+    .coerce.number({ message: "A quantidade deve ser um número válido." })
     .gt(0, "A quantidade deve ser maior que zero."),
   precoUnitario: z
-    .number({ message: "O preço deve ser um número válido." })
+    .coerce.number({ message: "O preço deve ser um número válido." })
     .gt(0, "O preço unitário deve ser um valor positivo maior que zero."),
   data: z.string().refine((val) => {
     if (!val) return false;
@@ -125,7 +125,7 @@ export const proventoSchema = z.object({
     message: "O tipo deve ser DIVIDENDO, JCP ou RENDIMENTO.",
   }),
   valorTotal: z
-    .number({ message: "O valor total deve ser um número." })
+    .coerce.number({ message: "O valor total deve ser um número." })
     .gt(0, "O valor total deve ser maior que zero."),
   data: z.string().optional(),
 });
@@ -137,12 +137,12 @@ export type ProventoInput = z.infer<typeof proventoSchema>;
 // ─────────────────────────────────────────────
 export const historicoSchema = z.object({
   patrimonioTotal: z
-    .number({ message: "O patrimônio total deve ser um número." })
+    .coerce.number({ message: "O patrimônio total deve ser um número." })
     .min(0, "O patrimônio total não pode ser negativo."),
   totalInvestido: z
-    .number({ message: "O total investido deve ser um número." })
+    .coerce.number({ message: "O total investido deve ser um número." })
     .min(0, "O total investido não pode ser negativo."),
-  lucroPrejuizo: z.number({ message: "O lucro/prejuízo deve ser um número." }),
+  lucroPrejuizo: z.coerce.number({ message: "O lucro/prejuízo deve ser um número." }),
   data: z.string().optional(),
 });
 
@@ -152,7 +152,7 @@ export type HistoricoInput = z.infer<typeof historicoSchema>;
 // Schema: Metas por Classe (POST /api/metas-classes)
 // ─────────────────────────────────────────────
 const percentualMeta = z
-  .number({ message: "O percentual deve ser um número." })
+  .coerce.number({ message: "O percentual deve ser um número." })
   .min(0, "O percentual não pode ser negativo.")
   .max(100, "O percentual não pode ultrapassar 100%.");
 

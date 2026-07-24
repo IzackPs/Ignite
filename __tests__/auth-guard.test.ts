@@ -61,27 +61,12 @@ describe("auth-guard", () => {
     expect(result.userId).toBe("new-id");
   });
 
-  it("deve usar o usuário admin de fallback se não encontrar no BD", async () => {
+  it("deve retornar 401 se o usuário não for encontrado no banco de dados", async () => {
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "unknown-id" },
     } as any);
 
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce({ id: "admin-id", email: "admin@ignite.com" } as any);
-
-    const { requireAuth } = await vi.importActual<typeof import("@/lib/auth-guard")>("@/lib/auth-guard");
-    const result = await requireAuth();
-
-    expect(result.userId).toBe("admin-id");
-  });
-
-  it("deve retornar 401 se nem o usuário fallback admin existir", async () => {
-    vi.mocked(auth).mockResolvedValueOnce({
-      user: { id: "unknown-id" },
-    } as any);
-
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.user.findFirst).mockResolvedValueOnce(null);
 
     const { requireAuth } = await vi.importActual<typeof import("@/lib/auth-guard")>("@/lib/auth-guard");
     const result = await requireAuth();

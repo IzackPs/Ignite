@@ -15,13 +15,12 @@ vi.mock('next/server', () => ({
 }));
 
 describe('API Cotacoes', () => {
-  let _mockDateNow: any;
   let currentTime = 0;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Avança 31 segundos a cada chamada para burlar o rate limit de 30s
-    _mockDateNow = vi.spyOn(Date, 'now').mockImplementation(() => {
+    vi.spyOn(Date, 'now').mockImplementation(() => {
       currentTime += 31000;
       return currentTime;
     });

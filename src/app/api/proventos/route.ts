@@ -1,12 +1,10 @@
 import { logger } from '@/lib/logger';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import Decimal from "decimal.js";
+
 import { requireAuth } from "@/lib/auth-guard";
 import { proventoSchema } from "@/lib/validations";
 import { createDeleteHandler, parseBody } from "@/lib/api-handler";
-
-type DecimalInstance = InstanceType<typeof Decimal>;
 
 export async function GET() {
   const { userId, errorResponse } = await requireAuth();
@@ -30,45 +28,45 @@ export async function GET() {
     });
 
     // Calcular estatísticas e agrupamento mensal
-    let totalGeralRecebidoDec = new Decimal(0);
+    let totalGeralRecebidoNum = 0;
     const agrupamentoMeses: Record<
       string,
       {
-        total: DecimalInstance;
-        dividendo: DecimalInstance;
-        jcp: DecimalInstance;
-        rendimento: DecimalInstance;
+        total: number;
+        dividendo: number;
+        jcp: number;
+        rendimento: number;
         dataRef: Date;
       }
     > = {};
 
     proventos.forEach((p) => {
-      const valorDec = new Decimal(p.valorTotal || 0);
-      totalGeralRecebidoDec = totalGeralRecebidoDec.plus(valorDec);
+      const valorNum = Number(p.valorTotal) || 0;
+      totalGeralRecebidoNum += valorNum;
 
       const d = new Date(p.data);
       const chaveMes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
       if (!agrupamentoMeses[chaveMes]) {
         agrupamentoMeses[chaveMes] = {
-          total: new Decimal(0),
-          dividendo: new Decimal(0),
-          jcp: new Decimal(0),
-          rendimento: new Decimal(0),
+          total: 0,
+          dividendo: 0,
+          jcp: 0,
+          rendimento: 0,
           dataRef: new Date(d.getFullYear(), d.getMonth(), 1),
         };
       }
 
       const mesItem = agrupamentoMeses[chaveMes];
-      mesItem.total = mesItem.total.plus(valorDec);
+      mesItem.total += valorNum;
 
       const tipoUpper = p.tipo.toUpperCase();
       if (tipoUpper === "DIVIDENDO") {
-        mesItem.dividendo = mesItem.dividendo.plus(valorDec);
+        mesItem.dividendo += valorNum;
       } else if (tipoUpper === "JCP") {
-        mesItem.jcp = mesItem.jcp.plus(valorDec);
+        mesItem.jcp += valorNum;
       } else {
-        mesItem.rendimento = mesItem.rendimento.plus(valorDec);
+        mesItem.rendimento += valorNum;
       }
     });
 
@@ -91,11 +89,11 @@ export async function GET() {
       .sort((a, b) => a.dataRef.getTime() - b.dataRef.getTime());
 
     const totalMeses = historicoMensal.length || 1;
-    const mediaMensalDec = totalGeralRecebidoDec.dividedBy(totalMeses);
+    const mediaMensalNum = totalGeralRecebidoNum / totalMeses;
 
     return NextResponse.json({
-      totalGeralRecebido: Number(totalGeralRecebidoDec.toFixed(2)),
-      mediaMensal: Number(mediaMensalDec.toFixed(2)),
+      totalGeralRecebido: Number(totalGeralRecebidoNum.toFixed(2)),
+      mediaMensal: Number(mediaMensalNum.toFixed(2)),
       proventosCount: proventos.length,
       historicoMensal,
       proventos,

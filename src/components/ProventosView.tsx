@@ -1,7 +1,7 @@
 "use client";
 import { logger } from '@/lib/logger';
 
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react';
 import { formatCurrency } from "@/lib/utils";
 import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import { AtivoCalculado } from "@/lib/calculator";

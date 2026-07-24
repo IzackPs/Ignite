@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { AtivoCalculado } from "@/lib/calculator";
 import { SidebarNav } from "@/components/SidebarNav";
 import { AssetTable } from "@/components/AssetTable";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
 import { DashboardCharts } from "@/components/DashboardCharts";
 import { ProventosView } from "@/components/ProventosView";
-import { AssetModal } from "@/components/AssetModal";
-import { TransactionModal } from "@/components/TransactionModal";
-import { ClassGoalsModal } from "@/components/ClassGoalsModal";
-import { UserAvatarModal } from "@/components/UserAvatarModal";
-import { InvestorProfileModal } from "@/components/InvestorProfileModal";
-import { SimuladorModal } from "@/components/SimuladorModal";
+import dynamic from 'next/dynamic';
+
+const AssetModal = dynamic(() => import("@/components/AssetModal").then((mod) => mod.AssetModal), { ssr: false });
+const TransactionModal = dynamic(() => import("@/components/TransactionModal").then((mod) => mod.TransactionModal), { ssr: false });
+const ClassGoalsModal = dynamic(() => import("@/components/ClassGoalsModal").then((mod) => mod.ClassGoalsModal), { ssr: false });
+const UserAvatarModal = dynamic(() => import("@/components/UserAvatarModal").then((mod) => mod.UserAvatarModal), { ssr: false });
+const InvestorProfileModal = dynamic(() => import("@/components/InvestorProfileModal").then((mod) => mod.InvestorProfileModal), { ssr: false });
+const SimuladorModal = dynamic(() => import("@/components/SimuladorModal").then((mod) => mod.SimuladorModal), { ssr: false });
 import { RefreshCw } from "lucide-react";
 import { Toast } from "@/components/Toast";
 import { logout } from "@/actions/auth";
@@ -87,6 +89,14 @@ export default function Home() {
     setTransacaoAtivo(ativo);
     setTransacaoModalOpen(true);
   }, []);
+
+  const filteredAtivos = useMemo(() => {
+    return portfolio?.ativos.filter((a) => a.classe.toUpperCase() === activeTab) || [];
+  }, [portfolio?.ativos, activeTab]);
+
+  const filteredResumo = useMemo(() => {
+    return portfolio?.resumoClasses.find((r) => r.classe === activeTab);
+  }, [portfolio?.resumoClasses, activeTab]);
 
   const renderContent = () => {
     if (loading && !portfolio) {
@@ -175,8 +185,8 @@ export default function Home() {
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         <AssetTable
-          ativos={portfolio.ativos.filter((a) => a.classe.toUpperCase() === activeTab)}
-          resumoClasse={portfolio.resumoClasses.find((r) => r.classe === activeTab)}
+          ativos={filteredAtivos}
+          resumoClasse={filteredResumo}
           classeKey={activeTab}
           nomeClasse={NOMES_CLASSES[activeTab] || activeTab}
           onAddTransacao={handleAddTransacao}

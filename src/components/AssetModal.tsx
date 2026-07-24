@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AtivoCalculado } from "@/lib/calculator";
 import { Modal } from "@/components/ui/Modal";
 import {
@@ -171,10 +171,10 @@ export function AssetModal({
       .catch(() => {});
   }, [isOpen]);
 
-  const lastSearchedTicker = React.useRef<string>("");
+  const lastSearchedTicker = useRef<string>("");
 
   // Busca de informações do ativo & fundamentos (onBlur, Enter, clique ou debounce ao parar de digitar)
-  const handleSearchAsset = React.useCallback(
+  const handleSearchAsset = useCallback(
     async (tickerToSearch?: string, force = false) => {
       const searchTicker = (tickerToSearch ?? simbolo).trim().toUpperCase();
       if (!searchTicker || searchTicker.length < 3) return;
@@ -207,7 +207,7 @@ export function AssetModal({
     [simbolo, editingAtivo]
   );
 
-  const handleSearchAssetRef = React.useRef(handleSearchAsset);
+  const handleSearchAssetRef = useRef(handleSearchAsset);
   useEffect(() => {
     handleSearchAssetRef.current = handleSearchAsset;
   });
@@ -272,7 +272,7 @@ export function AssetModal({
 
   if (!isOpen) return null;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: any) {
     e.preventDefault();
     setLoading(true);
     setError(null);
