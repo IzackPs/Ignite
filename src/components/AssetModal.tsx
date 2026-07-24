@@ -123,7 +123,7 @@ function computeSuggestedAnswers(
   return newAnswers;
 }
 
-function extractInitialAnswers(editingAtivo?: AtivoWithAnswers | null): Record<string, boolean> {
+function extractInitialAnswers(editingAtivo?: AtivoCalculado | null): Record<string, boolean> {
   if (!editingAtivo?.answers || !Array.isArray(editingAtivo.answers)) return {};
   const initialAnswers: Record<string, boolean> = {};
   editingAtivo.answers.forEach((ans) => {
