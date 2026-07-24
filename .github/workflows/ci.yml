@@ -14,8 +14,9 @@ concurrency:
 
 # Variáveis globais
 env:
-  NODE_VERSION: 22
+  NODE_VERSION: 24
   FORCE_JAVASCRIPT_ACTIONS_NODE24: 'true'
+  NODE_OPTIONS: '--no-deprecation'
 
 
 # Permissão global restrita apenas para leitura
