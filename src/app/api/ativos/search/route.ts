@@ -36,7 +36,7 @@ function determineAssetClass(symbolClean: string, nameUpper: string): string {
   if (symbolClean.includes('-USD') || symbolClean.includes('USDT') || symbolClean.includes('BTC') || symbolClean.includes('ETH')) {
     return "CRIPTO";
   }
-  if (!symbolClean.match(/\d/) && !symbolClean.endsWith('.SA')) {
+  if (!/\d/.test(symbolClean) && !symbolClean.endsWith('.SA')) {
     if (nameUpper.includes('REALTY') || nameUpper.includes('REIT') || nameUpper.includes('TRUST')) {
       return "REITS";
     }

@@ -101,6 +101,37 @@ function getNotaBadgeStyle(score: number): string {
   return "bg-rose-500/15 text-rose-400 border-rose-500/30 shadow-rose-500/10 animate-pulse";
 }
 
+function calculateNotaScore(questions: Question[], answers: Record<string, boolean>): number {
+  const totalPeso = questions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
+  const sumSim = questions.reduce((sum, q) => sum + (answers[q.id] ? (q.peso || 1.0) : 0), 0);
+  return totalPeso > 0 ? Number(((sumSim / totalPeso) * 10).toFixed(1)) : 10;
+}
+
+function computeSuggestedAnswers(
+  questions: Question[],
+  currentAnswers: Record<string, boolean>,
+  suggestedAnswers?: Record<string, boolean>
+): Record<string, boolean> {
+  if (!suggestedAnswers) return currentAnswers;
+  const newAnswers = { ...currentAnswers };
+  questions.forEach((q) => {
+    const key = q.criterio.toUpperCase();
+    if (key in suggestedAnswers) {
+      newAnswers[q.id] = suggestedAnswers[key];
+    }
+  });
+  return newAnswers;
+}
+
+function extractInitialAnswers(editingAtivo?: AtivoWithAnswers | null): Record<string, boolean> {
+  if (!editingAtivo?.answers || !Array.isArray(editingAtivo.answers)) return {};
+  const initialAnswers: Record<string, boolean> = {};
+  editingAtivo.answers.forEach((ans) => {
+    initialAnswers[ans.questionId] = ans.answer;
+  });
+  return initialAnswers;
+}
+
 export function AssetModal({
   isOpen,
   onClose,
@@ -202,15 +233,7 @@ export function AssetModal({
       setPrecoAtual(editingAtivo.precoAtual ?? 0);
       setUltimoProvento(editingAtivo.ultimoProvento ?? "");
       setTaxaRentabilidade(editingAtivo.taxaRentabilidade ?? 100);
-
-      // Preencher respostas salvas se existirem
-      if (editingAtivo.answers && Array.isArray(editingAtivo.answers)) {
-        const initialAnswers: Record<string, boolean> = {};
-        editingAtivo.answers.forEach((ans) => {
-          initialAnswers[ans.questionId] = ans.answer;
-        });
-        setAnswers(initialAnswers);
-      }
+      setAnswers(extractInitialAnswers(editingAtivo));
 
       if (editingAtivo.simbolo) {
         lastSearchedTicker.current = editingAtivo.simbolo.toUpperCase();
@@ -234,11 +257,7 @@ export function AssetModal({
   }, [editingAtivo, initialClasse, isOpen]);
 
   // Cálculo Dinâmico da Nota (0 a 10) baseado na soma ponderada das perguntas SIM
-  const totalPeso = questions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
-  const sumSim = questions.reduce((sum, q) => sum + (answers[q.id] ? (q.peso || 1.0) : 0), 0);
-  const notaCalculada = totalPeso > 0
-    ? Number(((sumSim / totalPeso) * 10).toFixed(1))
-    : 10;
+  const notaCalculada = calculateNotaScore(questions, answers);
 
   const handleToggleAnswer = (questionId: string) => {
     setAnswers((prev) => ({
@@ -248,17 +267,7 @@ export function AssetModal({
   };
 
   const handleApplySuggestedAnswers = () => {
-    if (!fundData?.suggestedAnswers) return;
-
-    const newAnswers = { ...answers };
-    questions.forEach((q) => {
-      const key = q.criterio.toUpperCase();
-      if (fundData.suggestedAnswers && key in fundData.suggestedAnswers) {
-        newAnswers[q.id] = fundData.suggestedAnswers[key];
-      }
-    });
-
-    setAnswers(newAnswers);
+    setAnswers((prev) => computeSuggestedAnswers(questions, prev, fundData?.suggestedAnswers));
   };
 
   if (!isOpen) return null;
