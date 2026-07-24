@@ -226,7 +226,7 @@ export function AssetModal({
       lastSearchedTicker.current = "";
     }
     setError(null);
-  }, [editingAtivo, initialClasse, isOpen]);
+  }, [editingAtivo, initialClasse, isOpen, handleSearchAsset]);
 
   // Cálculo Dinâmico da Nota (0 a 10) baseado na soma ponderada das perguntas SIM
   const totalPeso = questions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
