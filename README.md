@@ -24,7 +24,7 @@
   - [6.3. 🧪 Script de Validação de Carteira](#63--script-de-validação-de-carteira)
   - [6.4. 🌙 Dark Mode, Proventos & Real-Time Quotes](#64--dark-mode-proventos--real-time-quotes)
 - [7. OpenAPI e Documentação](#7-openapi-e-documentação)
-- [8. Status Atual e Melhorias Recentes (Refatoração & Qualidade)](#8-status-atual-e-melhorias-recentes-refatoração--qualidade)
+- [8. Relatório da Auditoria Sênior (5 Níveis de Qualidade & Refatoração)](#8-relatório-da-auditoria-sênior-5-níveis-de-qualidade--refatoração)
 - [9. Stack Tecnológica](#9-stack-tecnológica)
 
 ---
@@ -88,145 +88,108 @@ O banco de dados utiliza **PostgreSQL** gerenciado pelo **Prisma ORM**. O schema
 ┌──────────────┐         ┌───────────────┐ ┌────────────────────┐
 │   Account    │         │  MetaClasse   │ │      Question      │
 │──────────────│         │───────────────│ │────────────────────│
-│ id (cuid, PK)│         │ id (uuid, PK) │ │ id (uuid, PK)      │
-│ userId (FK)  │         │ userId (FK)   │ │ userId (FK)        │
-│ provider...  │         │ classe (ENUM) │ │ criterio, pergunta │
-└──────────────┘         │ percentual... │ │ peso, isDefault    │
-                         └───────────────┘ └─────────┬──────────┘
+│ id (cuid, PK)│         │ userId (FK)   │ │ id (uuid, PK)      │
+│ userId (FK)  │         │ classe (ENUM) │ │ userId (FK)        │
+│ provider...  │         │ percentual... │ │ criterio, pergunta │
+└──────────────┘         └───────────────┘ │ peso, isDefault    │
+                                           └─────────┬──────────┘
                                                      │
                                                      ▼
 ┌───────────────────────────┐             ┌─────────────────────┐
 │           Ativo           │             │ AssetQuestionAnswer │
 │───────────────────────────│             │─────────────────────│
 │ id (uuid, PK)             │             │ id (uuid, PK)       │
-│ simbolo, nome             │             │ ativoId (FK)        │
-│ classe (7 ENUMs)          │────────────►│ questionId (FK)     │
-│ setor, logoUrl            │             │ answer (Boolean)    │
-│ percentualIdeal, preco... │             └─────────────────────┘
-│ nota (Float 0..10)        │
-│ userId (FK → User)        │
+│ userId (FK)               │             │ ativoId (FK)        │
+│ simbolo, nome, classe...  │             │ questionId (FK)     │
+│ percentualIdeal, nota     │             │ answer (BOOLEAN)    │
+│ precoAtual                │             └─────────────────────┘
 │───────────────────────────│
 │ ← Transacao[]             │
 │ ← Provento[]              │
 │ ← AssetQuestionAnswer[]   │
-└──────┬──────┬─────────────┘
-       │      │
-       ▼      ▼
-┌─────────────┐ ┌─────────────┐
-│  Transacao  │ │  Provento   │
-│─────────────│ │─────────────│
-│ id (uuid)   │ │ id (uuid)   │
-│ ativoId(FK) │ │ ativoId(FK) │
-│ data, tipo  │ │ data, tipo  │
-│ quantidade  │ │ valorTotal  │
-│ precoUnit.  │ └─────────────┘
-└─────────────┘
+└──────┬──────────────┬─────┘
+       │              │
+       ▼              ▼
+┌──────────────┐ ┌──────────────┐
+│  Transacao   │ │   Provento   │
+│──────────────│ │──────────────│
+│ id (uuid, PK)│ │ id (uuid, PK)│
+│ ativoId (FK) │ │ ativoId (FK) │
+│ tipo, qtd    │ │ tipo, data   │
+│ precoUnitario│ │ valorTotal   │
+└──────────────┘ └──────────────┘
 ```
-
-### Descrição das Tabelas
-
-| Tabela | Descrição |
-|---|---|
-| **User** | Usuário autenticado (NextAuth). Suporta credenciais (senha bcrypt) e OAuth (Google). |
-| **Account** / **Session** / **VerificationToken** | Tabelas padrão do NextAuth para controle de sessões e logins sociais. |
-| **Ativo** | Ativo financeiro da carteira. Contém símbolo, classe (7 classes), setor, logoUrl, preço atual, percentual ideal, último provento, taxa rentabilidade e **nota (0 a 10)**. |
-| **Question** | Perguntas/Critérios de análise fundamentalista por usuário (ex: "ROE > 10%?", "Lucro consistente?"). |
-| **AssetQuestionAnswer** | Resposta booleana (`true`/`false`) de um ativo para um determinado critério/pergunta. |
-| **Transacao** | Registro de compra ou venda (`COMPRA`/`VENDA`) de um ativo com quantidade, preço unitário e data. |
-| **Provento** | Registro de dividendo, JCP ou rendimento recebido de um ativo. |
-| **MetaClasse** | Meta percentual ideal por classe de ativo (`ACOES_NACIONAIS`, `FIIS`, etc.) configurável por usuário. |
-| **HistoricoPatrimonio** | Snapshots mensais do patrimônio total, total investido e lucro/prejuízo acumulado. |
 
 ---
 
 ## 3. Guia de Variáveis de Ambiente (.env)
 
-| Variável | Obrigatória | Descrição | Exemplo |
-|---|:---:|---|---|
-| `DATABASE_URL` | ✅ | Connection string do PostgreSQL. Em container Docker Compose, o host é `db`. | `postgresql://admin:adminpassword@localhost:5432/app_db?schema=public` |
-| `AUTH_SECRET` | ✅ | Segredo do NextAuth para assinar JWTs e cookies de sessão. | `chave_secreta_super_segura_1234567890` |
-| `GOOGLE_CLIENT_ID` | ❌ | Client ID OAuth do Google. | `123456789.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET` | ❌ | Client Secret OAuth do Google. | `GOCSPX-xxxxxxxxxxxxxxx` |
+Consulte o arquivo `.env.example` para configurar as variáveis do sistema:
+
+```env
+DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/app_db?schema=public"
+AUTH_SECRET="sua_chave_secreta_super_segura"
+GOOGLE_CLIENT_ID="seu_client_id_google"
+GOOGLE_CLIENT_SECRET="seu_client_secret_google"
+```
 
 ---
 
 ## 4. Regras de Negócio Detalhadas (Fórmulas)
 
-Toda a lógica de cálculo está centralizada no arquivo `src/lib/calculator.ts` e utiliza a biblioteca **Decimal.js** com precisão de 20 dígitos e arredondamento `ROUND_HALF_UP` para evitar erros de ponto flutuante.
-
 ### 4.1. Preço Médio Ponderado
 
-**COMPRA:** `custoTotalAcumulado = custoTotalAcumulado + (quantidade × preçoUnitário)`  
-`preçoMédio = custoTotalAcumulado ÷ quantidadeAtual`
-
-**VENDA:** `quantidadeAtual = quantidadeAtual - quantidade` (mantém o preço médio inalterado).
+$$\text{PM} = \frac{\sum (\text{Qtd}_{\text{compra}} \times \text{Preço}_{\text{compra}})}{\sum \text{Qtd}_{\text{compra}}}$$
 
 ### 4.2. Valor de Mercado e Lucro/Prejuízo
 
-```
-totalInvestido     = quantidadeAtual × preçoMédio
-valorMercado       = quantidadeAtual × preçoAtual
-lucroPrejuízo (R$) = valorMercado - totalInvestido
-lucroPrejuízo (%)  = (lucroPrejuízo R$ ÷ totalInvestido) × 100
-```
+$$\text{Valor Mercado} = \text{Quantidade Atual} \times \text{Preço Atual}$$
+$$\text{Lucro/Prejuízo} = \text{Valor Mercado} - \text{Total Investido}$$
 
 ### 4.3. Lógica de Rebalanceamento
 
-O rebalanceamento é calculado para **7 Classes de Ativos**:
-`ACOES_NACIONAIS`, `ACOES_INTERNACIONAIS`, `FIIS`, `REITS`, `CRIPTO`, `RENDA_FIXA`, `RENDA_FIXA_INTERNACIONAL`.
-
-```
-percentualAtual  = (valorMercado do ativo ÷ patrimônioTotal) × 100
-valorIdealAtivo  = (percentualIdeal ÷ 100) × patrimônioTotal
-faltaR$          = valorIdealAtivo - valorMercado
-```
+$$\text{Falta (R\$)} = \max\left(0, \left(\text{Patrimônio Total} \times \frac{\text{Meta Ideal \%}}{100}\right) - \text{Valor Mercado Atual}\right)$$
 
 ### 4.4. Simulação de Aporte (Algoritmo Greedy)
 
-O simulador utiliza um **algoritmo guloso (Greedy)** que distribui um orçamento em R$ comprando iterativamente 1 cota por vez do ativo com **maior defasagem em R$ em relação à meta ideal**, considerando o patrimônio acumulado iterativamente.
+O simulador aloca o valor disponível de forma iterativa nos ativos que apresentam o maior desvio negativo em relação à sua meta ponderada.
 
 ### 4.5. Número Mágico (FIIs)
 
-```
-númeroMágico              = ceil(preçoAtual ÷ últimoProvento)
-cotasFaltantesMágico      = max(0, númeroMágico - quantidadeAtual)
-progressoMágicoPercentual = (quantidadeAtual ÷ númeroMágico) × 100
-```
+$$\text{Número Mágico} = \left\lceil \frac{\text{Preço Atual da Cota}}{\text{Último Provento por Cota}} \right\rceil$$
 
 ### 4.6. Rendimento Pro-Rata Diário do CDI (Renda Fixa)
 
-- **CDI Dinâmico**: Obtido da API do **Banco Central do Brasil** (SGS - Série 4389).
-- **Ano Comercial**: 252 dias úteis.
-- **Feriados Nacionais**: Dedução automática de feriados nacionais fixos brasileiros no motor `calcularDiasUteis`.
+Dedução automática de feriados nacionais fixos brasileiros no motor `calcularDiasUteis`.
 
 ### 4.7. Nota Ignite & Checklist Fundamentalista (0 a 10)
 
-Cada ativo possui uma nota de 0.0 a 10.0 calculada dinamicamente com base nas respostas dos critérios de análise fundamentalista:
+Calculada dinamicamente e **recalculada no backend como única fonte da verdade**:
 
 $$\text{Nota} = \left( \frac{\sum_{\text{critérios com resposta 'Sim'}} \text{peso}_i}{\sum_{\text{todos os critérios}} \text{peso}_i} \right) \times 10$$
 
-Caso não haja critérios cadastrados, o ativo mantém a nota neutra padrão 10.0.
-
 ---
 
-## 5. Instruções de Inicialização (Docker)
+## 5. Instruções de Inicialização (Docker & Produção)
+
+### Rodando em Desenvolvimento via Docker Compose
 
 ```bash
 # 1. Copiar variáveis de ambiente
 cp .env.example .env
 
-# 2. Subir containers PostgreSQL e Next.js
+# 2. Subir containers (PostgreSQL com Healthcheck + Next.js App)
 docker-compose up -d --build
 
 # 3. Aplicar schema Prisma no banco
 npx prisma generate
 npx prisma db push
-
-# 4. (Opcional) Executar script de validação de consistência
-npm run validate:carteira
 ```
 
 Aplicação disponível em: **[http://localhost:3000](http://localhost:3000)**
+
+### Produção Docker Standalone (Imagem Enxuta de ~150MB)
+O `Dockerfile` utiliza **Multi-Stage Build** (com estágios `base`, `deps`, `builder` e `runner`) rodando sob o usuário de sistema não-root `nextjs:nodejs` e exportando artefatos `output: 'standalone'`.
 
 ---
 
@@ -243,7 +206,7 @@ Aplicação disponível em: **[http://localhost:3000](http://localhost:3000)**
 
 ### 6.3. 🧪 Script de Validação de Carteira
 - Executável via `npm run validate:carteira` (`scripts/validate-carteira.ts`).
-- Valida invariantess matemáticas, arredondamentos e integridade da carteira sem necessidade de subir o front-end.
+- Valida invariantes matemáticas, arredondamentos e integridade da carteira.
 
 ### 6.4. 🌙 Dark Mode, Proventos & Real-Time Quotes
 - Alternador Dark/Light Mode com `next-themes`.
@@ -256,30 +219,35 @@ Aplicação disponível em: **[http://localhost:3000](http://localhost:3000)**
 
 O projeto possui sua API REST 100% documentada no padrão **OpenAPI 3.0** no arquivo [`openapi.yaml`](./openapi.yaml).
 
-**Endpoints Disponíveis:**
-- `GET /api/portfolio`
-- `POST /api/cotacoes`
-- `GET /api/cdi`
-- `POST`, `DELETE /api/ativos`
-- `POST`, `DELETE /api/transacoes`
-- `GET`, `POST`, `DELETE /api/proventos`
-- `POST`, `DELETE /api/historico`
-- `POST /api/metas-classes`
-- `GET`, `POST`, `DELETE /api/questions`
-- `POST /api/questions/reset`
-- `POST /api/user/avatar`
-
 ---
 
-## 8. Status Atual e Melhorias Recentes (Refatoração & Qualidade)
+## 8. Relatório da Auditoria Sênior (5 Níveis de Qualidade & Refatoração)
 
-1. **Refatoração Modular do SidebarNav**:
-   - Decomposição do componente principal `SidebarNav` em subcomponentes puros (`SidebarHeaderSection`, `SidebarUserSection`, `SidebarBalanceSection`, `SidebarQuickActionsSection`, `SidebarMainMenuSection`, `SidebarClassesSection`, `SidebarFooterSection`).
-   - Redução da **Complexidade Cognitiva de 18 para 5** (limite máximo permitido: 15).
+O projeto passou por uma auditoria crítica dividida em 5 pilares estruturais de engenharia de software:
 
-2. **Qualidade e Cobertura de Testes (Vitest & Playwright)**:
-   - **203 Testes Unitários e de Integração** em 55 suítes de teste.
-   - Pipeline CI/CD em GitHub Actions com SonarCloud, LCOV coverage, Node 24 support e Playwright E2E.
+1. **Nível 1 — Fundações e Configurações**:
+   - Atualização de compatibilidade CI/CD para **Node.js 24**.
+   - Refatoração de configs base (`tsconfig.json`, `next.config.ts`).
+   - Remoção de imports redundantes `import React from "react"` e ordenamento estrito de `"use client"`.
+
+2. **Nível 2 — Modelagem de Dados e Segurança**:
+   - Migração dos tipos de moeda no Prisma de `Float` para `Decimal(10,4)` e `Decimal(15,6)`.
+   - Adição de índices `@@index` nas tabelas `Transacao`, `Provento` e `HistoricoPatrimonio`.
+   - Adaptação do `middleware.ts` para o novo padrão `proxy.ts` (Next.js 16+).
+
+3. **Nível 3 — Backend e Regras de Negócio**:
+   - **Nota Ignite Unica Fonte da Verdade**: O backend descarta qualquer nota vinda do front-end e a calcula matematicamente com os pesos do banco.
+   - **Coerção Zod**: Aplicação global de `z.coerce.number()` no `validations.ts`.
+   - Otimização do loop de proventos no Node Heap evitando alocações desnecessárias de objetos.
+
+4. **Nível 4 — Frontend e React Patterns**:
+   - **Dynamic Imports (`next/dynamic`)**: Carregamento sob demanda (Lazy Loading) dos modais pesados (`AssetModal`, `SimuladorModal`, `TransactionModal`, etc.), reduzindo o *bundle size* inicial.
+   - **Memoization com `useMemo`**: Filtros de ativos isolados em memória para impedir re-renders em cascata da `AssetTable`.
+
+5. **Nível 5 — Testes, Qualidade e CI/CD**:
+   - **Vitest + `vitest-mock-extended`**: Injeção de `mockDeep<PrismaClient>()` para testes unitários com tipagem forte e validações comportamentais estritas (`toHaveBeenCalledWith`).
+   - **Playwright E2E**: Suíte completa de testes End-to-End cobrindo Registro, Login, Proteção de Rotas, CRUD de Ativos e Movimentações Financeiras.
+   - **GitHub Actions**: Pipeline CI/CD integrado com SonarCloud, cobertura LCOV e serviço de PostgreSQL containerizado para testes E2E.
 
 ---
 
@@ -297,9 +265,9 @@ O projeto possui sua API REST 100% documentada no padrão **OpenAPI 3.0** no arq
 | **Gráficos** | Recharts | 3.9.2 |
 | **Precisão Decimal** | Decimal.js | 10.6.x |
 | **Validação** | Zod | 4.4.x |
-| **Testes Unitários** | Vitest + Testing Library | 4.1.10 |
+| **Testes Unitários** | Vitest + `vitest-mock-extended` | 4.1.10 |
 | **Testes E2E** | Playwright | 1.61.1 |
-| **Containerização** | Docker + Docker Compose | — |
+| **Containerização** | Docker (Multi-stage Standalone) | — |
 
 ---
 

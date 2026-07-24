@@ -1,5 +1,38 @@
+# Node & Dependencies
 node_modules
+npm-debug.log*
+
+# Next.js Build Output
 .next
-dev.db
-prisma/dev.db
-.env.local
+out
+
+# Git & GitHub
+.git
+.github
+
+# Environment Secrets
+.env
+.env*
+!.env.example
+
+# Testing & Artifacts
+coverage
+playwright-report
+test-results
+e2e
+__tests__
+
+# Docker & Infrastructure
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+
+# Documentation & Misc
+README.md
+LICENSE
+CONTRIBUTING.md
+.DS_Store
