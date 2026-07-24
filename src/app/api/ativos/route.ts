@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       nome,
       classe,
       setor: setor ?? null,
-      logoUrl: logoUrl ? logoUrl : null,
+      logoUrl: logoUrl ?? null,
       percentualIdeal,
       precoAtual,
       ultimoProvento,
