@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 
 import { useState, useEffect, useMemo } from 'react';
 import { AtivoCalculado } from "@/lib/calculator";

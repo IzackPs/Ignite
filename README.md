@@ -1,4 +1,4 @@
-# ⚡ Ignite — Asset Allocation & Rebalanceamento
+# ⚡ Ignite 
 
 > **Ignite** é um sistema completo de gestão de carteira de investimentos com rebalanceamento automático, simulador inteligente de aportes (Algoritmo Greedy), análise fundamentalista (Nota Ignite / Diagrama AUVP), acompanhamento de proventos e evolução patrimonial. Construído com **Next.js 16**, **Prisma ORM**, **PostgreSQL** e **Docker**.
 
@@ -22,9 +22,9 @@
   - [6.1. 🏆 Nota Ignite (Critérios & Pergunta Management)](#61--nota-ignite-critérios--pergunta-management)
   - [6.2. 🖼️ Customização de Avatar e Perfil de Investimento](#62-️-customização-de-avatar-e-perfil-de-investimento)
   - [6.3. 🧪 Script de Validação de Carteira](#63--script-de-validação-de-carteira)
-  - [6.4. 🌙 Dark Mode, Proventos & Real-Time Quotes](#64--dark-mode-proventos--real-time-quotes)
+  - [6.4. 🌙 Tema Dark, Proventos & Real-Time Quotes](#64--tema-dark-proventos--real-time-quotes)
 - [7. OpenAPI e Documentação](#7-openapi-e-documentação)
-- [8. Relatório da Auditoria Sênior (5 Níveis de Qualidade & Refatoração)](#8-relatório-da-auditoria-sênior-5-níveis-de-qualidade--refatoração)
+- [8. Engenharia, Testes e Qualidade de Código](#8-engenharia-testes-e-qualidade-de-código)
 - [9. Stack Tecnológica](#9-stack-tecnológica)
 
 ---
@@ -164,32 +164,31 @@ Dedução automática de feriados nacionais fixos brasileiros no motor `calcular
 
 ### 4.7. Nota Ignite & Checklist Fundamentalista (0 a 10)
 
-Calculada dinamicamente e **recalculada no backend como única fonte da verdade**:
+Calculada dinamicamente no servidor para garantir integridade dos dados:
 
 $$\text{Nota} = \left( \frac{\sum_{\text{critérios com resposta 'Sim'}} \text{peso}_i}{\sum_{\text{todos os critérios}} \text{peso}_i} \right) \times 10$$
 
 ---
 
-## 5. Instruções de Inicialização (Docker & Produção)
+## 5. Instruções de Inicialização (Docker)
 
-### Rodando em Desenvolvimento via Docker Compose
+### Ambiente de Desenvolvimento
 
 ```bash
 # 1. Copiar variáveis de ambiente
 cp .env.example .env
 
-# 2. Subir containers (PostgreSQL com Healthcheck + Next.js App)
+# 2. Subir serviços (PostgreSQL + Next.js App)
 docker-compose up -d --build
 
-# 3. Aplicar schema Prisma no banco
-npx prisma generate
+# 3. Aplicar schema do banco de dados
 npx prisma db push
 ```
 
 Aplicação disponível em: **[http://localhost:3000](http://localhost:3000)**
 
-### Produção Docker Standalone (Imagem Enxuta de ~150MB)
-O `Dockerfile` utiliza **Multi-Stage Build** (com estágios `base`, `deps`, `builder` e `runner`) rodando sob o usuário de sistema não-root `nextjs:nodejs` e exportando artefatos `output: 'standalone'`.
+### Build de Produção Standalone (~150MB)
+O `Dockerfile` utiliza **Multi-Stage Build** (`deps`, `builder`, `runner`) com exportação `output: 'standalone'` e execução sob o usuário não-root `nextjs:nodejs`.
 
 ---
 
@@ -208,8 +207,8 @@ O `Dockerfile` utiliza **Multi-Stage Build** (com estágios `base`, `deps`, `bui
 - Executável via `npm run validate:carteira` (`scripts/validate-carteira.ts`).
 - Valida invariantes matemáticas, arredondamentos e integridade da carteira.
 
-### 6.4. 🌙 Dark Mode, Proventos & Real-Time Quotes
-- Alternador Dark/Light Mode com `next-themes`.
+### 6.4. 🌙 Tema Dark, Proventos & Real-Time Quotes
+- Interface padronizada com Tema Dark elegante (configurada nativamente via `next-themes` com `forcedTheme="dark"`).
 - Extrato e gráfico empilhado de proventos (Dividendos, JCP, Rendimentos).
 - Cotações em tempo real via Brapi.dev e Yahoo Finance com Rate Limiting de 30s.
 
@@ -221,33 +220,13 @@ O projeto possui sua API REST 100% documentada no padrão **OpenAPI 3.0** no arq
 
 ---
 
-## 8. Relatório da Auditoria Sênior (5 Níveis de Qualidade & Refatoração)
+## 8. Engenharia, Testes e Qualidade de Código
 
-O projeto passou por uma auditoria crítica dividida em 5 pilares estruturais de engenharia de software:
-
-1. **Nível 1 — Fundações e Configurações**:
-   - Atualização de compatibilidade CI/CD para **Node.js 24**.
-   - Refatoração de configs base (`tsconfig.json`, `next.config.ts`).
-   - Remoção de imports redundantes `import React from "react"` e ordenamento estrito de `"use client"`.
-
-2. **Nível 2 — Modelagem de Dados e Segurança**:
-   - Migração dos tipos de moeda no Prisma de `Float` para `Decimal(10,4)` e `Decimal(15,6)`.
-   - Adição de índices `@@index` nas tabelas `Transacao`, `Provento` e `HistoricoPatrimonio`.
-   - Adaptação do `middleware.ts` para o novo padrão `proxy.ts` (Next.js 16+).
-
-3. **Nível 3 — Backend e Regras de Negócio**:
-   - **Nota Ignite Unica Fonte da Verdade**: O backend descarta qualquer nota vinda do front-end e a calcula matematicamente com os pesos do banco.
-   - **Coerção Zod**: Aplicação global de `z.coerce.number()` no `validations.ts`.
-   - Otimização do loop de proventos no Node Heap evitando alocações desnecessárias de objetos.
-
-4. **Nível 4 — Frontend e React Patterns**:
-   - **Dynamic Imports (`next/dynamic`)**: Carregamento sob demanda (Lazy Loading) dos modais pesados (`AssetModal`, `SimuladorModal`, `TransactionModal`, etc.), reduzindo o *bundle size* inicial.
-   - **Memoization com `useMemo`**: Filtros de ativos isolados em memória para impedir re-renders em cascata da `AssetTable`.
-
-5. **Nível 5 — Testes, Qualidade e CI/CD**:
-   - **Vitest + `vitest-mock-extended`**: Injeção de `mockDeep<PrismaClient>()` para testes unitários com tipagem forte e validações comportamentais estritas (`toHaveBeenCalledWith`).
-   - **Playwright E2E**: Suíte completa de testes End-to-End cobrindo Registro, Login, Proteção de Rotas, CRUD de Ativos e Movimentações Financeiras.
-   - **GitHub Actions**: Pipeline CI/CD integrado com SonarCloud, cobertura LCOV e serviço de PostgreSQL containerizado para testes E2E.
+- **Precisão Financeira**: Utilização de `Decimal(10,4)` e `Decimal(15,6)` no Prisma ORM para mitigar problemas com arredondamento binário de ponto flutuante.
+- **Otimização de Renderização**: Modais pesados utilizam Dynamic Imports (`next/dynamic`) para Code-Splitting, e listas de ativos utilizam `useMemo` para mitigar re-renderizações no React.
+- **Testes Unitários & Integração**: Suíte desenvolvida com **Vitest** e `vitest-mock-extended` para tipagem estrita de Mocks do banco.
+- **Testes End-to-End (E2E)**: Suíte automatizada com **Playwright** cobrindo fluxos de Autenticação, Proteção de Rotas, Cadastro de Ativos e Operações Financeiras.
+- **CI/CD Pipeline**: Automação via GitHub Actions para validação de Linting, Testes Unitários, Build Standalone, Testes E2E com PostgreSQL e análise SonarCloud.
 
 ---
 
@@ -261,7 +240,7 @@ O projeto passou por uma auditoria crítica dividida em 5 pilares estruturais de
 | **Estilização** | TailwindCSS | 4.x |
 | **Banco de Dados** | PostgreSQL | 15 (Alpine) |
 | **ORM** | Prisma Client | 5.22.0 |
-| **Autenticação** | NextAuth v5 (Auth.js) | 5.0.0-beta.31 |
+| **Autenticação** | NextAuth v5 (Auth.js) | 5.0.0-beta.32 |
 | **Gráficos** | Recharts | 3.9.2 |
 | **Precisão Decimal** | Decimal.js | 10.6.x |
 | **Validação** | Zod | 4.4.x |
@@ -272,5 +251,5 @@ O projeto passou por uma auditoria crítica dividida em 5 pilares estruturais de
 ---
 
 <p align="center">
-  <sub>Documentação do <strong>Ignite</strong> — Atualizada em Julho/2026. Desenvolvido com ❤️ utilizando Next.js, Prisma e PostgreSQL.</sub>
+  <sub>Documentação do <strong>Ignite</strong>. Desenvolvido com Next.js, Prisma e PostgreSQL.</sub>
 </p>

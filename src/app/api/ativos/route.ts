@@ -31,6 +31,28 @@ async function saveQuestionAnswers(
   await prisma.$transaction(ops);
 }
 
+async function calculateBackendNota(
+  userId: string,
+  respostas?: { questionId: string; answer: boolean }[],
+  fallbackNota: number = 10
+): Promise<number> {
+  if (!respostas || respostas.length === 0) return fallbackNota;
+
+  const allQuestions = await prisma.question.findMany({ where: { userId } });
+  const totalPeso = allQuestions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
+  if (totalPeso <= 0) return 10;
+
+  let sumSim = 0;
+  allQuestions.forEach((q) => {
+    const resp = respostas.find((r) => r.questionId === q.id);
+    if (resp?.answer) {
+      sumSim += q.peso || 1.0;
+    }
+  });
+
+  return Number(((sumSim / totalPeso) * 10).toFixed(1));
+}
+
 // POST: Criar ou Atualizar Ativo
 export async function POST(request: Request) {
   const { userId, errorResponse } = await requireAuth();
@@ -59,37 +81,14 @@ export async function POST(request: Request) {
     const { id } = body;
     let targetAtivoId: string;
 
-    let notaCalculada = nota; // fallback
-
-    // Recalcular nota no backend para garantir segurança
-    if (respostas) {
-      const allQuestions = await prisma.question.findMany({
-        where: { userId }
-      });
-      
-      const totalPeso = allQuestions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
-      
-      let sumSim = 0;
-      allQuestions.forEach(q => {
-        // Encontrar a resposta enviada para esta pergunta, ou assumir false se não enviada
-        const resp = respostas.find(r => r.questionId === q.id);
-        if (resp && resp.answer) {
-          sumSim += (q.peso || 1.0);
-        } else {
-          // Se não enviou na array 'respostas' nova, tenta ver se já existe no banco (para updates parciais)
-          // Mas como o front-end envia TODAS as respostas no AssetModal, podemos confiar na array.
-        }
-      });
-      
-      notaCalculada = totalPeso > 0 ? Number(((sumSim / totalPeso) * 10).toFixed(1)) : 10;
-    }
+    const notaCalculada = await calculateBackendNota(userId, respostas, nota);
 
     const payload = {
       simbolo: simbolo.trim().toUpperCase(),
       nome,
       classe,
       setor: setor ?? null,
-      logoUrl: logoUrl && logoUrl !== "" ? logoUrl : null,
+      logoUrl: logoUrl ? logoUrl : null,
       percentualIdeal,
       precoAtual,
       ultimoProvento,
@@ -101,7 +100,7 @@ export async function POST(request: Request) {
       const ativoExistente = await prisma.ativo.findUnique({
         where: { id },
       });
-      if (!ativoExistente || ativoExistente.userId !== userId) {
+      if (ativoExistente?.userId !== userId) {
         return NextResponse.json(
           { error: "Ativo não encontrado ou sem permissão." },
           { status: 404 }
