@@ -176,6 +176,11 @@ export function AssetModal({
     [simbolo, editingAtivo]
   );
 
+  const handleSearchAssetRef = React.useRef(handleSearchAsset);
+  useEffect(() => {
+    handleSearchAssetRef.current = handleSearchAsset;
+  });
+
   useEffect(() => {
     if (!simbolo || simbolo.length < 3) return;
 
@@ -209,7 +214,7 @@ export function AssetModal({
 
       if (editingAtivo.simbolo) {
         lastSearchedTicker.current = editingAtivo.simbolo.toUpperCase();
-        handleSearchAsset(editingAtivo.simbolo, true);
+        handleSearchAssetRef.current(editingAtivo.simbolo, true);
       }
     } else {
       setSimbolo("");
@@ -226,7 +231,7 @@ export function AssetModal({
       lastSearchedTicker.current = "";
     }
     setError(null);
-  }, [editingAtivo, initialClasse, isOpen, handleSearchAsset]);
+  }, [editingAtivo, initialClasse, isOpen]);
 
   // Cálculo Dinâmico da Nota (0 a 10) baseado na soma ponderada das perguntas SIM
   const totalPeso = questions.reduce((sum, q) => sum + (q.peso || 1.0), 0);
