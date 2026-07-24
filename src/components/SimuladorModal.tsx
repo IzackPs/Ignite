@@ -22,7 +22,7 @@ export function SimuladorModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Simulador Inteligente de Aporte (Algoritmo Guloso)"
+      title="Simulador de Aporte (Algoritmo Guloso)"
       description="Informe o orçamento disponível para simular a alocação perfeita com cálculo iterativo do troco resultante."
       maxWidth="max-w-4xl"
     >

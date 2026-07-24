@@ -96,9 +96,6 @@ function SidebarUserSection({
             <div className="text-xs font-bold text-white truncate flex items-center gap-1">
               {userName}
             </div>
-            <div className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online
-            </div>
           </div>
         )}
       </div>
@@ -345,11 +342,6 @@ function SidebarMainMenuSection({
             <Zap className="w-4 h-4 text-gold-main shrink-0" />
             {expanded && <span>Simulador de Aporte</span>}
           </div>
-          {expanded && (
-            <span className="text-[9px] bg-gold-main/20 text-gold-main border border-gold-main/30 px-1.5 py-0.5 rounded-md font-bold">
-              IA
-            </span>
-          )}
         </button>
       )}
 

@@ -231,7 +231,7 @@ export function PortfolioOverview({
                 </div>
               )}
 
-              {ativosDefasados === 0 && (
+              {ativosDefasados === 0 && saudeInfo.label === "Excelente" && (
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 w-fit">
                   <CheckCircle2 className="w-3 h-3" />
                   Carteira equilibrada!

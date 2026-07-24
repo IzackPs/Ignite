@@ -570,22 +570,31 @@ export function calcularSaudeCarteira(portfolio: PortfolioCalculado): InfoSaudeC
     };
   }
 
-  // 1. Desvio acumulado de metas por classe
-  const desvioClasses = portfolio.resumoClasses.reduce((sum, r) => {
-    return sum + Math.abs(r.percentualAtual - r.metaPercentual);
-  }, 0);
+  // 1. Verificar se o usuário configurou metas por classe
+  const somaMetasClasses = portfolio.resumoClasses.reduce((sum, r) => sum + r.metaPercentual, 0);
 
-  // Score de Alocação (0 a 100)
-  const scoreAlocacao = Math.max(0, 100 - Math.round(desvioClasses * 0.65));
+  // 2. Desvio real de alocação de classes (soma dos desvios dividida por 2 representa o % real desbalanceado)
+  let desvioClasses = 0;
+  if (somaMetasClasses > 0) {
+    const somaDesviosAbsolutos = portfolio.resumoClasses.reduce((sum, r) => {
+      return sum + Math.abs(r.percentualAtual - r.metaPercentual);
+    }, 0);
+    desvioClasses = somaDesviosAbsolutos / 2;
+  }
 
-  // 2. Média das Notas Ignite dos Ativos da Carteira (escalada para 0-100)
+  // Score de Alocação (0 a 100) - Desvio 0% = Score 100 | Desvio 15% = Score 77 | Desvio 30%+ = Score 55
+  const scoreAlocacao = somaMetasClasses > 0
+    ? Math.max(0, 100 - Math.round(desvioClasses * 1.5))
+    : 100;
+
+  // 3. Média das Notas Ignite dos Ativos da Carteira (escalada para 0-100)
   const notasAtivos = portfolio.ativos.map((a) => a.nota ?? 10);
   const mediaNotas =
     notasAtivos.length > 0
       ? (notasAtivos.reduce((acc, n) => acc + n, 0) / notasAtivos.length) * 10
       : 100;
 
-  // 3. Score Final Composto (70% Alocação + 30% Qualidade/Nota)
+  // 4. Score Final Composto (70% Alocação + 30% Qualidade/Nota)
   const scoreFinal = Math.min(
     100,
     Math.max(0, Math.round(0.7 * scoreAlocacao + 0.3 * mediaNotas))

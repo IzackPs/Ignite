@@ -24,6 +24,6 @@ describe('SimuladorModal', () => {
       />
     );
 
-    expect(screen.getByText(/Simulador Inteligente de Aporte/i)).toBeInTheDocument();
+    expect(screen.getByText(/Simulador de Aporte/i)).toBeInTheDocument();
   });
 });

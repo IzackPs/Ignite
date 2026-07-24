@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AtivoCalculado } from "@/lib/calculator";
 import { Modal } from "@/components/ui/Modal";
+import { getTodayLocalDate } from "@/lib/utils";
 
 interface DividendModalProps {
   readonly isOpen: boolean;
@@ -20,7 +21,7 @@ export function DividendModal({
   const [ativoId, setAtivoId] = useState("");
   const [tipo, setTipo] = useState("RENDIMENTO");
   const [valorTotal, setValorTotal] = useState<number | "">("");
-  const [data, setData] = useState(new Date().toISOString().split("T")[0]);
+  const [data, setData] = useState(getTodayLocalDate());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

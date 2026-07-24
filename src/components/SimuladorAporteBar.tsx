@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 
 import { useState } from 'react';
 import { PortfolioCalculado, simularAporteGreedy } from "@/lib/calculator";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getTodayLocalDate } from "@/lib/utils";
 import {
   ShoppingCart,
   CheckCircle2,
@@ -56,7 +56,7 @@ export function SimuladorAporteBar({
             tipo: "COMPRA",
             quantidade: item.qtdSimuladaComprar,
             precoUnitario: item.precoAtual,
-            data: new Date().toISOString().split("T")[0],
+            data: getTodayLocalDate(),
           }),
         });
 
@@ -108,7 +108,7 @@ export function SimuladorAporteBar({
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2 group-hover:text-gold-main transition-colors">
-              Simular Aporte Inteligente
+              Simular Aporte
               {isExpanded ? (
                 <ChevronUp className="w-4 h-4 text-zinc-500" />
               ) : (

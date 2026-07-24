@@ -65,7 +65,7 @@ describe("SimuladorAporteBar Coverage Expansion", () => {
     fireEvent.click(btn5000);
 
     // Clicar no cabeçalho para recolher/expandir
-    const headerBtn = screen.getByRole("button", { name: /Simular Aporte Inteligente/i });
+    const headerBtn = screen.getByRole("button", { name: /Simular Aporte/i });
     fireEvent.click(headerBtn);
     fireEvent.click(headerBtn);
   });
